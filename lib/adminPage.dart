@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:project_mobile/categoryEdit.dart';
-import 'package:project_mobile/itemEdit.dart';
+import 'package:project_mobile/menuEdit.dart';
 
 class AdminHome extends StatefulWidget {
   const AdminHome({Key? key}) : super(key: key);
@@ -11,9 +10,7 @@ class AdminHome extends StatefulWidget {
 
 class _AdminHomeState extends State<AdminHome> {
 
-  int _selectedIndex = 0;
-  static const TextStyle optionStyle =
-  TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
+  int _selectedIndex = 1;
   final _pageOptions = [
     MenuEdit(),
     Home(),
@@ -50,6 +47,7 @@ class _AdminHomeState extends State<AdminHome> {
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.blue,
         onTap: _onItemTapped,
+
       ),
     );
   }
@@ -65,29 +63,8 @@ class MenuEdit extends StatefulWidget {
 class _MenuEditState extends State<MenuEdit> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(
-      title: Text("Menu Editor"),
-    ),
-      body: Center(
-        child: Column(
-          children: [
-            ElevatedButton(onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => EditCategories()),
-              );
-            },
-              child: Text("Edit Categories"),
-            ),
-            ElevatedButton(onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => EditItems()),
-              );
-            }, child: Text("Edit Items"),
-            ),
-          ],),
-      ),
+    return Scaffold(
+      body: EditMenu()
     );
   }
 }
