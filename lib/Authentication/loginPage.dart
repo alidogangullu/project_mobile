@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
@@ -12,8 +13,13 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-
   final auth = FirebaseAuth.instance;
+  late User user;
+
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  bool showSignUp = false;
+  final nameController = TextEditingController();
+  final surnameController = TextEditingController();
 
   String? phoneNumber;
   int? forceResendingToken;
@@ -98,10 +104,20 @@ class _LoginPageState extends State<LoginPage> {
     try {
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
           verificationId: _verificationId, smsCode: smsController.text);
-      await auth.signInWithCredential(credential).then((value) {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => AdminHome()));
-      });
+      user = (await auth.signInWithCredential(credential)).user!;
+
+      if (await getData(uid: user.uid)) {
+        await auth.signInWithCredential(credential).then((value) {
+          AdminHome.uid = user.uid; //must change without static
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (context) => AdminHome()));
+        });
+      } else {
+        setState(() {
+          showSignUp = true;
+        });
+      }
+
       setState(() {
         loading = false;
       });
@@ -115,146 +131,208 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> signUp(User user) async {
+    await firestore.collection('users').doc(user.uid).set({
+      'uid': user.uid,
+      'phone': user.phoneNumber,
+      'name': nameController.text,
+      'surname': surnameController.text,
+    });
+    AdminHome.uid = user.uid; //must change without static
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => AdminHome()));
+  }
+
+  Future<bool> getData({required String uid}) async {
+    DocumentSnapshot ds = await firestore.collection("users").doc(uid).get();
+    return ds.exists;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(50, 0, 30, 0),
-            child: InternationalPhoneNumberInput(
-              isEnabled: !phoneNumberFormat,
-              onInputValidated: (bool value) {
-                  phoneNumberFormat = value;
-              },
-              textAlign: TextAlign.center,
-              searchBoxDecoration: const InputDecoration(
-                hintText: "Country",
-                hintStyle: TextStyle(
-                  color: Colors.grey,
+          showSignUp
+              ? const SizedBox(
+                  height: 0,
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(50, 0, 30, 0),
+                      child: InternationalPhoneNumberInput(
+                        isEnabled: !phoneNumberFormat,
+                        onInputValidated: (bool value) {
+                          phoneNumberFormat = value;
+                        },
+                        textAlign: TextAlign.center,
+                        searchBoxDecoration: const InputDecoration(
+                          hintText: "Country",
+                          hintStyle: TextStyle(
+                            color: Colors.grey,
+                          ),
+                          fillColor: Colors.white,
+                          filled: true,
+                          prefixIcon: Icon(Icons.add_outlined),
+                          prefixIconConstraints: BoxConstraints(
+                            minWidth: 75,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(50),
+                            ),
+                            borderSide: BorderSide(color: Colors.grey),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(50),
+                            ),
+                            borderSide: BorderSide(color: Colors.blue),
+                          ),
+                        ),
+                        inputDecoration: const InputDecoration(
+                          hintText: "5xx xxx xxxx",
+                          hintStyle: TextStyle(
+                            color: Colors.grey,
+                          ),
+                          fillColor: Colors.white,
+                          filled: true,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(50),
+                            ),
+                            borderSide: BorderSide(color: Colors.grey),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(50),
+                            ),
+                            borderSide: BorderSide(color: Colors.blue),
+                          ),
+                        ),
+                        onInputChanged: (PhoneNumber number) {
+                          phoneNumber = number.phoneNumber;
+                        },
+                        selectorConfig: const SelectorConfig(
+                          selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
+                          trailingSpace: false,
+                        ),
+                        ignoreBlank: false,
+                        autoValidateMode: AutovalidateMode.disabled,
+                        initialValue: PhoneNumber(isoCode: 'TR'),
+                        formatInput: false,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            signed: true, decimal: true),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    showOTPbox
+                        ? Padding(
+                            padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                            child: Pinput(
+                              length: 6,
+                              closeKeyboardWhenCompleted: true,
+                              forceErrorState: !verificated,
+                              errorPinTheme: errorPinTheme,
+                              submittedPinTheme: submittedPinTheme,
+                              controller: smsController,
+                              defaultPinTheme: defaultPinTheme,
+                              focusedPinTheme: focusedPinTheme,
+                              showCursor: false,
+                            ),
+                          )
+                        : const SizedBox(
+                            height: 0,
+                          ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    if (phoneNumberFormat & codeSent)
+                      const Text(
+                        'Verification Code Sent',
+                        style: TextStyle(color: Colors.green),
+                      )
+                    else if (!phoneNumberFormat & buttonPressed)
+                      const Text(
+                        'Check your phone number',
+                        style: TextStyle(color: Colors.red),
+                      )
+                    else if (!verificated)
+                      const Text(
+                        'Wrong verification code',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    loading
+                        ? const Center(child: CircularProgressIndicator())
+                        : ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                //primary: Colors.green,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                minimumSize: Size(150, 55)),
+                            onPressed: () {
+                              if (showOTPbox) {
+                                verifyOTP();
+                              } else {
+                                loginWithPhone();
+                                setState(() {
+                                  buttonPressed = true;
+                                });
+                              }
+                            },
+                            child: Text(
+                              showOTPbox ? "Verify" : "Sign In",
+                              style: const TextStyle(
+                                fontSize: 20,
+                              ),
+                            ),
+                          ),
+                  ],
                 ),
-                fillColor: Colors.white,
-                filled: true,
-                prefixIcon: Icon(Icons.add_outlined),
-                prefixIconConstraints: BoxConstraints(
-                  minWidth: 75,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(50),
-                  ),
-                  borderSide: BorderSide(color: Colors.grey),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(50),
-                  ),
-                  borderSide: BorderSide(color: Colors.blue),
-                ),
-              ),
-              inputDecoration: const InputDecoration(
-                hintText: "5xx xxx xxxx",
-                hintStyle: TextStyle(
-                  color: Colors.grey,
-                ),
-                fillColor: Colors.white,
-                filled: true,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(50),
-                  ),
-                  borderSide: BorderSide(color: Colors.grey),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(50),
-                  ),
-                  borderSide: BorderSide(color: Colors.blue),
-                ),
-              ),
-              onInputChanged: (PhoneNumber number) {
-                phoneNumber = number.phoneNumber;
-              },
-              selectorConfig: const SelectorConfig(
-                selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
-                trailingSpace: false,
-              ),
-              ignoreBlank: false,
-              autoValidateMode: AutovalidateMode.disabled,
-              initialValue: PhoneNumber(isoCode: 'TR'),
-              formatInput: false,
-              keyboardType: const TextInputType.numberWithOptions(
-                  signed: true, decimal: true),
-            ),
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          showOTPbox
-              ? Padding(
-                  padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
-                  child: Pinput(
-                    length: 6,
-                    closeKeyboardWhenCompleted: true,
-                    forceErrorState: !verificated,
-                    errorPinTheme: errorPinTheme,
-                    submittedPinTheme: submittedPinTheme,
-                    controller: smsController,
-                    defaultPinTheme: defaultPinTheme,
-                    focusedPinTheme: focusedPinTheme,
-                    showCursor: false,
-                  ),
+          showSignUp
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    InputField(
+                        Icon(Icons.person_outlined), "Name", nameController),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    InputField(Icon(Icons.person_outlined), "Surname",
+                        surnameController),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          minimumSize: Size(150, 55)),
+                      onPressed: () {
+                        signUp(user);
+                      },
+                      child: const Text(
+                        "Sign Up",
+                        style: TextStyle(
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                  ],
                 )
               : const SizedBox(
                   height: 0,
-                ),
-          const SizedBox(
-            height: 20,
-          ),
-          if (phoneNumberFormat & codeSent)
-            const Text(
-              'Verification Code Sent',
-              style: TextStyle(color: Colors.green),
-            )
-          else if (!phoneNumberFormat & buttonPressed)
-            const Text(
-              'Check your phone number',
-              style: TextStyle(color: Colors.red),
-            )
-          else if (!verificated)
-            const Text(
-              'Wrong verification code',
-              style: TextStyle(color: Colors.red),
-            ),
-          const SizedBox(
-            height: 20,
-          ),
-          loading
-              ? const Center(child: CircularProgressIndicator())
-              : ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      //primary: Colors.green,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      minimumSize: Size(150, 55)),
-                  onPressed: () {
-                    if (showOTPbox) {
-                      verifyOTP();
-                    } else {
-                      loginWithPhone();
-                      setState(() {
-                        buttonPressed = true;
-                      });
-                    }
-                  },
-                  child: Text(
-                    showOTPbox ? "Verify" : "Login",
-                    style: const TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
                 ),
         ],
       ),

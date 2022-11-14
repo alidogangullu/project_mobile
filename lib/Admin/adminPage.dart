@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:project_mobile/Admin/menu_editorPage.dart';
 
 class AdminHome extends StatefulWidget {
-  const AdminHome({Key? key}) : super(key: key);
+  AdminHome({Key? key}) : super(key: key);
+  static String uid = '';
 
   @override
   State<AdminHome> createState() => _AdminHomeState();
 }
 
 class _AdminHomeState extends State<AdminHome> {
-
   int _selectedIndex = 1;
   final _pageOptions = [
     MenuEdit(),
-    Home(),
+    Home(AdminHome.uid),
     //ActionsScreen(),
   ];
 
@@ -70,7 +70,8 @@ class _MenuEditState extends State<MenuEdit> {
 }
 
 class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
+  Home(this.uid);
+  String uid;
 
   @override
   State<Home> createState() => _HomeState();
@@ -83,7 +84,7 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         title: Text("App Name"),
       ),
-      body: Center(child: Text("HomeScreen"),),
+      body: Center(child: Text(widget.uid),),
     );
   }
 }
