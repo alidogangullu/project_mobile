@@ -12,90 +12,107 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  late String _verificationId;
+
   final auth = FirebaseAuth.instance;
-  final smsController = TextEditingController();
+
   String? phoneNumber;
+  int? forceResendingToken;
+  late String _verificationId;
+  final smsController = TextEditingController();
+
   bool showOTPbox = false;
   bool loading = false;
-  int? forceResendingToken;
+  bool phoneNumberFormat = false;
+  bool verificated = true;
+  bool codeSent = false;
+  bool buttonPressed = false;
 
   final defaultPinTheme = PinTheme(
     width: 65,
     height: 65,
-    textStyle: TextStyle(fontSize: 20),
+    textStyle: const TextStyle(fontSize: 20),
     decoration: BoxDecoration(
       border: Border.all(color: Colors.grey),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(25),
     ),
   );
   final focusedPinTheme = PinTheme(
     width: 65,
     height: 65,
-    textStyle: TextStyle(fontSize: 20),
+    textStyle: const TextStyle(fontSize: 20),
     decoration: BoxDecoration(
       border: Border.all(color: Colors.blue),
-      borderRadius: BorderRadius.circular(20),
-    ),
-  );
-  final submittedPinTheme = PinTheme(
-    width: 65,
-    height: 65,
-    textStyle: TextStyle(fontSize: 20),
-    decoration: BoxDecoration(
-      border: Border.all(color: Colors.green),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(25),
     ),
   );
   final errorPinTheme = PinTheme(
     width: 65,
     height: 65,
-    textStyle: TextStyle(fontSize: 20),
+    textStyle: const TextStyle(fontSize: 20),
     decoration: BoxDecoration(
       border: Border.all(color: Colors.red),
-      borderRadius: BorderRadius.circular(50),
+      borderRadius: BorderRadius.circular(25),
+    ),
+  );
+  final submittedPinTheme = PinTheme(
+    width: 65,
+    height: 65,
+    textStyle: const TextStyle(fontSize: 20),
+    decoration: BoxDecoration(
+      border: Border.all(color: Colors.green),
+      borderRadius: BorderRadius.circular(25),
     ),
   );
 
   void loginWithPhone() async {
-    auth.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await auth.signInWithCredential(credential).then((value) {
-          Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (context) => AdminHome()));
-          print("You are logged in successfully");
-        });
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        print(e.message);
-      },
-      codeSent: (String verificationId, int? resendToken) {
-        showOTPbox = true;
-        _verificationId = verificationId;
-        setState(() {});
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {},
-    );
+    if (phoneNumberFormat) {
+      setState(() {
+        loading = true;
+      });
+      auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          await auth.signInWithCredential(credential).then((value) {
+            Navigator.pushReplacement(
+                context, MaterialPageRoute(builder: (context) => AdminHome()));
+          });
+        },
+        verificationFailed: (FirebaseAuthException e) {},
+        codeSent: (String verificationId, int? resendToken) {
+          codeSent = true;
+          showOTPbox = true;
+          _verificationId = verificationId;
+          setState(() {
+            loading = false;
+          });
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {},
+      );
+    }
   }
 
   void verifyOTP() async {
-    PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: _verificationId, smsCode: smsController.text);
-    await auth.signInWithCredential(credential).then((value) {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => AdminHome()));
-      print("You are logged in successfully");
-      //Fluttertoast.showToast(
-      //  msg: "You are logged in successfully",
-      //toastLength: Toast.LENGTH_SHORT,
-      //gravity: ToastGravity.CENTER,
-      //timeInSecForIosWeb: 1,
-      //backgroundColor: Colors.red,
-      //textColor: Colors.white,
-      //fontSize: 16.0
-      //);
+    setState(() {
+      loading = true;
     });
+    try {
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+          verificationId: _verificationId, smsCode: smsController.text);
+      await auth.signInWithCredential(credential).then((value) {
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => AdminHome()));
+      });
+      setState(() {
+        loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        buttonPressed = false; //changed for if-else in column
+        codeSent = false; //changed for if-else in column
+        loading = false;
+        verificated = false;
+      });
+    }
   }
 
   @override
@@ -107,6 +124,10 @@ class _LoginPageState extends State<LoginPage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(50, 0, 30, 0),
             child: InternationalPhoneNumberInput(
+              isEnabled: !phoneNumberFormat,
+              onInputValidated: (bool value) {
+                  phoneNumberFormat = value;
+              },
               textAlign: TextAlign.center,
               searchBoxDecoration: const InputDecoration(
                 hintText: "Country",
@@ -172,24 +193,17 @@ class _LoginPageState extends State<LoginPage> {
           ),
           showOTPbox
               ? Padding(
-                  padding: const EdgeInsets.fromLTRB(30, 10, 30, 10),
+                  padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
                   child: Pinput(
                     length: 6,
                     closeKeyboardWhenCompleted: true,
+                    forceErrorState: !verificated,
                     errorPinTheme: errorPinTheme,
+                    submittedPinTheme: submittedPinTheme,
                     controller: smsController,
                     defaultPinTheme: defaultPinTheme,
                     focusedPinTheme: focusedPinTheme,
-                    submittedPinTheme: submittedPinTheme,
                     showCursor: false,
-                    onSubmitted: (pin) async {
-                      PhoneAuthCredential credential = PhoneAuthProvider.credential(verificationId: _verificationId, smsCode: smsController.text);
-                      await auth.signInWithCredential(credential).then((value){
-                        print("You are logged in successfully");
-                        Navigator.pushReplacement(
-                            context, MaterialPageRoute(builder: (context) => AdminHome()));
-                      });
-                    },
                   ),
                 )
               : const SizedBox(
@@ -198,27 +212,50 @@ class _LoginPageState extends State<LoginPage> {
           const SizedBox(
             height: 20,
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                //primary: Colors.green,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                minimumSize: Size(150, 55)),
-            onPressed: () {
-              if (showOTPbox) {
-                verifyOTP();
-              } else {
-                loginWithPhone();
-              }
-            },
-            child: Text(
-              showOTPbox ? "Verify" : "Login",
-              style: const TextStyle(
-                fontSize: 20,
-              ),
+          if (phoneNumberFormat & codeSent)
+            const Text(
+              'Verification Code Sent',
+              style: TextStyle(color: Colors.green),
+            )
+          else if (!phoneNumberFormat & buttonPressed)
+            const Text(
+              'Check your phone number',
+              style: TextStyle(color: Colors.red),
+            )
+          else if (!verificated)
+            const Text(
+              'Wrong verification code',
+              style: TextStyle(color: Colors.red),
             ),
+          const SizedBox(
+            height: 20,
           ),
+          loading
+              ? const Center(child: CircularProgressIndicator())
+              : ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      //primary: Colors.green,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      minimumSize: Size(150, 55)),
+                  onPressed: () {
+                    if (showOTPbox) {
+                      verifyOTP();
+                    } else {
+                      loginWithPhone();
+                      setState(() {
+                        buttonPressed = true;
+                      });
+                    }
+                  },
+                  child: Text(
+                    showOTPbox ? "Verify" : "Login",
+                    style: const TextStyle(
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
         ],
       ),
     );
