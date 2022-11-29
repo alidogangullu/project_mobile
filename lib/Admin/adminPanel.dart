@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:project_mobile/Admin/menuEditorPage.dart';
+import 'package:project_mobile/Admin/management.dart';
+import 'package:project_mobile/Admin/stats.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
 
 class AdminHome extends StatefulWidget {
-  AdminHome({Key? key}) : super(key: key);
+  const AdminHome({Key? key}) : super(key: key);
 
   @override
   State<AdminHome> createState() => _AdminHomeState();
@@ -13,9 +14,9 @@ class _AdminHomeState extends State<AdminHome> {
 
   int _selectedIndex = 1;
   final _pageOptions = [
-    const MenuEditor(),
-    Home(userId: LoginPage.userID,)
-    //ActionsScreen(),
+    const ManagementPanel(),
+    Home(userId: LoginPage.userID,),
+    Stats(),
   ];
 
   void _onItemTapped(int index) {
@@ -33,29 +34,28 @@ class _AdminHomeState extends State<AdminHome> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.menu_book),
-            label: 'Restaurant Menu',
+            icon: Icon(Icons.edit_note),
+            label: 'Management',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.question_mark),
-            label: 'Another Tab',
+            icon: Icon(Icons.query_stats),
+            label: 'Stats',
           ),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.blue,
         onTap: _onItemTapped,
-
       ),
     );
   }
 }
 
 class Home extends StatelessWidget {
-  Home({Key? key, required this.userId}) : super(key: key);
+  const Home({Key? key, required this.userId}) : super(key: key);
   final String userId;
 
   @override

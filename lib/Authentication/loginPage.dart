@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:pinput/pinput.dart';
-import 'package:project_mobile/Admin/adminPage.dart';
+import 'package:project_mobile/Admin/adminPanel.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -83,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
         verificationCompleted: (PhoneAuthCredential credential) async {
           await auth.signInWithCredential(credential).then((value) {
             Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (context) => AdminHome()));
+                context, MaterialPageRoute(builder: (context) => const AdminHome()));
           });
         },
         verificationFailed: (FirebaseAuthException e) {},
@@ -113,7 +113,7 @@ class _LoginPageState extends State<LoginPage> {
         await auth.signInWithCredential(credential).then((value) {
           LoginPage.userID = user.uid;
           Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (context) => AdminHome()));
+              context, MaterialPageRoute(builder: (context) => const AdminHome()));
         });
       } else {
         setState(() {
@@ -143,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
     });
     LoginPage.userID = user.uid;
     Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => AdminHome()));
+        context, MaterialPageRoute(builder: (context) => const AdminHome()));
   }
 
   Future<bool> getData({required String uid}) async {
