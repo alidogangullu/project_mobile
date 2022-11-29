@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:project_mobile/Admin/menu_editorPage.dart';
+import 'package:project_mobile/Admin/menuEditorPage.dart';
+import 'package:project_mobile/Authentication/loginPage.dart';
 
 class AdminHome extends StatefulWidget {
   AdminHome({Key? key}) : super(key: key);
-  static String uid = '';
 
   @override
   State<AdminHome> createState() => _AdminHomeState();
 }
 
 class _AdminHomeState extends State<AdminHome> {
+
   int _selectedIndex = 1;
   final _pageOptions = [
-    MenuEdit(),
-    Home(AdminHome.uid),
+    const MenuEditor(),
+    Home(userId: LoginPage.userID,)
     //ActionsScreen(),
   ];
 
@@ -53,39 +54,17 @@ class _AdminHomeState extends State<AdminHome> {
   }
 }
 
-class MenuEdit extends StatefulWidget {
-  const MenuEdit({Key? key}) : super(key: key);
+class Home extends StatelessWidget {
+  Home({Key? key, required this.userId}) : super(key: key);
+  final String userId;
 
-  @override
-  State<MenuEdit> createState() => _MenuEditState();
-}
-
-class _MenuEditState extends State<MenuEdit> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: EditMenu()
-    );
-  }
-}
-
-class Home extends StatefulWidget {
-  Home(this.uid);
-  String uid;
-
-  @override
-  State<Home> createState() => _HomeState();
-}
-
-class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("App Name"),
+        title: const Text("App Name"),
       ),
-      body: Center(child: Text(widget.uid),),
+      body: Center(child: Text(userId),),
     );
   }
 }
-

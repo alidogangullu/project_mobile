@@ -8,6 +8,8 @@ import 'package:project_mobile/Admin/adminPage.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
+  static String userID = "";
+
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
@@ -15,6 +17,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final auth = FirebaseAuth.instance;
   late User user;
+
 
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
   bool showSignUp = false;
@@ -108,7 +111,7 @@ class _LoginPageState extends State<LoginPage> {
 
       if (await getData(uid: user.uid)) {
         await auth.signInWithCredential(credential).then((value) {
-          AdminHome.uid = user.uid; //must change without static
+          LoginPage.userID = user.uid;
           Navigator.pushReplacement(
               context, MaterialPageRoute(builder: (context) => AdminHome()));
         });
@@ -138,7 +141,7 @@ class _LoginPageState extends State<LoginPage> {
       'name': nameController.text,
       'surname': surnameController.text,
     });
-    AdminHome.uid = user.uid; //must change without static
+    LoginPage.userID = user.uid;
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => AdminHome()));
   }
@@ -278,7 +281,7 @@ class _LoginPageState extends State<LoginPage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30),
                                 ),
-                                minimumSize: Size(150, 55)),
+                                minimumSize: const Size(150, 55)),
                             onPressed: () {
                               if (showOTPbox) {
                                 verifyOTP();
@@ -302,12 +305,12 @@ class _LoginPageState extends State<LoginPage> {
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    InputField(
-                        Icon(Icons.person_outlined), "Name", nameController),
+                    inputField(
+                        const Icon(Icons.person_outlined), "Name", nameController),
                     const SizedBox(
                       height: 20,
                     ),
-                    InputField(Icon(Icons.person_outlined), "Surname",
+                    inputField(const Icon(Icons.person_outlined), "Surname",
                         surnameController),
                     const SizedBox(
                       height: 20,
@@ -318,7 +321,7 @@ class _LoginPageState extends State<LoginPage> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
-                          minimumSize: Size(150, 55)),
+                          minimumSize: const Size(150, 55)),
                       onPressed: () {
                         signUp(user);
                       },
@@ -340,7 +343,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-Widget InputField(
+Widget inputField(
     Icon prefixIcon, String hintText, TextEditingController controller) {
   return Padding(
     padding: const EdgeInsets.fromLTRB(30, 10, 30, 10),

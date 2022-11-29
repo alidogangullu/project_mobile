@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class EditMenu extends StatefulWidget {
-  const EditMenu({Key? key}) : super(key: key);
-  @override
-  _EditMenuState createState() => _EditMenuState();
-}
-class _EditMenuState extends State<EditMenu> {
+class MenuEditor extends StatelessWidget {
+  const MenuEditor({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,7 +47,7 @@ class _EditMenuState extends State<EditMenu> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    EditItems(document['name']),
+                                    editMenuItems(selected: document['name']),
                               ),
                             );
                           },
@@ -83,16 +80,12 @@ class _EditMenuState extends State<EditMenu> {
   }
 }
 
-class addCategory extends StatefulWidget {
-  const addCategory({Key? key}) : super(key: key);
+class addCategory extends StatelessWidget {
+  addCategory({Key? key}) : super(key: key);
 
-  @override
-  State<addCategory> createState() => _addCategoryState();
-}
-class _addCategoryState extends State<addCategory> {
-  @override
   final myController = TextEditingController();
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -142,14 +135,11 @@ class _addCategoryState extends State<addCategory> {
   }
 }
 
-class EditItems extends StatefulWidget {
-  EditItems(this.selected);
+class editMenuItems extends StatelessWidget {
+  editMenuItems({Key? key, required this.selected}) : super(key: key);
   final String selected;
 
   @override
-  State<EditItems> createState() => _EditItemsState();
-}
-class _EditItemsState extends State<EditItems> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -168,13 +158,13 @@ class _EditItemsState extends State<EditItems> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => addItems(widget.selected)),
+            MaterialPageRoute(builder: (context) => addItems(selected: selected)),
           );
         },
       ),
       body: StreamBuilder(
           stream: FirebaseFirestore.instance
-              .collection('Category/${widget.selected}/list')
+              .collection('Category/$selected/list')
               .orderBy('name', descending: true)
               .snapshots(),
           builder:
@@ -192,7 +182,7 @@ class _EditItemsState extends State<EditItems> {
                       ),
                       onPressed: () {
                         FirebaseFirestore.instance
-                            .collection('Category/${widget.selected}/list')
+                            .collection('Category/$selected/list')
                             .doc(document["name"])
                             .delete();
                       },
@@ -206,15 +196,10 @@ class _EditItemsState extends State<EditItems> {
   }
 }
 
-class addItems extends StatefulWidget {
-  addItems(this.selected);
+class addItems extends StatelessWidget {
+  addItems({Key? key, required this.selected}) : super(key: key);
+
   final String selected;
-
-  @override
-  State<addItems> createState() => _addItemsState();
-}
-class _addItemsState extends State<addItems> {
-
   final myController = TextEditingController();
 
   @override
@@ -252,7 +237,7 @@ class _addItemsState extends State<addItems> {
                 ),
                 onPressed: () {
                   final ref = FirebaseFirestore.instance
-                      .collection("Category/${widget.selected}/list");
+                      .collection("Category/$selected/list");
                   ref.doc(myController.text).set({
                     "name": myController.text,
                   });
