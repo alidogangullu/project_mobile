@@ -306,12 +306,12 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     inputField(
-                        const Icon(Icons.person_outlined), "Name", nameController),
+                        const Icon(Icons.person_outlined), "Name", nameController,false),
                     const SizedBox(
                       height: 20,
                     ),
                     inputField(const Icon(Icons.person_outlined), "Surname",
-                        surnameController),
+                        surnameController, false),
                     const SizedBox(
                       height: 20,
                     ),
@@ -344,10 +344,11 @@ class _LoginPageState extends State<LoginPage> {
 }
 
 Widget inputField(
-    Icon prefixIcon, String hintText, TextEditingController controller) {
+    Icon prefixIcon, String hintText, TextEditingController controller, bool isNumeric) {
   return Padding(
     padding: const EdgeInsets.fromLTRB(30, 10, 30, 10),
     child: TextField(
+      keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
       controller: controller,
       decoration: InputDecoration(
         hintText: hintText,

@@ -40,6 +40,7 @@ dependencies:
   cloud_firestore: ^4.0.2
   intl_phone_number_input: ^0.7.1
   pinput: ^2.2.16
+  qr_flutter: ^4.0.0
 
 dev_dependencies:
   flutter_test:
