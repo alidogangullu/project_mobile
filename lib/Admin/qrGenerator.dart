@@ -50,7 +50,7 @@ class QR_HomePage extends StatelessWidget {
                           children: [
                             QrImage(size: 170,
                                 version: QrVersions.auto,
-                                data: "$selectedRestaurant/${document['number']}"),
+                                data: "https://restaurantapp-2a43d.web.app/?para1=$selectedRestaurant&para2=${document['number']}"),
                             Text("Table ${document['number']}", style: const TextStyle(fontSize: 18),),
                           ],
                         ),
