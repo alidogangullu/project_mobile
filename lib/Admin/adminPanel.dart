@@ -14,7 +14,7 @@ class _AdminHomeState extends State<AdminHome> {
 
   int _selectedIndex = 1;
   final _pageOptions = [
-    const ManagementPanel(),
+    ManagementPanel(),
     Home(userId: LoginPage.userID,),
     Stats(),
   ];
