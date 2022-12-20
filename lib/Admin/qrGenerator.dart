@@ -79,11 +79,18 @@ class QR_HomePage extends StatelessWidget {
                   flex: 10,
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(0, 0, 16, 0),
-                    child: MenuButton('', Icon(Icons.done), () {
+                    child: MenuButton('', Icon(Icons.done), () async {
                       int numberOfTables =
                           int.parse(tableNumberController.text);
                       final ref = FirebaseFirestore.instance.collection(
                           "/Restaurants/$selectedRestaurant/Tables");
+
+                      var snapshots = await ref.get();
+                      for (var doc in snapshots.docs) {
+                        //TODO önceki orderlist vb kaybolmadan değişebilsin.
+                        await doc.reference.delete();
+                      }
+
                       for (int i = numberOfTables; i > 0; i--) {
                         ref.doc("$i").set({
                           "number": i,
