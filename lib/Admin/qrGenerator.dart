@@ -15,9 +15,7 @@ class QR_HomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Create QR Code"),
-        actions: const [
-          Icon(Icons.picture_as_pdf)
-        ],
+        actions: const [Icon(Icons.picture_as_pdf)],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -26,8 +24,7 @@ class QR_HomePage extends StatelessWidget {
             flex: 7,
             child: StreamBuilder(
               stream: FirebaseFirestore.instance
-                  .collection(
-                      "users/${LoginPage.userID}/Restaurants/$selectedRestaurant/Tables")
+                  .collection("/Restaurants/$selectedRestaurant/Tables")
                   .orderBy("number", descending: false)
                   .snapshots(),
               builder: (BuildContext context,
@@ -36,7 +33,8 @@ class QR_HomePage extends StatelessWidget {
                   return const Center(child: CircularProgressIndicator());
                 } else {
                   return GridView(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10,
@@ -52,9 +50,13 @@ class QR_HomePage extends StatelessWidget {
                               flex: 1,
                               child: QrImage(
                                   version: QrVersions.auto,
-                                  data: "https://restaurantapp-2a43d.web.app/?para1=$selectedRestaurant&para2=${document['number']}"),
+                                  data:
+                                      "https://restaurantapp-2a43d.web.app/?para1=$selectedRestaurant&para2=${document['number']}"),
                             ),
-                            Text("Table ${document['number']}", style: const TextStyle(fontSize: 18),),
+                            Text(
+                              "Table ${document['number']}",
+                              style: const TextStyle(fontSize: 18),
+                            ),
                           ],
                         ),
                       );
@@ -78,10 +80,12 @@ class QR_HomePage extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(0, 0, 16, 0),
                     child: MenuButton('', Icon(Icons.done), () {
-                      int numberOfTables =int.parse(tableNumberController.text);
-                      final ref = FirebaseFirestore.instance.collection("users/${LoginPage.userID}/Restaurants/$selectedRestaurant/Tables");
-                      for(int i = numberOfTables; i > 0; i--){
-                        ref.doc("Table$i").set({
+                      int numberOfTables =
+                          int.parse(tableNumberController.text);
+                      final ref = FirebaseFirestore.instance.collection(
+                          "/Restaurants/$selectedRestaurant/Tables");
+                      for (int i = numberOfTables; i > 0; i--) {
+                        ref.doc("$i").set({
                           "number": i,
                           "isActive": true,
                         });
