@@ -1,11 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_mobile/Admin/menuEdit.dart';
-import 'package:project_mobile/Authentication/loginPage.dart';
 
 class ManagementPanel extends StatelessWidget {
   const ManagementPanel({Key? key}) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,13 +22,14 @@ class ManagementPanel extends StatelessWidget {
         //TODO - change database (same name restaurant will be problem)
         stream: FirebaseFirestore.instance
             .collection("users")
-            .doc(LoginPage.userID)
+            .doc(FirebaseAuth.instance.currentUser!.uid)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
           var items = snapshot.data!['managerOf'];
+          //TODO - if managerOf does not exist it gives error.
           return ListView.builder(
             itemCount: items.length,
             itemBuilder: (context, index) {

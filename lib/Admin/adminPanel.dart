@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:project_mobile/Admin/management.dart';
 import 'package:project_mobile/Admin/stats.dart';
@@ -11,11 +12,10 @@ class AdminHome extends StatefulWidget {
 }
 
 class _AdminHomeState extends State<AdminHome> {
-
   int _selectedIndex = 1;
   final _pageOptions = [
     ManagementPanel(),
-    Home(userId: LoginPage.userID,),
+    Home(userId: FirebaseAuth.instance.currentUser!.uid,),
     Stats(),
   ];
 
@@ -63,8 +63,20 @@ class Home extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("App Name"),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()));
+            },
+            icon: const Icon(Icons.logout),
+          ),
+        ],
       ),
-      body: Center(child: Text(userId),),
+      body: Center(
+        child: Text(userId),
+      ),
     );
   }
 }

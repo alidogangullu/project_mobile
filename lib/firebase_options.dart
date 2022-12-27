@@ -63,6 +63,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1083970971819',
     projectId: 'restaurantapp-2a43d',
     storageBucket: 'restaurantapp-2a43d.appspot.com',
+    androidClientId: '1083970971819-oenp28p9l9ko9qto4u44nqa15tq4u47i.apps.googleusercontent.com',
     iosClientId: '1083970971819-tbi7vokj7rg6a2u9e07ri6448pn2mvil.apps.googleusercontent.com',
     iosBundleId: 'com.example.projectMobile',
   );
