@@ -135,11 +135,13 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> signUp(User user) async {
+    var list = [];
     await firestore.collection('users').doc(user.uid).set({
       'uid': user.uid,
       'phone': user.phoneNumber,
       'name': nameController.text,
       'surname': surnameController.text,
+      'managerOf': list
     });
     LoginPage.userID = user.uid;
     Navigator.pushReplacement(

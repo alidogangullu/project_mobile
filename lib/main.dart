@@ -28,6 +28,10 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     user = FirebaseAuth.instance.authStateChanges().listen((user) {});
+    if(FirebaseAuth.instance.currentUser != null){
+      //TODO change this, not good
+      LoginPage.userID = FirebaseAuth.instance.currentUser!.uid;
+    }
   }
 
   @override

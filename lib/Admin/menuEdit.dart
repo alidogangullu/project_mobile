@@ -7,7 +7,9 @@ class editMenu extends StatelessWidget {
   final String collection;
   final String restaurantName;
 
-  void onPressed() {}
+  void onPressed() {
+    //TODO Edit Restaurant Managers
+  }
 
   @override
   Widget build(BuildContext context) {
