@@ -2,10 +2,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:project_mobile/Admin/qrGenerator.dart';
 
-class editMenu extends StatelessWidget {
-  editMenu({Key? key, required this.collection, required this.restaurantName}) : super(key: key);
+class editRestaurant extends StatelessWidget {
+  editRestaurant(
+      {Key? key,
+      required this.collection,
+      required this.restaurantName,
+      required this.restaurantID})
+      : super(key: key);
   final String collection;
   final String restaurantName;
+  final String restaurantID;
 
   void onPressed() {
     //TODO Edit Restaurant Managers
@@ -20,7 +26,7 @@ class editMenu extends StatelessWidget {
       body: Column(
         children: [
           Expanded(
-            flex: 2,
+            flex: 5,
             child: StreamBuilder(
               stream: FirebaseFirestore.instance
                   .collection(collection)
@@ -52,7 +58,7 @@ class editMenu extends StatelessWidget {
                                       MaterialPageRoute(
                                         builder: (context) => editCategoryItems(
                                             collection: collection,
-                                            selected: document['name']),
+                                            selected: document.id),
                                       ),
                                     );
                                   },
@@ -69,7 +75,7 @@ class editMenu extends StatelessWidget {
                                 onPressed: () {
                                   FirebaseFirestore.instance
                                       .collection(collection)
-                                      .doc(document["name"])
+                                      .doc(document.id)
                                       .delete();
                                 },
                               ),
@@ -84,35 +90,49 @@ class editMenu extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 1,
-            child:
-                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              MenuButton(
-                "Add Menu Category",
-                const Icon(Icons.restaurant_menu_outlined),
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => addCategory(
-                        collection: collection,
+            flex: 3,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                MenuButton(
+                  "Add Menu Category",
+                  const Icon(Icons.restaurant_menu_outlined),
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => addCategory(
+                          collection: collection,
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
-              MenuButton("Edit Restaurant Managers",
-                  const Icon(Icons.manage_accounts), onPressed),
-              MenuButton(
-                  "Create QR Codes for Tables", const Icon(Icons.qr_code_2), () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => QR_HomePage(selectedRestaurant: restaurantName,),
-                  ),
-                );
-              },),
-            ]),
+                    );
+                  },
+                ),
+                MenuButton("Edit Restaurant Managers",
+                    const Icon(Icons.manage_accounts), onPressed),
+                MenuButton(
+                  "Create QR Codes for Tables",
+                  const Icon(Icons.qr_code_2),
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => QR_HomePage(
+                          selectedRestaurantID: restaurantID,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                MenuButton(
+                  "Edit Waiter Acces",
+                  const Icon(Icons.desktop_windows_outlined),
+                  () {
+                    //TODO DESKTOP APP GIRIS BILGILERINI VER
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -159,8 +179,10 @@ class addCategory extends StatelessWidget {
                   style: TextStyle(color: Colors.white),
                 ),
                 onPressed: () {
-                  final ref = FirebaseFirestore.instance.collection(collection);
-                  ref.doc(myController.text).set({
+                  FirebaseFirestore.instance
+                      .collection(collection)
+                      .doc(myController.text)
+                      .set({
                     "name": myController.text,
                   });
                   myController.clear();

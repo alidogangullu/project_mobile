@@ -5,10 +5,10 @@ import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class QR_HomePage extends StatelessWidget {
-  QR_HomePage({Key? key, required this.selectedRestaurant}) : super(key: key);
+  QR_HomePage({Key? key, required this.selectedRestaurantID}) : super(key: key);
 
   final tableNumberController = new TextEditingController();
-  final String selectedRestaurant;
+  final String selectedRestaurantID;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class QR_HomePage extends StatelessWidget {
             flex: 7,
             child: StreamBuilder(
               stream: FirebaseFirestore.instance
-                  .collection("/Restaurants/$selectedRestaurant/Tables")
+                  .collection("Restaurants/$selectedRestaurantID/Tables")
                   .orderBy("number", descending: false)
                   .snapshots(),
               builder: (BuildContext context,
@@ -51,7 +51,7 @@ class QR_HomePage extends StatelessWidget {
                               child: QrImage(
                                   version: QrVersions.auto,
                                   data:
-                                      "https://restaurantapp-2a43d.web.app/?para1=$selectedRestaurant&para2=${document['number']}"),
+                                      "https://restaurantapp-2a43d.web.app/?id=$selectedRestaurantID&tableNo=${document['number']}"),
                             ),
                             Text(
                               "Table ${document['number']}",
@@ -83,20 +83,27 @@ class QR_HomePage extends StatelessWidget {
                       int numberOfTables =
                           int.parse(tableNumberController.text);
                       final ref = FirebaseFirestore.instance.collection(
-                          "/Restaurants/$selectedRestaurant/Tables");
+                          "/Restaurants/$selectedRestaurantID/Tables");
 
                       var snapshots = await ref.get();
-                      for (var doc in snapshots.docs) {
-                        //TODO önceki orderlist vb kaybolmadan değişebilsin.
-                        await doc.reference.delete();
-                      }
 
                       for (int i = numberOfTables; i > 0; i--) {
-                        ref.doc("$i").set({
-                          "number": i,
-                          "isActive": true,
-                        });
+                        if (!snapshots.docs.contains("$i")) {
+                          ref.doc("$i").set({
+                            "number": i,
+                            "isActive": true,
+                          });
+                        }
                       }
+
+                      if (snapshots.docs.length > numberOfTables) {
+                        for (int i = snapshots.docs.length;
+                            i > numberOfTables;
+                            i--) {
+                          ref.doc("$i").delete();
+                        }
+                      }
+
                       tableNumberController.clear();
                     }),
                   ),

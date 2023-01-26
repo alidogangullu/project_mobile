@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -29,7 +28,6 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     user = FirebaseAuth.instance.authStateChanges().listen((user) {});
     if(FirebaseAuth.instance.currentUser != null){
-      //TODO change this, not good
       LoginPage.userID = FirebaseAuth.instance.currentUser!.uid;
     }
   }

@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_mobile/Admin/menuEdit.dart';
@@ -26,76 +25,73 @@ class ManagementPanel extends StatelessWidget {
       ),
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
-            .collection("users")
-            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .collection("Restaurants")
+            .where('managers', arrayContains: LoginPage.userID)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          var accessibleRestaurantIDs = snapshot.data!['managerOf'];
-          return ListView.builder(
-            itemCount: accessibleRestaurantIDs.length,
-            itemBuilder: (context, index) {
-              return Card(
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 7,
-                      child: ListTile(
-                        leading: const Icon(Icons.storefront),
-                        title: Text(accessibleRestaurantIDs[index].toString().split("#creator").first),
-                        trailing: IconButton(
-                          icon: const Icon(
-                            Icons.edit,
-                            color: Colors.green,
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    editMenu(
-                                      collection:
-                                      "Restaurants/${accessibleRestaurantIDs[index]}/MenuCategory",
-                                      restaurantName: accessibleRestaurantIDs[index].toString().split("#creator").first,
+          return ListView(
+            children: snapshot.data!.docs
+                .map((doc) => Card(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 7,
+                            child: ListTile(
+                              leading: const Icon(Icons.storefront),
+                              title: Text(doc["name"]),
+                              trailing: IconButton(
+                                icon: const Icon(
+                                  Icons.edit,
+                                  color: Colors.green,
+                                ),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => editRestaurant(
+                                        collection:
+                                            "Restaurants/${doc.id}/MenuCategory",
+                                        restaurantName: doc["name"],
+                                        restaurantID: doc.id,
+                                      ),
                                     ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.delete,
+                                color: Colors.red,
+                              ),
+                              onPressed: () {
+                                FirebaseFirestore.instance
+                                    .collection("Restaurants/")
+                                    .doc(doc.id)
+                                    .delete();
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.delete,
-                          color: Colors.red,
-                        ),
-                        onPressed: () {
-                          FirebaseFirestore.instance
-                              .collection("Restaurants/")
-                              .doc(accessibleRestaurantIDs[index])
-                              .delete();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                    ))
+                .toList(),
           );
-        },),
+        },
+      ),
     );
   }
 }
 
 class addRestaurant extends StatelessWidget {
-  addRestaurant({Key? key})
-      : super(key: key);
+  addRestaurant({Key? key}) : super(key: key);
   final myController = TextEditingController();
-  late String restaurantID= myController.text+"#creator"+LoginPage.userID;
 
   @override
   Widget build(BuildContext context) {
@@ -131,17 +127,14 @@ class addRestaurant extends StatelessWidget {
                   style: TextStyle(color: Colors.white),
                 ),
                 onPressed: () {
-                  //create database doc
+                  var list = [LoginPage.userID];
                   FirebaseFirestore.instance
-                      .collection("Restaurants").doc(restaurantID).set({
+                      .collection("Restaurants")
+                      .doc()
+                      .set({
                     "name": myController.text,
+                    "managers": FieldValue.arrayUnion(list)
                   });
-
-                  //add restaurant id to creator's manager list
-                  var list = [restaurantID];
-                  FirebaseFirestore.instance
-                      .collection("users").doc(LoginPage.userID).update({
-                    "managerOf": FieldValue.arrayUnion(list)});
 
                   //exit
                   myController.clear();

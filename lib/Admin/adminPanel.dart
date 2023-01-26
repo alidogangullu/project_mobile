@@ -74,8 +74,8 @@ class Home extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: Text(userId),
+      body: const Center(
+        child: Text("feedback and comments will be listed here for manager"),
       ),
     );
   }
