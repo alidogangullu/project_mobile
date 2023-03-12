@@ -45,6 +45,8 @@ class editRestaurant extends StatelessWidget {
                             Expanded(
                               flex: 7,
                               child: ListTile(
+                                //menü kategorilerinin listelenmesi
+                                //todo icon veya resim seçimini kullanıcıya yaptırmak
                                 leading: const Icon(Icons.emoji_food_beverage),
                                 title: Text(document['name']),
                                 trailing: IconButton(
@@ -90,6 +92,7 @@ class editRestaurant extends StatelessWidget {
             ),
           ),
           Expanded(
+            //restorant yönetim butonları
             flex: 3,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -101,6 +104,7 @@ class editRestaurant extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
+                        //todo daha detaylı, (icon, resim her kategoriye unique olmalı)
                         builder: (context) => addCategory(
                           collection: collection,
                         ),
@@ -128,7 +132,7 @@ class editRestaurant extends StatelessWidget {
                   "Edit Waiter Acces",
                   const Icon(Icons.desktop_windows_outlined),
                   () {
-                    //TODO DESKTOP APP GIRIS BILGILERINI VER
+                    //TODO Garsonların DESKTOP APP GIRIS BILGILERINI yönetme
                   },
                 ),
               ],

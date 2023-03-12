@@ -6,6 +6,8 @@ import 'package:project_mobile/Admin/adminPanel.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
 import 'firebase_options.dart';
 
+//todo !!! restorant müşterisi arayüzü !!!, security, location check vb...
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -26,6 +28,7 @@ class _MyAppState extends State<MyApp> {
   late StreamSubscription<User?> user;
   void initState() {
     super.initState();
+    //zaten giriş yapılıp yapılmadığı kontrolü
     user = FirebaseAuth.instance.authStateChanges().listen((user) {});
     if(FirebaseAuth.instance.currentUser != null){
       LoginPage.userID = FirebaseAuth.instance.currentUser!.uid;
@@ -44,6 +47,7 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
+      //login durumuna göre sayafaya yönlendirme
       home: FirebaseAuth.instance.currentUser == null ? LoginPage(): AdminHome(),
     );
   }

@@ -82,6 +82,7 @@ class _LoginPageState extends State<LoginPage> {
         phoneNumber: phoneNumber,
         verificationCompleted: (PhoneAuthCredential credential) async {
           await auth.signInWithCredential(credential).then((value) {
+            //doğrulama kodundan sonra uygulamaya yönlendirme
             Navigator.pushReplacement(
                 context, MaterialPageRoute(builder: (context) => const AdminHome()));
           });
@@ -112,11 +113,13 @@ class _LoginPageState extends State<LoginPage> {
       if (await getData(uid: user.uid)) {
         await auth.signInWithCredential(credential).then((value) {
           LoginPage.userID = user.uid;
+          //doğrulama kodundan sonra uygulamaya yönlendirme
           Navigator.pushReplacement(
               context, MaterialPageRoute(builder: (context) => const AdminHome()));
         });
       } else {
         setState(() {
+          //kayıtlı değilse signUp ekranına yönlendirmek için boolean
           showSignUp = true;
         });
       }
@@ -135,6 +138,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> signUp(User user) async {
+    //ilk kayıt için bilgileri database'e yollama
     await firestore.collection('users').doc(user.uid).set({
       'uid': user.uid,
       'phone': user.phoneNumber,
@@ -142,6 +146,7 @@ class _LoginPageState extends State<LoginPage> {
       'surname': surnameController.text,
     });
     LoginPage.userID = user.uid;
+    //ilk kayıttan sonra uygulamaya yönlendirme
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => const AdminHome()));
   }
@@ -344,6 +349,7 @@ class _LoginPageState extends State<LoginPage> {
 }
 
 Widget inputField(
+    //textbox; numeric ya da metin olarak değişebilir birkaç yerde kullanıldı
     Icon prefixIcon, String hintText, TextEditingController controller, bool isNumeric) {
   return Padding(
     padding: const EdgeInsets.fromLTRB(30, 10, 30, 10),

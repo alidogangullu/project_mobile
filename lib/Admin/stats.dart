@@ -5,6 +5,7 @@ class Stats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //todo database kullanarak manager için stats (gelir, en çok satılan ürün vb.)
     return const Scaffold();
   }
 }

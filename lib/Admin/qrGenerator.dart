@@ -15,7 +15,10 @@ class QR_HomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Create QR Code"),
-        actions: const [Icon(Icons.picture_as_pdf)],
+        actions: const [
+          //todo pdf vb. yöntemler ile qr kodunu dışarı verdirtme
+          Icon(Icons.picture_as_pdf),
+        ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -42,6 +45,7 @@ class QR_HomePage extends StatelessWidget {
                     primary: false,
                     shrinkWrap: true,
                     children: snapshot.data!.docs.map((document) {
+                      //restorant masalarının qr kodlarını listeleme
                       return Card(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -51,6 +55,7 @@ class QR_HomePage extends StatelessWidget {
                               child: QrImage(
                                   version: QrVersions.auto,
                                   data:
+                                      //qr kodun içeriği
                                       "https://restaurantapp-2a43d.web.app/?id=$selectedRestaurantID&tableNo=${document['number']}"),
                             ),
                             Text(
@@ -67,6 +72,7 @@ class QR_HomePage extends StatelessWidget {
             ),
           ),
           Expanded(
+            //masa sayısı girerek masa numarasına qr kod oluşturma
             flex: 1,
             child: Row(
               children: [
@@ -91,11 +97,11 @@ class QR_HomePage extends StatelessWidget {
                         if (!snapshots.docs.contains("$i")) {
                           ref.doc("$i").set({
                             "number": i,
+                            //todo isactive yönetimi
                             "isActive": true,
                           });
                         }
                       }
-
                       if (snapshots.docs.length > numberOfTables) {
                         for (int i = snapshots.docs.length;
                             i > numberOfTables;
@@ -103,7 +109,6 @@ class QR_HomePage extends StatelessWidget {
                           ref.doc("$i").delete();
                         }
                       }
-
                       tableNumberController.clear();
                     }),
                   ),

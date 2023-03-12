@@ -14,6 +14,7 @@ class AdminHome extends StatefulWidget {
 class _AdminHomeState extends State<AdminHome> {
   int _selectedIndex = 1;
   final _pageOptions = [
+    //bottom bar sekmeleri
     ManagementPanel(),
     Home(userId: FirebaseAuth.instance.currentUser!.uid,),
     Stats(),
@@ -75,6 +76,7 @@ class Home extends StatelessWidget {
         ],
       ),
       body: const Center(
+        //todo
         child: Text("feedback and comments will be listed here for manager"),
       ),
     );

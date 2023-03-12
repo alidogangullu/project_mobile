@@ -33,6 +33,7 @@ class ManagementPanel extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           return ListView(
+            //manager olunan restorantların listelenmesi
             children: snapshot.data!.docs
                 .map((doc) => Card(
                       child: Row(
@@ -127,6 +128,7 @@ class addRestaurant extends StatelessWidget {
                   style: TextStyle(color: Colors.white),
                 ),
                 onPressed: () {
+                  //todo başka manager'lar da olabilir, restorant oluşturulurken ve daha sonrasında eklenebilmeli (userid, phone number vb. kullanara)
                   var list = [LoginPage.userID];
                   FirebaseFirestore.instance
                       .collection("Restaurants")
