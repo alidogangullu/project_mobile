@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:project_mobile/Admin/adminPanel.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
+import 'package:project_mobile/Customer/customerPanel.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
-
-//todo !!! restorant müşterisi arayüzü !!!, security, location check vb...
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,12 +26,34 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
 
   late StreamSubscription<User?> user;
+  var sharedPreferences;
+  var isManager;
+
+  Future<void> readySharedPreferences() async {
+    sharedPreferences = await SharedPreferences.getInstance();
+    isManager = sharedPreferences.getBool('isManager')!;
+    setState(() {});
+  }
+
+  Widget navigateUserType() {
+    if (isManager == true) {
+      return AdminHome();
+    } else if (isManager == false) {
+      return CustomerHome();
+    } else {
+      return LoginPage();
+    }
+  }
+
   void initState() {
     super.initState();
     //zaten giriş yapılıp yapılmadığı kontrolü
     user = FirebaseAuth.instance.authStateChanges().listen((user) {});
-    if(FirebaseAuth.instance.currentUser != null){
+    if (FirebaseAuth.instance.currentUser != null) {
       LoginPage.userID = FirebaseAuth.instance.currentUser!.uid;
+
+      //user tipine göre yönlendirme hazırlığı
+      readySharedPreferences();
     }
   }
 
@@ -47,8 +69,9 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      //login durumuna göre sayafaya yönlendirme
-      home: FirebaseAuth.instance.currentUser == null ? LoginPage(): AdminHome(),
+
+      //login durumuna göre sayfaya yönlendirme
+      home: FirebaseAuth.instance.currentUser == null ? LoginPage(): navigateUserType(),
     );
   }
 }

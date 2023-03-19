@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:pinput/pinput.dart';
 import 'package:project_mobile/Admin/adminPanel.dart';
+import 'package:project_mobile/Customer/customerPanel.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,7 +20,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final auth = FirebaseAuth.instance;
   late User user;
-
+  bool isManager = false;
 
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
   bool showSignUp = false;
@@ -81,11 +84,13 @@ class _LoginPageState extends State<LoginPage> {
       auth.verifyPhoneNumber(
         phoneNumber: phoneNumber,
         verificationCompleted: (PhoneAuthCredential credential) async {
+          /*
           await auth.signInWithCredential(credential).then((value) {
             //doğrulama kodundan sonra uygulamaya yönlendirme
             Navigator.pushReplacement(
                 context, MaterialPageRoute(builder: (context) => const AdminHome()));
           });
+           */
         },
         verificationFailed: (FirebaseAuthException e) {},
         codeSent: (String verificationId, int? resendToken) {
@@ -111,11 +116,26 @@ class _LoginPageState extends State<LoginPage> {
       user = (await auth.signInWithCredential(credential)).user!;
 
       if (await getData(uid: user.uid)) {
-        await auth.signInWithCredential(credential).then((value) {
+        await auth.signInWithCredential(credential).then((value) async {
           LoginPage.userID = user.uid;
+
+          //uygulamaya tekrar girişte doğru yönlendirmesi için isManager'ın lokal olarak saklanması
+          SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+          sharedPreferences.setBool('isManager', isManager); //isManager'ı kaydetmek için
+
+          print(isManager);
+          print(sharedPreferences.getBool('isManager'));
+
           //doğrulama kodundan sonra uygulamaya yönlendirme
-          Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (context) => const AdminHome()));
+          if(isManager == true){
+            Navigator.pushReplacement(
+                context, MaterialPageRoute(builder: (context) => const AdminHome()));
+          }
+          else if(isManager == false){
+            Navigator.pushReplacement(
+                context, MaterialPageRoute(builder: (context) => const CustomerHome()));
+          }
+
         });
       } else {
         setState(() {
@@ -146,9 +166,23 @@ class _LoginPageState extends State<LoginPage> {
       'surname': surnameController.text,
     });
     LoginPage.userID = user.uid;
-    //ilk kayıttan sonra uygulamaya yönlendirme
+
+    //uygulamaya tekrar girişte doğru yönlendirmesi için isManager'ın lokal olarak saklanması
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    sharedPreferences.setBool('isManager', isManager); //isManager'ı kaydetmek için
+
+    print(isManager);
+    print(sharedPreferences.getBool('isManager'));
+
+    //ilk kayıttan sonra kullanıcı tipine göre uygulamaya yönlendirme
+    if(isManager == true){
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => const AdminHome()));
+    }
+    else if(isManager == false){
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => const CustomerHome()));
+    }
   }
 
   Future<bool> getData({required String uid}) async {
@@ -304,6 +338,20 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
+                    if(showOTPbox == false && loading == false)
+                      Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text("as Manager"),
+                        Switch(
+                          value: isManager,
+                          onChanged: (bool value) async {
+                          setState(() {
+                            isManager = value;
+                          });
+                        },),
+                      ],
+                    )
                   ],
                 ),
           showSignUp
