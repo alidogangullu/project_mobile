@@ -97,7 +97,7 @@ class QRScanner extends StatelessWidget {
   QRScanner({Key? key}) : super(key: key);
 
   final MobileScannerController qrScannerController = MobileScannerController();
-  BarcodeCapture? capture;
+  bool scanned = false;
 
   @override
   Widget build(BuildContext context) {
@@ -107,22 +107,25 @@ class QRScanner extends StatelessWidget {
         builder: (context) {
           return MobileScanner(
             onDetect: (capture) {
-              this.capture = capture;
+              if(capture.barcodes.first.rawValue!.contains("2a43d") && !scanned){
+                //"2a43d" url'de var, birden fazla navigator işlemi olmaması için kontrolde kullanılabilir. daha sonra değiştirilebilinir.
 
-              String? url = capture.barcodes.first.rawValue;
-              Uri uri = Uri.parse(url!);
-              String id = uri.queryParameters['id']!;
-              String tableNo = uri.queryParameters['tableNo']!;
+                scanned = true;
+                String? url = capture.barcodes.first.rawValue;
+                Uri uri = Uri.parse(url!);
+                String id = uri.queryParameters['id']!;
+                String tableNo = uri.queryParameters['tableNo']!;
 
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MenuScreen(
-                    id: id,
-                    tableNo: tableNo,
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MenuScreen(
+                      id: id,
+                      tableNo: tableNo,
+                    ),
                   ),
-                ),
-              );
+                );
+              }
             },
           );
         },
