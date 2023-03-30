@@ -24,7 +24,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
   late StreamSubscription<User?> user;
   var sharedPreferences;
   var isManager;
@@ -66,12 +65,15 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
 
       //login durumuna göre sayfaya yönlendirme
-      home: FirebaseAuth.instance.currentUser == null ? LoginPage(): navigateUserType(),
+      home: FirebaseAuth.instance.currentUser == null
+          ? LoginPage()
+          : navigateUserType(),
     );
   }
 }
