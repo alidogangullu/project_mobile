@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:project_mobile/Customer/completedOrders.dart';
 import 'package:project_mobile/Customer/profile.dart';
+import 'package:project_mobile/Customer/qrScanner.dart';
 import 'package:project_mobile/Customer/restaurantMenu.dart';
 
 //todo security, location check vb...
@@ -38,8 +38,9 @@ class _CustomerHomeState extends State<CustomerHome> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => QRScanner()));
+          //Navigator.push(context, MaterialPageRoute(builder: (context) => QRScanner()));
+          //kolaylık açısından direkt yönlendirme
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MenuScreen(id: "w2I2nZ1laB7xN0HF7m2R", tableNo: "1")));
         },
         child: const Icon(Icons.qr_code_scanner),
 
@@ -88,47 +89,6 @@ class Home extends StatelessWidget {
       body: const Center(
         //todo
         child: Text("Customer Screen Test"),
-      ),
-    );
-  }
-}
-
-class QRScanner extends StatelessWidget {
-  QRScanner({Key? key}) : super(key: key);
-
-  final MobileScannerController qrScannerController = MobileScannerController();
-  bool scanned = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Scan QR')),
-      body: Builder(
-        builder: (context) {
-          return MobileScanner(
-            onDetect: (capture) {
-              if(capture.barcodes.first.rawValue!.contains("2a43d") && !scanned){
-                //"2a43d" url'de var, birden fazla navigator işlemi olmaması için kontrolde kullanılabilir. daha sonra değiştirilebilinir.
-
-                scanned = true;
-                String? url = capture.barcodes.first.rawValue;
-                Uri uri = Uri.parse(url!);
-                String id = uri.queryParameters['id']!;
-                String tableNo = uri.queryParameters['tableNo']!;
-
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MenuScreen(
-                      id: id,
-                      tableNo: tableNo,
-                    ),
-                  ),
-                );
-              }
-            },
-          );
-        },
       ),
     );
   }
