@@ -40,7 +40,7 @@ class _CustomerHomeState extends State<CustomerHome> {
         onPressed: () {
           //Navigator.push(context, MaterialPageRoute(builder: (context) => QRScanner()));
           //kolaylık açısından direkt yönlendirme
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MenuScreen(id: "w2I2nZ1laB7xN0HF7m2R", tableNo: "1")));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MenuScreen(id: "vAkYpJA6Pd6UTEPDysvj", tableNo: "1")));
         },
         child: const Icon(Icons.qr_code_scanner),
 

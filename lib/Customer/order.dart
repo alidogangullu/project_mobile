@@ -288,79 +288,80 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                         builder: (BuildContext context) {
                           return Container(
                             height: MediaQuery.of(context).size.height * 0.8,
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 16),
-                                const Text(
-                                  'Summary',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Expanded(
-                                  child: ListView.builder(
-                                    itemCount: submittedOrders.length,
-                                    itemBuilder: (context, index) {
-                                      final order = submittedOrders[index];
-                                      return FutureBuilder<DocumentSnapshot>(
-                                        future: (order['itemRef']
-                                                as DocumentReference)
-                                            .get(),
-                                        builder: (context, snapshot) {
-                                          if (!snapshot.hasData) {
-                                            return const SizedBox();
-                                          }
-                                          final name = snapshot.data!
-                                              .get('name') as String;
-                                          final quantity = order[
-                                                  'quantity_Submitted_notServiced'] +
-                                              order[
-                                                  'quantity_Submitted_Serviced'];
-                                          return ListTile(
-                                            title: Text(name),
-                                            subtitle: Text('x $quantity'),
-                                            trailing: Text(
-                                                '${(10.0).toStringAsFixed(2)}\$'),
-                                          );
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const Divider(),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text(
-                                      'Total',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Summary',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    Text(
-                                      '${totalAmount.toStringAsFixed(2)}\$',
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Expanded(
+                                    child: ListView.builder(
+                                      itemCount: submittedOrders.length,
+                                      itemBuilder: (context, index) {
+                                        final order = submittedOrders[index];
+                                        return FutureBuilder<DocumentSnapshot>(
+                                          future: (order['itemRef']
+                                                  as DocumentReference)
+                                              .get(),
+                                          builder: (context, snapshot) {
+                                            if (!snapshot.hasData) {
+                                              return const SizedBox();
+                                            }
+                                            final name = snapshot.data!
+                                                .get('name') as String;
+                                            final quantity = order[
+                                                    'quantity_Submitted_notServiced'] +
+                                                order[
+                                                    'quantity_Submitted_Serviced'];
+                                            return ListTile(
+                                              title: Text(name),
+                                              subtitle: Text('x $quantity'),
+                                              trailing: Text(
+                                                  '${(10.0).toStringAsFixed(2)}\$'),
+                                            );
+                                          },
+                                        );
+                                      },
                                     ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    paymentButton(),
-                                  ],
-                                ),
-                              ],
+                                  ),
+                                  const Divider(),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'Total',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${totalAmount.toStringAsFixed(2)}\$',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      paymentButton(),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         },
@@ -392,11 +393,11 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
         final userIds = List<String>.from(tableSnapshot.get('users'));
 
         for (final userId in userIds) {
-          // Get a reference to the user's orders collection.
-          final userOrdersRef = usersRef.doc(userId).collection('orders');
 
           // Get a reference to the orders collection for this table.
           final tableOrdersRef = widget.tableRef.collection('Orders');
+          final restaurantRef = widget.tableRef.parent.parent;
+          final restaurantId = restaurantRef.toString().split('/')[1];
 
           // Loop through the orders for this table and transfer them to the user's orders collection.
           final tableOrdersSnapshot = await tableOrdersRef.get();
@@ -406,7 +407,10 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
             final submittedServiced = orderData['quantity_Submitted_Serviced'] as int;
             final submittedNotServiced = orderData['quantity_Submitted_notServiced'] as int;
             if (submittedServiced > 0 || submittedNotServiced > 0) {
-              await userOrdersRef.doc(orderSnapshot.id).set(orderData);
+              await usersRef.doc(userId).collection('orders').doc(restaurantId).set({
+                'restaurantRef' : restaurantRef
+              });
+              await usersRef.doc(userId).collection('orders/$restaurantId/${DateTime.now()}').doc(orderSnapshot.id).set(orderData);
             }
             await tableOrdersRef.doc(orderSnapshot.id).delete(); // Delete from table orders
           }
