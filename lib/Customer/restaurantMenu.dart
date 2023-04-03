@@ -1,15 +1,35 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:project_mobile/Customer/customerPanel.dart';
 import 'package:project_mobile/Customer/order.dart';
 
 //todo detaylandirma (managerin menu olusturma ekrani ile birlikte)
 
-class MenuScreen extends StatelessWidget {
+class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key, required this.id, required this.tableNo});
 
   final String id;
   final String tableNo;
+
+  @override
+  State<MenuScreen> createState() => _MenuScreenState();
+}
+
+class _MenuScreenState extends State<MenuScreen> {
+
+  @override
+  void initState() {
+    //sipariş ekranına giren kullanıcıların id'lerini database'e ekleme
+    //todo bu işlem güvenlik algoritmalarını da içeren farklı bir yere taşınabilir
+    FirebaseFirestore.instance
+        .collection("Restaurants/${widget.id}/Tables")
+        .doc(widget.tableNo).update(
+        {
+          'users': FieldValue.arrayUnion([LoginPage.userID]),
+        });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +41,12 @@ class MenuScreen extends StatelessWidget {
             MaterialPageRoute(
               builder: (context) => OrdersPage(
                 ordersRef: FirebaseFirestore.instance
-                    .collection("Restaurants/$id/Tables")
-                    .doc(tableNo)
+                    .collection("Restaurants/${widget.id}/Tables")
+                    .doc(widget.tableNo)
                     .collection("Orders"),
+                tableRef: FirebaseFirestore.instance
+                    .collection("Restaurants/${widget.id}/Tables")
+                    .doc(widget.tableNo),
               ),
             ),
           );
@@ -39,12 +62,12 @@ class MenuScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back),
         ),
         title: RestaurantNameText(
-          id: id,
+          id: widget.id,
         ),
       ),
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
-            .collection("Restaurants/$id/MenuCategory")
+            .collection("Restaurants/${widget.id}/MenuCategory")
             .orderBy("name", descending: true)
             .snapshots(),
         builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -60,9 +83,9 @@ class MenuScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => CategoryItemsList(
-                          restaurantPath: "Restaurants/$id",
+                          restaurantPath: "Restaurants/${widget.id}",
                           selectedCategory: document['name'],
-                          table: tableNo,
+                          table: widget.tableNo,
                         ),
                       ),
                     );
@@ -83,7 +106,7 @@ class MenuScreen extends StatelessWidget {
   }
 }
 
-class CategoryItemsList extends StatefulWidget {
+class CategoryItemsList extends StatelessWidget {
   const CategoryItemsList(
       {Key? key,
       required this.restaurantPath,
@@ -96,15 +119,10 @@ class CategoryItemsList extends StatefulWidget {
   final String table;
 
   @override
-  State<CategoryItemsList> createState() => _CategoryItemsListState();
-}
-
-class _CategoryItemsListState extends State<CategoryItemsList> {
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.selectedCategory),
+        title: Text(selectedCategory),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -112,9 +130,12 @@ class _CategoryItemsListState extends State<CategoryItemsList> {
             context,
             MaterialPageRoute(
               builder: (context) => OrdersPage(
+                tableRef: FirebaseFirestore.instance
+                    .collection("$restaurantPath/Tables")
+                    .doc(table),
                 ordersRef: FirebaseFirestore.instance
-                    .collection("${widget.restaurantPath}/Tables")
-                    .doc(widget.table)
+                    .collection("$restaurantPath/Tables")
+                    .doc(table)
                     .collection("Orders"),
               ),
             ),
@@ -125,7 +146,7 @@ class _CategoryItemsListState extends State<CategoryItemsList> {
       body: StreamBuilder(
           stream: FirebaseFirestore.instance
               .collection(
-                  '${widget.restaurantPath}/MenuCategory/${widget.selectedCategory}/list')
+                  '$restaurantPath/MenuCategory/$selectedCategory/list')
               .orderBy('name', descending: true)
               .snapshots(),
           builder:
@@ -148,8 +169,8 @@ class _CategoryItemsListState extends State<CategoryItemsList> {
                         ),
                         onPressed: () async {
                           final querySnapshot = await FirebaseFirestore.instance
-                              .collection("${widget.restaurantPath}/Tables")
-                              .doc(widget.table)
+                              .collection("$restaurantPath/Tables")
+                              .doc(table)
                               .collection("Orders")
                               .where("itemRef", isEqualTo: document.reference)
                               .get();
@@ -161,8 +182,8 @@ class _CategoryItemsListState extends State<CategoryItemsList> {
                           } else {
                             // Item doesn't exist in order, add it with quantity 1
                             FirebaseFirestore.instance
-                                .collection("${widget.restaurantPath}/Tables")
-                                .doc(widget.table)
+                                .collection("$restaurantPath/Tables")
+                                .doc(table)
                                 .collection("Orders")
                                 .doc()
                                 .set({
