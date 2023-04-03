@@ -410,7 +410,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
               await usersRef.doc(userId).collection('orders').doc(restaurantId).set({
                 'restaurantRef' : restaurantRef
               });
-              await usersRef.doc(userId).collection('orders/$restaurantId/${DateTime.now()}').doc(orderSnapshot.id).set(orderData);
+              await usersRef.doc(userId).collection('orders/$restaurantId/${DateTime.now().toString().split(":")[0]+'.'+DateTime.now().toString().split(":")[1]}').doc(orderSnapshot.id).set(orderData);
             }
             await tableOrdersRef.doc(orderSnapshot.id).delete(); // Delete from table orders
           }
