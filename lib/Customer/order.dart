@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:project_mobile/Customer/customerPanel.dart';
 import 'package:slide_to_act/slide_to_act.dart';
 
@@ -223,8 +224,8 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
           // Calculate the total amount for payment bottom sheet
           double totalAmount = 0;
           for (var order in submittedOrders) {
-            final reference = order['itemRef'] as DocumentReference;
-            final item = reference.get();
+            //final reference = order['itemRef'] as DocumentReference;
+            //final item = reference.get();
             const price = 10; //todo database integration
             final quantity = order['quantity_Submitted_notServiced'] +
                 order['quantity_Submitted_Serviced'];
@@ -397,24 +398,31 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
           // Get a reference to the orders collection for this table.
           final tableOrdersRef = widget.tableRef.collection('Orders');
           final restaurantRef = widget.tableRef.parent.parent;
-          final restaurantId = restaurantRef.toString().split('/')[1];
 
           // Loop through the orders for this table and transfer them to the user's orders collection.
           final tableOrdersSnapshot = await tableOrdersRef.get();
+
+          String completedOrderId = LoginPage.userID+DateTime.now().toString();
+
+          await usersRef.doc(userId).collection('completedOrders').doc(completedOrderId).set({
+            'restaurantRef' : restaurantRef,
+            'timestamp': Timestamp.now(),
+            'items': []
+          });
 
           for (final orderSnapshot in tableOrdersSnapshot.docs) {
             final orderData = orderSnapshot.data();
             final submittedServiced = orderData['quantity_Submitted_Serviced'] as int;
             final submittedNotServiced = orderData['quantity_Submitted_notServiced'] as int;
             if (submittedServiced > 0 || submittedNotServiced > 0) {
-              await usersRef.doc(userId).collection('orders').doc(restaurantId).set({
-                'restaurantRef' : restaurantRef
+              await usersRef.doc(userId).collection('completedOrders').doc(completedOrderId).update({
+                'items': FieldValue.arrayUnion([orderData])
               });
-              await usersRef.doc(userId).collection('orders/$restaurantId/${DateTime.now().toString().split(":")[0]+'.'+DateTime.now().toString().split(":")[1]}').doc(orderSnapshot.id).set(orderData);
             }
             await tableOrdersRef.doc(orderSnapshot.id).delete(); // Delete from table orders
           }
 
+          //reset table users after transfering order data
           await widget.tableRef.update({'users': []});
 
           Navigator.pushReplacement(
