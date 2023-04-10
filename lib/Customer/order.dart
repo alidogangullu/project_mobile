@@ -207,178 +207,176 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
     );
   }
 
-  Expanded submittedOrdersTab() {
-    return Expanded(
-      child: StreamBuilder<QuerySnapshot>(
-        stream: widget.ordersRef.snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final submittedOrders = snapshot.data!.docs
-              .where((doc) =>
-                  doc['quantity_Submitted_notServiced'] > 0 ||
-                  doc['quantity_Submitted_Serviced'] > 0)
-              .toList();
+  StreamBuilder submittedOrdersTab() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: widget.ordersRef.snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final submittedOrders = snapshot.data!.docs
+            .where((doc) =>
+                doc['quantity_Submitted_notServiced'] > 0 ||
+                doc['quantity_Submitted_Serviced'] > 0)
+            .toList();
 
-          // Calculate the total amount for payment bottom sheet
-          double totalAmount = 0;
-          for (var order in submittedOrders) {
-            //final reference = order['itemRef'] as DocumentReference;
-            //final item = reference.get();
-            const price = 10; //todo database integration
-            final quantity = order['quantity_Submitted_notServiced'] +
-                order['quantity_Submitted_Serviced'];
-            totalAmount += price * quantity;
-          }
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  itemCount: submittedOrders.length,
-                  itemBuilder: (context, index) {
-                    final order =
-                        submittedOrders[index].data() as Map<String, dynamic>;
-                    final reference = order['itemRef'] as DocumentReference;
-                    final item = reference.get();
-                    return FutureBuilder<DocumentSnapshot>(
-                      future: item,
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return const SizedBox();
-                        }
-                        final name = snapshot.data!.get('name') as String;
-                        int quantity = order['quantity_Submitted_notServiced'] +
-                            order['quantity_Submitted_Serviced'];
-                        return Card(
-                          child: ListTile(
-                            title: Text(name),
-                            subtitle: const Text('details'),
-                            trailing: Text(
-                              "10\$ x$quantity", // todo price information for menu items. 10 is test price.
+        // Calculate the total amount for payment bottom sheet
+        double totalAmount = 0;
+        for (var order in submittedOrders) {
+          //final reference = order['itemRef'] as DocumentReference;
+          //final item = reference.get();
+          const price = 10; //todo database integration
+          final quantity = order['quantity_Submitted_notServiced'] +
+              order['quantity_Submitted_Serviced'];
+          totalAmount += price * quantity;
+        }
+        return Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                itemCount: submittedOrders.length,
+                itemBuilder: (context, index) {
+                  final order =
+                      submittedOrders[index].data() as Map<String, dynamic>;
+                  final reference = order['itemRef'] as DocumentReference;
+                  final item = reference.get();
+                  return FutureBuilder<DocumentSnapshot>(
+                    future: item,
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const SizedBox();
+                      }
+                      final name = snapshot.data!.get('name') as String;
+                      int quantity = order['quantity_Submitted_notServiced'] +
+                          order['quantity_Submitted_Serviced'];
+                      return Card(
+                        child: ListTile(
+                          title: Text(name),
+                          subtitle: const Text('details'),
+                          trailing: Text(
+                            "10\$ x$quantity", // todo price information for menu items. 10 is test price.
+                          ),
+                          leading: order['quantity_Submitted_notServiced'] > 0
+                              ? const Icon(Icons.timer_outlined)
+                              : null,
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: SizedBox(
+                width: double.infinity,
+                height: 70,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(52),
+                    ),
+                  ),
+                  onPressed: () {
+                    showModalBottomSheet(
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(52),
+                        topRight: Radius.circular(52),
+                      )),
+                      context: context,
+                      builder: (BuildContext context) {
+                        return Container(
+                          height: MediaQuery.of(context).size.height * 0.8,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Summary',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Expanded(
+                                  child: ListView.builder(
+                                    itemCount: submittedOrders.length,
+                                    itemBuilder: (context, index) {
+                                      final order = submittedOrders[index];
+                                      return FutureBuilder<DocumentSnapshot>(
+                                        future: (order['itemRef']
+                                                as DocumentReference)
+                                            .get(),
+                                        builder: (context, snapshot) {
+                                          if (!snapshot.hasData) {
+                                            return const SizedBox();
+                                          }
+                                          final name = snapshot.data!
+                                              .get('name') as String;
+                                          final quantity = order[
+                                                  'quantity_Submitted_notServiced'] +
+                                              order[
+                                                  'quantity_Submitted_Serviced'];
+                                          return ListTile(
+                                            title: Text(name),
+                                            subtitle: Text('x $quantity'),
+                                            trailing: Text(
+                                                '${(10.0).toStringAsFixed(2)}\$'),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                                const Divider(),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text(
+                                      'Total',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${totalAmount.toStringAsFixed(2)}\$',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    paymentButton(),
+                                  ],
+                                ),
+                              ],
                             ),
-                            leading: order['quantity_Submitted_notServiced'] > 0
-                                ? const Icon(Icons.timer_outlined)
-                                : null,
                           ),
                         );
                       },
                     );
                   },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 70,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(52),
-                      ),
-                    ),
-                    onPressed: () {
-                      showModalBottomSheet(
-                        shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(52),
-                          topRight: Radius.circular(52),
-                        )),
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Container(
-                            height: MediaQuery.of(context).size.height * 0.8,
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Summary',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Expanded(
-                                    child: ListView.builder(
-                                      itemCount: submittedOrders.length,
-                                      itemBuilder: (context, index) {
-                                        final order = submittedOrders[index];
-                                        return FutureBuilder<DocumentSnapshot>(
-                                          future: (order['itemRef']
-                                                  as DocumentReference)
-                                              .get(),
-                                          builder: (context, snapshot) {
-                                            if (!snapshot.hasData) {
-                                              return const SizedBox();
-                                            }
-                                            final name = snapshot.data!
-                                                .get('name') as String;
-                                            final quantity = order[
-                                                    'quantity_Submitted_notServiced'] +
-                                                order[
-                                                    'quantity_Submitted_Serviced'];
-                                            return ListTile(
-                                              title: Text(name),
-                                              subtitle: Text('x $quantity'),
-                                              trailing: Text(
-                                                  '${(10.0).toStringAsFixed(2)}\$'),
-                                            );
-                                          },
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  const Divider(),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      const Text(
-                                        'Total',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${totalAmount.toStringAsFixed(2)}\$',
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      paymentButton(),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    child: Text(
-                      "Pay (${totalAmount.toStringAsFixed(2)}\$)",
-                      style: const TextStyle(fontSize: 18, color: Colors.white),
-                    ),
+                  child: Text(
+                    "Pay (${totalAmount.toStringAsFixed(2)}\$)",
+                    style: const TextStyle(fontSize: 18, color: Colors.white),
                   ),
                 ),
               ),
-            ],
-          );
-        },
-      ),
+            ),
+          ],
+        );
+      },
     );
   }
 
