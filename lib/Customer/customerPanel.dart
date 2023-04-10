@@ -98,7 +98,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                         id: "vAkYpJA6Pd6UTEPDysvj", tableNo: "1")));
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Menüye erişmek için restraurantta olmak zorundasınız!")
+              const SnackBar(content: Text("You have to be at the restaurant to access the menu!")
               )
             );
           }

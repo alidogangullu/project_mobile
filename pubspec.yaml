@@ -46,6 +46,7 @@ dependencies:
   slide_to_act: ^2.0.1
   location: ^4.2.0
   geolocator: ^7.6.2
+  flutter_rating_bar: ^4.0.1
 
 dev_dependencies:
   flutter_test:
