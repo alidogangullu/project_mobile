@@ -1,11 +1,13 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:project_mobile/Admin/qrGenerator.dart';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 
@@ -299,6 +301,14 @@ class addCategoryItems extends StatelessWidget {
   final contentController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
 
+  Future<Uint8List?> compressFile(File file) async {
+    var result = await FlutterImageCompress.compressWithFile(
+      file.absolute.path,
+      quality: 25,
+    );
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -369,28 +379,15 @@ class addCategoryItems extends StatelessWidget {
                       priceController.text.isNotEmpty &&
                       contentController.text.isNotEmpty) {
                     try {
-                      XFile? image =
-                          await _picker.pickImage(source: ImageSource.gallery);
+                      XFile? image = await _picker.pickImage(source: ImageSource.gallery);
 
                       var imageFile = File(image!.path);
-                      String fileName = basename(imageFile.path);
+                      Uint8List? imageBytes = await compressFile(imageFile);
 
-                      File? compressedImageFile;
-                      try {
-                        compressedImageFile = await compressImage(imageFile);
-                      } catch (e) {
-                        print(
-                            'Image compression failed, using the original image.');
-                      }
-
-                      if (compressedImageFile != null) {
-                        imageFile = compressedImageFile;
-                      }
                       FirebaseStorage storage = FirebaseStorage.instance;
-                      Reference ref =
-                          storage.ref().child("Image-" + myController.text);
+                      Reference ref = storage.ref().child("Image-" + myController.text);
 
-                      TaskSnapshot snapshot = await ref.putFile(imageFile);
+                      TaskSnapshot snapshot = await ref.putData(imageBytes!);
                       String imageUrl = await snapshot.ref.getDownloadURL();
 
                       final firestoreRef = FirebaseFirestore.instance
@@ -410,8 +407,7 @@ class addCategoryItems extends StatelessWidget {
                       contentController.clear();
                       Navigator.pop(context);
                     } catch (e) {
-                      print(
-                          'An error occurred while adding data to Firestore:');
+                      print('An error occurred while adding data to Firestore:');
                       print(e);
                     }
                   } else {
