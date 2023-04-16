@@ -1,6 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:project_mobile/Admin/qrGenerator.dart';
+import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class editRestaurant extends StatelessWidget {
   editRestaurant(
@@ -26,7 +31,6 @@ class editRestaurant extends StatelessWidget {
       body: Column(
         children: [
           Expanded(
-            flex: 5,
             child: StreamBuilder(
               stream: FirebaseFirestore.instance
                   .collection(collection)
@@ -38,6 +42,8 @@ class editRestaurant extends StatelessWidget {
                   return const Center(child: CircularProgressIndicator());
                 } else {
                   return ListView(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     children: snapshot.data!.docs.map((document) {
                       return Card(
                         child: Row(
@@ -45,8 +51,6 @@ class editRestaurant extends StatelessWidget {
                             Expanded(
                               flex: 7,
                               child: ListTile(
-                                //menü kategorilerinin listelenmesi
-                                //todo icon veya resim seçimini kullanıcıya yaptırmak
                                 leading: const Icon(Icons.emoji_food_beverage),
                                 title: Text(document['name']),
                                 trailing: IconButton(
@@ -91,9 +95,8 @@ class editRestaurant extends StatelessWidget {
               },
             ),
           ),
-          Expanded(
-            //restorant yönetim butonları
-            flex: 3,
+          Flexible(
+            //height: 300,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -104,7 +107,6 @@ class editRestaurant extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        //todo daha detaylı, (icon, resim her kategoriye unique olmalı)
                         builder: (context) => addCategory(
                           collection: collection,
                         ),
@@ -247,8 +249,22 @@ class editCategoryItems extends StatelessWidget {
                 children: snapshot.data!.docs.map((document) {
                   return Card(
                     child: ListTile(
-                      leading: const Icon(Icons.emoji_food_beverage),
-                      title: Text(document['name']),
+                      leading: document['image_url'] != null
+                          ? Image.network(
+                              document['image_url'],
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                            )
+                          : const SizedBox.shrink(),
+                      title: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(document['name']),
+                          Text('Price: ' + document['price']),
+                          Text('Content: ' + document['content']),
+                        ],
+                      ),
                       trailing: IconButton(
                         icon: const Icon(
                           Icons.delete,
@@ -277,6 +293,9 @@ class addCategoryItems extends StatelessWidget {
   final String collection;
   final String selected;
   final myController = TextEditingController();
+  final priceController = TextEditingController();
+  final contentController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
@@ -306,19 +325,98 @@ class addCategoryItems extends StatelessWidget {
                   ),
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(10, 2, 10, 2),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.blue)),
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      labelText: "Price",
+                    ),
+                    controller: priceController,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(10, 2, 10, 2),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.blue)),
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      labelText: "Content",
+                    ),
+                    controller: contentController,
+                  ),
+                ),
+              ),
               ElevatedButton(
                 child: const Text(
                   "Add",
                   style: TextStyle(color: Colors.white),
                 ),
-                onPressed: () {
-                  final ref = FirebaseFirestore.instance
-                      .collection("$collection/$selected/list");
-                  ref.doc(myController.text).set({
-                    "name": myController.text,
-                  });
-                  myController.clear();
-                  Navigator.pop(context);
+                onPressed: () async {
+                  if (myController.text.isNotEmpty &&
+                      priceController.text.isNotEmpty &&
+                      contentController.text.isNotEmpty) {
+                    try {
+                      XFile? image =
+                          await _picker.pickImage(source: ImageSource.gallery);
+
+                      var imageFile = File(image!.path);
+                      String fileName = basename(imageFile.path);
+
+                      final compressedImageFile =
+                          await FlutterImageCompress.compressAndGetFile(
+                        imageFile.absolute.path,
+                        fileName,
+                        minWidth: 800, // Adjust width and height accordingly
+                        minHeight: 600,
+                        quality: 75,
+                      );
+
+                      FirebaseStorage storage = FirebaseStorage.instance;
+                      Reference ref =
+                          storage.ref().child("Image-" + myController.text);
+
+                      TaskSnapshot snapshot =
+                          await ref.putFile(compressedImageFile!);
+                      String imageUrl = await snapshot.ref.getDownloadURL();
+
+                      final firestoreRef = FirebaseFirestore.instance
+                          .collection("$collection/$selected/list");
+
+                      await firestoreRef.doc(myController.text).set({
+                        "name": myController.text,
+                        "price": priceController.text,
+                        "content": contentController.text,
+                        "image_url": imageUrl
+                      });
+
+                      print('Data added successfully to Firestore.');
+
+                      myController.clear();
+                      priceController.clear();
+                      contentController.clear();
+                      Navigator.pop(context);
+                    } catch (e) {
+                      print(
+                          'An error occurred while adding data to Firestore:');
+                      print(e);
+                    }
+                  } else {
+                    final snackBar = SnackBar(
+                      content: Text('Please fill in all required fields.'),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  }
                 },
               )
             ],
