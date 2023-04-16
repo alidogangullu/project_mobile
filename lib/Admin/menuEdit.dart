@@ -6,6 +6,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:image/image.dart' as img;
+import 'package:path_provider/path_provider.dart';
 
 class editRestaurant extends StatelessWidget {
   editRestaurant(
@@ -373,21 +375,22 @@ class addCategoryItems extends StatelessWidget {
                       var imageFile = File(image!.path);
                       String fileName = basename(imageFile.path);
 
-                      final compressedImageFile =
-                          await FlutterImageCompress.compressAndGetFile(
-                        imageFile.absolute.path,
-                        fileName,
-                        minWidth: 800, // Adjust width and height accordingly
-                        minHeight: 600,
-                        quality: 75,
-                      );
+                      File? compressedImageFile;
+                      try {
+                        compressedImageFile = await compressImage(imageFile);
+                      } catch (e) {
+                        print(
+                            'Image compression failed, using the original image.');
+                      }
 
+                      if (compressedImageFile != null) {
+                        imageFile = compressedImageFile;
+                      }
                       FirebaseStorage storage = FirebaseStorage.instance;
                       Reference ref =
                           storage.ref().child("Image-" + myController.text);
 
-                      TaskSnapshot snapshot =
-                          await ref.putFile(compressedImageFile!);
+                      TaskSnapshot snapshot = await ref.putFile(imageFile);
                       String imageUrl = await snapshot.ref.getDownloadURL();
 
                       final firestoreRef = FirebaseFirestore.instance
@@ -454,4 +457,20 @@ Widget MenuButton(String text, Icon icon, void Function() onPressed) {
       ),
     ),
   );
+}
+
+Future<File> compressImage(File imageFile) async {
+  img.Image? image = img.decodeImage(imageFile.readAsBytesSync());
+  if (image == null) {
+    throw Exception('Error decoding image');
+  }
+
+  img.Image resizedImage = img.copyResize(image, width: 800);
+
+  List<int> compressedBytes = img.encodeJpg(resizedImage, quality: 75);
+
+  final extDir = await getApplicationDocumentsDirectory();
+  final compressedImageFile =
+      File('${extDir.path}/compressed_${basename(imageFile.path)}');
+  return compressedImageFile..writeAsBytesSync(compressedBytes);
 }
