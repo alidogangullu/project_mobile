@@ -35,10 +35,6 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
   }
 
   void confirmOrders() async {
-    setState(() {
-      _tabController.animateTo(1);
-    });
-
     final ordersSnapshot = await widget.ordersRef.get();
     final orders = ordersSnapshot.docs
         .where((doc) => doc['quantity_notSubmitted_notServiced'] > 0)
@@ -58,6 +54,10 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
         'quantity_Submitted_notServiced': newQuantity,
       });
     }
+
+    setState(() {
+      _tabController.animateTo(1);
+    });
   }
 
   @override
@@ -207,19 +207,21 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
     );
   }
 
-  StreamBuilder submittedOrdersTab() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: widget.ordersRef.snapshots(),
+  FutureBuilder<QuerySnapshot> submittedOrdersTab() {
+    return FutureBuilder<QuerySnapshot>(
+      future: widget.ordersRef.get(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
+        } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(child: Text("No orders"));
         }
+
         final submittedOrders = snapshot.data!.docs
             .where((doc) =>
-                doc['quantity_Submitted_notServiced'] > 0 ||
-                doc['quantity_Submitted_Serviced'] > 0)
+        doc['quantity_Submitted_notServiced'] > 0 ||
+            doc['quantity_Submitted_Serviced'] > 0)
             .toList();
-
         // Calculate the total amount for payment bottom sheet
         double totalAmount = 0;
         for (var order in submittedOrders) {
@@ -230,6 +232,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
               order['quantity_Submitted_Serviced'];
           totalAmount += price * quantity;
         }
+
         return Column(
           children: [
             Expanded(
@@ -237,11 +240,11 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                 itemCount: submittedOrders.length,
                 itemBuilder: (context, index) {
                   final order =
-                      submittedOrders[index].data() as Map<String, dynamic>;
+                  submittedOrders[index].data() as Map<String, dynamic>;
                   final reference = order['itemRef'] as DocumentReference;
-                  final item = reference.get();
+
                   return FutureBuilder<DocumentSnapshot>(
-                    future: item,
+                    future: reference.get(),
                     builder: (context, snapshot) {
                       if (!snapshot.hasData) {
                         return const SizedBox();
@@ -277,13 +280,14 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                       borderRadius: BorderRadius.circular(52),
                     ),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
+                    var submittedOrdersLength = submittedOrders.length;
                     showModalBottomSheet(
                       shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(52),
-                        topRight: Radius.circular(52),
-                      )),
+                            topLeft: Radius.circular(52),
+                            topRight: Radius.circular(52),
+                          )),
                       context: context,
                       builder: (BuildContext context) {
                         return Container(
@@ -303,12 +307,12 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                 const SizedBox(height: 16),
                                 Expanded(
                                   child: ListView.builder(
-                                    itemCount: submittedOrders.length,
+                                    itemCount: submittedOrdersLength,
                                     itemBuilder: (context, index) {
                                       final order = submittedOrders[index];
                                       return FutureBuilder<DocumentSnapshot>(
                                         future: (order['itemRef']
-                                                as DocumentReference)
+                                        as DocumentReference)
                                             .get(),
                                         builder: (context, snapshot) {
                                           if (!snapshot.hasData) {
@@ -317,9 +321,9 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                           final name = snapshot.data!
                                               .get('name') as String;
                                           final quantity = order[
-                                                  'quantity_Submitted_notServiced'] +
+                                          'quantity_Submitted_notServiced'] +
                                               order[
-                                                  'quantity_Submitted_Serviced'];
+                                              'quantity_Submitted_Serviced'];
                                           return ListTile(
                                             title: Text(name),
                                             subtitle: Text('x $quantity'),
@@ -334,7 +338,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                 const Divider(),
                                 Row(
                                   mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
                                       'Total',
@@ -355,7 +359,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                 const SizedBox(height: 16),
                                 Row(
                                   mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
+                                  MainAxisAlignment.spaceEvenly,
                                   children: [
                                     paymentButton(),
                                   ],
