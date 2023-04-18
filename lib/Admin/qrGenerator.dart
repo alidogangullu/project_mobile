@@ -4,10 +4,10 @@ import 'package:project_mobile/Admin/menuEdit.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-class QR_HomePage extends StatelessWidget {
-  QR_HomePage({Key? key, required this.selectedRestaurantID}) : super(key: key);
+class QRHomePage extends StatelessWidget {
+  QRHomePage({Key? key, required this.selectedRestaurantID}) : super(key: key);
 
-  final tableNumberController = new TextEditingController();
+  final tableNumberController = TextEditingController();
   final String selectedRestaurantID;
 
   @override
@@ -78,14 +78,14 @@ class QR_HomePage extends StatelessWidget {
               children: [
                 Expanded(
                   flex: 25,
-                  child: inputField(Icon(Icons.table_restaurant),
+                  child: inputField(const Icon(Icons.table_restaurant),
                       "Number of tables", tableNumberController, true),
                 ),
                 Expanded(
                   flex: 10,
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(0, 0, 16, 0),
-                    child: MenuButton('', Icon(Icons.done), () async {
+                    child: MenuButton('', const Icon(Icons.done), () async {
                       int numberOfTables =
                           int.parse(tableNumberController.text);
                       final ref = FirebaseFirestore.instance.collection(
@@ -97,8 +97,6 @@ class QR_HomePage extends StatelessWidget {
                         if (!snapshots.docs.contains("$i")) {
                           ref.doc("$i").set({
                             "number": i,
-                            //todo isactive yönetimi
-                            "isActive": true,
                           });
                         }
                       }

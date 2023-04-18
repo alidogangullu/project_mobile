@@ -127,7 +127,7 @@ class editRestaurant extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => QR_HomePage(
+                        builder: (context) => QRHomePage(
                           selectedRestaurantID: restaurantID,
                         ),
                       ),

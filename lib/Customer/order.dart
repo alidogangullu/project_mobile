@@ -82,14 +82,14 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
       body: TabBarView(
         controller: _tabController,
         children: [
-          notSubmittedOrdersTab(),
-          submittedOrdersTab(),
+          unConfirmedOrdersTab(),
+          confirmedOrdersTab(),
         ],
       ),
     );
   }
 
-  Column notSubmittedOrdersTab() {
+  Column unConfirmedOrdersTab() {
     return Column(
       children: [
         Expanded(
@@ -119,7 +119,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                         return const SizedBox();
                       }
                       final name = snapshot.data!.get('name') as String;
-                      final price = snapshot.data!.get('price') as double;
+                      final price = snapshot.data!.get('price');
                       return Card(
                         child: Row(
                           children: [
@@ -144,7 +144,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
 
                                   setState(() {});
                                 } else {
-                                  //print("last one, cannot delete");
+                                  //todo last one cannot delete snackbar
                                 }
                               },
                               icon: const Icon(
@@ -208,7 +208,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
     );
   }
 
-  FutureBuilder<QuerySnapshot> submittedOrdersTab() {
+  FutureBuilder<QuerySnapshot> confirmedOrdersTab() {
     return FutureBuilder<QuerySnapshot>(
       future: widget.ordersRef.get(),
       builder: (context, snapshot) {
@@ -228,13 +228,15 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
 
         for (var order in submittedOrders) {
           final reference = order['itemRef'] as DocumentReference;
-          double price = 0;
+
           final quantity = order['quantity_Submitted_notServiced'] +
               order['quantity_Submitted_Serviced'];
+
           reference.get().then((DocumentSnapshot documentSnapshot) {
-            price = documentSnapshot["price"];
+            final price = documentSnapshot["price"];
             totalAmount += price * quantity;
           });
+
         }
 
         return Column(
@@ -254,7 +256,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                         return const SizedBox();
                       }
                       final name = snapshot.data!.get('name') as String;
-                      final price = snapshot.data!.get('price') as double;
+                      final price = snapshot.data!.get('price');
                       int quantity = order['quantity_Submitted_notServiced'] +
                           order['quantity_Submitted_Serviced'];
                       return Card(
@@ -295,7 +297,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                           )),
                       context: context,
                       builder: (BuildContext context) {
-                        return Container(
+                        return SizedBox(
                           height: MediaQuery.of(context).size.height * 0.8,
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
@@ -326,7 +328,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                           final name = snapshot.data!
                                               .get('name') as String;
                                           final price = snapshot.data!
-                                              .get('price') as double;
+                                              .get('price');
                                           final quantity = order[
                                           'quantity_Submitted_notServiced'] +
                                               order[
@@ -442,13 +444,53 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => CustomerHome()
+              builder: (context) => const PaymentSuccessScreen()
             ),
           );
         }
 
       },
       child: const Text("Pay with ..."),
+    );
+  }
+}
+
+class PaymentSuccessScreen extends StatelessWidget {
+  const PaymentSuccessScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.check_circle,
+              size: 100,
+              color: Colors.green,
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Payment Successful',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                // Navigate back to the previous screen
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const CustomerHome()
+                  ),
+                );
+              },
+              child: const Text('Back to HomeScreen'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

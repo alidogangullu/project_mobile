@@ -36,6 +36,12 @@ class _CustomerHomeState extends State<CustomerHome> {
     _checkLocationEnabled();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+
   Future<void> _checkLocationEnabled() async {
     bool serviceEnabled = await _location.serviceEnabled();
     if (!serviceEnabled) {
@@ -46,9 +52,11 @@ class _CustomerHomeState extends State<CustomerHome> {
     }
     _locationEnabled = true;
     _location.onLocationChanged.listen((LocationData? locationData) {
-      setState(() {
-        _locationData = locationData;
-      });
+      if (mounted) {
+        setState(() {
+          _locationData = locationData;
+        });
+      }
     });
   }
 
