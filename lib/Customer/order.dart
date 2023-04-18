@@ -478,13 +478,12 @@ class PaymentSuccessScreen extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                // Navigate back to the previous screen
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const CustomerHome()
-                  ),
-                );
+                // Navigate back to the previous screen and clear stack
+
+                Navigator.pushAndRemoveUntil(
+                    context, MaterialPageRoute(builder: (_) =>  const CustomerHome()),
+                        (route) => false);
+
               },
               child: const Text('Back to HomeScreen'),
             ),
