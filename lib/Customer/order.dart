@@ -119,6 +119,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                         return const SizedBox();
                       }
                       final name = snapshot.data!.get('name') as String;
+                      final price = snapshot.data!.get('price') as double;
                       return Card(
                         child: Row(
                           children: [
@@ -173,9 +174,9 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                               ),
                             ),
                             Text(
-                              "${order['quantity_notSubmitted_notServiced'] * 10}\$",
+                              "${order['quantity_notSubmitted_notServiced'] * price}\$",
                               style: const TextStyle(fontSize: 16),
-                            ), //todo price information for menu items. '10' is test price.
+                            ),
                             IconButton(
                               onPressed: () async {
                                 await widget.ordersRef.doc(orderID).delete();
@@ -224,13 +225,16 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
             .toList();
         // Calculate the total amount for payment bottom sheet
         double totalAmount = 0;
+
         for (var order in submittedOrders) {
-          //final reference = order['itemRef'] as DocumentReference;
-          //final item = reference.get();
-          const price = 10; //todo database integration
+          final reference = order['itemRef'] as DocumentReference;
+          double price = 0;
           final quantity = order['quantity_Submitted_notServiced'] +
               order['quantity_Submitted_Serviced'];
-          totalAmount += price * quantity;
+          reference.get().then((DocumentSnapshot documentSnapshot) {
+            price = documentSnapshot["price"];
+            totalAmount += price * quantity;
+          });
         }
 
         return Column(
@@ -250,6 +254,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                         return const SizedBox();
                       }
                       final name = snapshot.data!.get('name') as String;
+                      final price = snapshot.data!.get('price') as double;
                       int quantity = order['quantity_Submitted_notServiced'] +
                           order['quantity_Submitted_Serviced'];
                       return Card(
@@ -257,7 +262,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                           title: Text(name),
                           subtitle: const Text('details'),
                           trailing: Text(
-                            "10\$ x$quantity", // todo price information for menu items. 10 is test price.
+                            "$price\$ x$quantity",
                           ),
                           leading: order['quantity_Submitted_notServiced'] > 0
                               ? const Icon(Icons.timer_outlined)
@@ -320,6 +325,8 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                           }
                                           final name = snapshot.data!
                                               .get('name') as String;
+                                          final price = snapshot.data!
+                                              .get('price') as double;
                                           final quantity = order[
                                           'quantity_Submitted_notServiced'] +
                                               order[
@@ -328,7 +335,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                             title: Text(name),
                                             subtitle: Text('x $quantity'),
                                             trailing: Text(
-                                                '${(10.0).toStringAsFixed(2)}\$'),
+                                                '${(price).toStringAsFixed(2)}\$'),
                                           );
                                         },
                                       );
@@ -371,9 +378,9 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                       },
                     );
                   },
-                  child: Text(
-                    "Pay (${totalAmount.toStringAsFixed(2)}\$)",
-                    style: const TextStyle(fontSize: 18, color: Colors.white),
+                  child: const Text(
+                    "Summary and Payment",
+                    style: TextStyle(fontSize: 18, color: Colors.white),
                   ),
                 ),
               ),
@@ -395,7 +402,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
         final tableSnapshot = await widget.tableRef.get();
         final userIds = List<String>.from(tableSnapshot.get('users'));
 
-        for (final userId in userIds) {
+        for (final userID in userIds) {
 
           // Get a reference to the orders collection for this table.
           final tableOrdersRef = widget.tableRef.collection('Orders');
@@ -406,7 +413,12 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
 
           String completedOrderId = LoginPage.userID+DateTime.now().toString();
 
-          await usersRef.doc(userId).collection('completedOrders').doc(completedOrderId).set({
+          //split "-" because of -admin
+          String userId = userID.split("-").first;
+
+          await usersRef.doc(userId.split("-").first)
+              .collection('completedOrders')
+              .doc(completedOrderId).set({
             'restaurantRef' : restaurantRef,
             'timestamp': Timestamp.now(),
             'items': []

@@ -17,42 +17,98 @@ class MenuScreen extends StatefulWidget {
 }
 
 class _MenuScreenState extends State<MenuScreen> {
+  List<dynamic> users = [];
 
   @override
   void initState() {
-    //sipariş ekranına giren kullanıcıların id'lerini database'e ekleme
-    //todo bu işlem güvenlik algoritmalarını da içeren farklı bir yere taşınabilir
+    super.initState();
+
     FirebaseFirestore.instance
         .collection("Restaurants/${widget.id}/Tables")
-        .doc(widget.tableNo).update(
-        {
-          'users': FieldValue.arrayUnion([LoginPage.userID]),
+        .doc(widget.tableNo)
+        .get()
+        .then((document) {
+      users = document.data()!['users'];
+      bool isAdmin = users.isEmpty ||
+          users.contains(
+              "${LoginPage.userID}-admin"); // First accessed user is admin
+
+      if (isAdmin) {
+        String userId = '${LoginPage.userID}${isAdmin ? '-admin' : ''}';
+        FirebaseFirestore.instance
+            .collection("Restaurants/${widget.id}/Tables")
+            .doc(widget.tableNo)
+            .update({
+          'users': FieldValue.arrayUnion([userId]),
         });
-    super.initState();
+      } else if (users.contains(LoginPage.userID)) {
+      } else {
+        FirebaseFirestore.instance
+            .collection("Restaurants/${widget.id}/Tables")
+            .doc(widget.tableNo)
+            .update({
+          'unAuthorizedUsers': FieldValue.arrayUnion([LoginPage.userID]),
+        });
+      }
+
+      if (users.contains("${LoginPage.userID}-admin")) {
+        // Listen for changes to the users array
+        FirebaseFirestore.instance
+            .collection("Restaurants/${widget.id}/Tables")
+            .doc(widget.tableNo)
+            .snapshots()
+            .listen((documentSnapshot) {
+          List<dynamic> unAuthorizedUsers =
+              documentSnapshot.data()!['unAuthorizedUsers'];
+          if (unAuthorizedUsers.isNotEmpty) {
+            // New user joined, display popup dialog to admin
+            for (var user in unAuthorizedUsers) {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('New User Joined'),
+                    content: Text('Allow user $user to access orders?'),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          // Allow user to access menu
+                          Navigator.of(context).pop();
+                          FirebaseFirestore.instance
+                              .collection("Restaurants/${widget.id}/Tables")
+                              .doc(widget.tableNo)
+                              .update({
+                            'users': FieldValue.arrayUnion([user]),
+                            'unAuthorizedUsers': FieldValue.arrayRemove([user]),
+                          });
+                        },
+                        child: const Text('Allow'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            }
+          }
+          users = documentSnapshot.data()!['users'];
+        });
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => OrdersPage(
-                ordersRef: FirebaseFirestore.instance
-                    .collection("Restaurants/${widget.id}/Tables")
-                    .doc(widget.tableNo)
-                    .collection("Orders"),
-                tableRef: FirebaseFirestore.instance
-                    .collection("Restaurants/${widget.id}/Tables")
-                    .doc(widget.tableNo),
-              ),
-            ),
-          );
-        },
-        child: const Icon(Icons.shopping_basket),
-      ),
+      floatingActionButton: ShoppingCartFloatingButton(
+          userID: LoginPage.userID,
+          tableNo: widget.tableNo,
+          restaurantID: widget.id),
       appBar: AppBar(
         leading: IconButton(
           onPressed: () {
@@ -124,29 +180,13 @@ class CategoryItemsList extends StatelessWidget {
       appBar: AppBar(
         title: Text(selectedCategory),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => OrdersPage(
-                tableRef: FirebaseFirestore.instance
-                    .collection("$restaurantPath/Tables")
-                    .doc(table),
-                ordersRef: FirebaseFirestore.instance
-                    .collection("$restaurantPath/Tables")
-                    .doc(table)
-                    .collection("Orders"),
-              ),
-            ),
-          );
-        },
-        child: const Icon(Icons.shopping_basket),
-      ),
+      floatingActionButton: ShoppingCartFloatingButton(
+          restaurantID: restaurantPath.split("/").last,
+          tableNo: table,
+          userID: LoginPage.userID),
       body: StreamBuilder(
           stream: FirebaseFirestore.instance
-              .collection(
-                  '$restaurantPath/MenuCategory/$selectedCategory/list')
+              .collection('$restaurantPath/MenuCategory/$selectedCategory/list')
               .orderBy('name', descending: true)
               .snapshots(),
           builder:
@@ -157,11 +197,25 @@ class CategoryItemsList extends StatelessWidget {
               return ListView(
                 children: snapshot.data!.docs.map((document) {
                   //kategornin içindeki ürünleri listeme
-                  //todo fiyat, yorum, estimated time vb diğer bilgiler
+                  //todo yorum, estimated time vb diğer bilgiler
                   return Card(
                     child: ListTile(
-                      leading: const Icon(Icons.emoji_food_beverage),
+                      leading: document['image_url'] != null
+                          ? Image.network(
+                        document['image_url'],
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                      )
+                          : const SizedBox.shrink(),
                       title: Text(document['name']),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Price: ${document['price']}'),
+                          Text('Content: ${document['content']}'),
+                        ],
+                      ),
                       trailing: IconButton(
                         icon: const Icon(
                           Icons.add,
@@ -177,8 +231,12 @@ class CategoryItemsList extends StatelessWidget {
                           if (querySnapshot.size > 0) {
                             // Item already exists in order, update its quantity
                             final orderDoc = querySnapshot.docs.first;
-                            final quantity = orderDoc["quantity_notSubmitted_notServiced"] + 1;
-                            orderDoc.reference.update({"quantity_notSubmitted_notServiced": quantity});
+                            final quantity =
+                                orderDoc["quantity_notSubmitted_notServiced"] +
+                                    1;
+                            orderDoc.reference.update({
+                              "quantity_notSubmitted_notServiced": quantity
+                            });
                           } else {
                             // Item doesn't exist in order, add it with quantity 1
                             FirebaseFirestore.instance
@@ -188,9 +246,9 @@ class CategoryItemsList extends StatelessWidget {
                                 .doc()
                                 .set({
                               "itemRef": document.reference,
-                              "quantity_notSubmitted_notServiced" : 1,
-                              "quantity_Submitted_notServiced" : 0,
-                              "quantity_Submitted_Serviced" : 0,
+                              "quantity_notSubmitted_notServiced": 1,
+                              "quantity_Submitted_notServiced": 0,
+                              "quantity_Submitted_Serviced": 0,
                             });
                           }
                         },
@@ -201,6 +259,74 @@ class CategoryItemsList extends StatelessWidget {
               );
             }
           }),
+    );
+  }
+}
+
+class ShoppingCartFloatingButton extends StatelessWidget {
+  const ShoppingCartFloatingButton({
+    super.key,
+    required this.restaurantID,
+    required this.tableNo,
+    required this.userID,
+  });
+
+  final String restaurantID;
+  final String tableNo;
+  final String userID;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<dynamic>>(
+      stream: FirebaseFirestore.instance
+          .collection("Restaurants/$restaurantID/Tables")
+          .doc(tableNo)
+          .snapshots()
+          .map<List<dynamic>>((snapshot) => snapshot.data()!['users']),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        }
+        final users = snapshot.data ?? [];
+        final isAdmin = users.isEmpty || users.contains("$userID-admin");
+        final currentUserIsAuthorized = users.contains(userID) || isAdmin;
+        return FloatingActionButton(
+          onPressed: currentUserIsAuthorized
+              ? () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OrdersPage(
+                        ordersRef: FirebaseFirestore.instance
+                            .collection("Restaurants/$restaurantID/Tables")
+                            .doc(tableNo)
+                            .collection("Orders"),
+                        tableRef: FirebaseFirestore.instance
+                            .collection("Restaurants/$restaurantID/Tables")
+                            .doc(tableNo),
+                      ),
+                    ),
+                  );
+                }
+              : () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Unauthorized User'),
+                      content: const Text(
+                          'You are not authorized to access orders.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+          child: const Icon(Icons.shopping_basket),
+        );
+      },
     );
   }
 }

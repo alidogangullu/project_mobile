@@ -261,12 +261,12 @@ class editCategoryItems extends StatelessWidget {
                               fit: BoxFit.cover,
                             )
                           : const SizedBox.shrink(),
-                      title: Column(
+                      title: Text(document['name']),
+                      subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(document['name']),
-                          Text('Price: ' + document['price']),
-                          Text('Content: ' + document['content']),
+                          Text('Price: ${document['price']}'),
+                          Text('Content: ${document['content']}'),
                         ],
                       ),
                       trailing: IconButton(
@@ -385,7 +385,7 @@ class addCategoryItems extends StatelessWidget {
                       Uint8List? imageBytes = await compressFile(imageFile);
 
                       FirebaseStorage storage = FirebaseStorage.instance;
-                      Reference ref = storage.ref().child("Image-" + myController.text);
+                      Reference ref = storage.ref().child("Image-${myController.text}");
 
                       TaskSnapshot snapshot = await ref.putData(imageBytes!);
                       String imageUrl = await snapshot.ref.getDownloadURL();
@@ -395,7 +395,7 @@ class addCategoryItems extends StatelessWidget {
 
                       await firestoreRef.doc(myController.text).set({
                         "name": myController.text,
-                        "price": priceController.text,
+                        "price": double.parse(priceController.text),
                         "content": contentController.text,
                         "image_url": imageUrl
                       });
