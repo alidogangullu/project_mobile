@@ -52,6 +52,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
       await widget.ordersRef.doc(order.id).update({
         'quantity_notSubmitted_notServiced': 0,
         'quantity_Submitted_notServiced': newQuantity,
+        'newNotification': true
       });
     }
 
