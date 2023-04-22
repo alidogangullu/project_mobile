@@ -220,8 +220,8 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
 
         final submittedOrders = snapshot.data!.docs
             .where((doc) =>
-        doc['quantity_Submitted_notServiced'] > 0 ||
-            doc['quantity_Submitted_Serviced'] > 0)
+                doc['quantity_Submitted_notServiced'] > 0 ||
+                doc['quantity_Submitted_Serviced'] > 0)
             .toList();
         // Calculate the total amount for payment bottom sheet
         double totalAmount = 0;
@@ -236,7 +236,6 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
             final price = documentSnapshot["price"];
             totalAmount += price * quantity;
           });
-
         }
 
         return Column(
@@ -246,7 +245,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                 itemCount: submittedOrders.length,
                 itemBuilder: (context, index) {
                   final order =
-                  submittedOrders[index].data() as Map<String, dynamic>;
+                      submittedOrders[index].data() as Map<String, dynamic>;
                   final reference = order['itemRef'] as DocumentReference;
 
                   return FutureBuilder<DocumentSnapshot>(
@@ -292,9 +291,9 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                     showModalBottomSheet(
                       shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(52),
-                            topRight: Radius.circular(52),
-                          )),
+                        topLeft: Radius.circular(52),
+                        topRight: Radius.circular(52),
+                      )),
                       context: context,
                       builder: (BuildContext context) {
                         return SizedBox(
@@ -319,7 +318,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                       final order = submittedOrders[index];
                                       return FutureBuilder<DocumentSnapshot>(
                                         future: (order['itemRef']
-                                        as DocumentReference)
+                                                as DocumentReference)
                                             .get(),
                                         builder: (context, snapshot) {
                                           if (!snapshot.hasData) {
@@ -327,12 +326,12 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                           }
                                           final name = snapshot.data!
                                               .get('name') as String;
-                                          final price = snapshot.data!
-                                              .get('price');
+                                          final price =
+                                              snapshot.data!.get('price');
                                           final quantity = order[
-                                          'quantity_Submitted_notServiced'] +
+                                                  'quantity_Submitted_notServiced'] +
                                               order[
-                                              'quantity_Submitted_Serviced'];
+                                                  'quantity_Submitted_Serviced'];
                                           return ListTile(
                                             title: Text(name),
                                             subtitle: Text('x $quantity'),
@@ -347,7 +346,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                 const Divider(),
                                 Row(
                                   mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
                                       'Total',
@@ -368,7 +367,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                 const SizedBox(height: 16),
                                 Row(
                                   mainAxisAlignment:
-                                  MainAxisAlignment.spaceEvenly,
+                                      MainAxisAlignment.spaceEvenly,
                                   children: [
                                     paymentButton(),
                                   ],
@@ -405,7 +404,6 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
         final userIds = List<String>.from(tableSnapshot.get('users'));
 
         for (final userID in userIds) {
-
           // Get a reference to the orders collection for this table.
           final tableOrdersRef = widget.tableRef.collection('Orders');
           final restaurantRef = widget.tableRef.parent.parent;
@@ -413,42 +411,61 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
           // Loop through the orders for this table and transfer them to the user's orders collection.
           final tableOrdersSnapshot = await tableOrdersRef.get();
 
-          String completedOrderId = LoginPage.userID+DateTime.now().toString();
+          String completedOrderId =
+              LoginPage.userID + DateTime.now().toString();
 
           //split "-" because of -admin
           String userId = userID.split("-").first;
 
-          await usersRef.doc(userId.split("-").first)
-              .collection('completedOrders')
-              .doc(completedOrderId).set({
-            'restaurantRef' : restaurantRef,
-            'timestamp': Timestamp.now(),
-            'items': []
-          });
+          if (!userId.contains("web")) {
+            //registered userid add to completed orders then delete order
+            await usersRef
+                .doc(userId)
+                .collection('completedOrders')
+                .doc(completedOrderId)
+                .set({
+              'restaurantRef': restaurantRef,
+              'timestamp': Timestamp.now(),
+              'items': []
+            });
 
-          for (final orderSnapshot in tableOrdersSnapshot.docs) {
-            final orderData = orderSnapshot.data();
-            final submittedServiced = orderData['quantity_Submitted_Serviced'] as int;
-            final submittedNotServiced = orderData['quantity_Submitted_notServiced'] as int;
-            if (submittedServiced > 0 || submittedNotServiced > 0) {
-              await usersRef.doc(userId).collection('completedOrders').doc(completedOrderId).update({
-                'items': FieldValue.arrayUnion([orderData])
-              });
+            for (final orderSnapshot in tableOrdersSnapshot.docs) {
+              final orderData = orderSnapshot.data();
+              final submittedServiced =
+                  orderData['quantity_Submitted_Serviced'] as int;
+              final submittedNotServiced =
+                  orderData['quantity_Submitted_notServiced'] as int;
+              if (submittedServiced > 0 || submittedNotServiced > 0) {
+                await usersRef
+                    .doc(userId)
+                    .collection('completedOrders')
+                    .doc(completedOrderId)
+                    .update({
+                  'items': FieldValue.arrayUnion([orderData])
+                });
+              }
+              await tableOrdersRef
+                  .doc(orderSnapshot.id)
+                  .delete(); // Delete from table orders
             }
-            await tableOrdersRef.doc(orderSnapshot.id).delete(); // Delete from table orders
+          } else {
+            //unregistered userid just delete order
+            for (final orderSnapshot in tableOrdersSnapshot.docs) {
+              await tableOrdersRef
+                  .doc(orderSnapshot.id)
+                  .delete(); // Delete from table orders
+            }
           }
 
-          //reset table users after transfering order data
+          //reset table users after transferring order data
           await widget.tableRef.update({'users': []});
 
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const PaymentSuccessScreen()
-            ),
+                builder: (context) => const PaymentSuccessScreen()),
           );
         }
-
       },
       child: const Text("Pay with ..."),
     );
@@ -481,9 +498,9 @@ class PaymentSuccessScreen extends StatelessWidget {
                 // Navigate back to the previous screen and clear stack
 
                 Navigator.pushAndRemoveUntil(
-                    context, MaterialPageRoute(builder: (_) =>  const CustomerHome()),
-                        (route) => false);
-
+                    context,
+                    MaterialPageRoute(builder: (_) => const CustomerHome()),
+                    (route) => false);
               },
               child: const Text('Back to HomeScreen'),
             ),
