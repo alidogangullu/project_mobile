@@ -123,8 +123,6 @@ class _LoginPageState extends State<LoginPage> {
           SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
           sharedPreferences.setBool('isManager', isManager); //isManager'ı kaydetmek için
 
-          print(isManager);
-          print(sharedPreferences.getBool('isManager'));
 
           //doğrulama kodundan sonra uygulamaya yönlendirme
           if(isManager == true){
