@@ -97,7 +97,9 @@ class QRHomePage extends StatelessWidget {
                         if (!snapshots.docs.contains("$i")) {
                           ref.doc("$i").set({
                             "number": i,
-                            "newNotification": false
+                            "newNotification": false,
+                            'users': FieldValue.arrayUnion([]),
+                            'unAuthorizedUsers': FieldValue.arrayUnion([]),
                           });
                         }
                       }

@@ -19,15 +19,12 @@ class MenuScreen extends StatefulWidget {
 class _MenuScreenState extends State<MenuScreen> {
   List<dynamic> users = [];
 
-  @override
-  void initState() {
-    super.initState();
-
-    FirebaseFirestore.instance
+  Future<void> listenUnauthorizedUsers() async {
+    await FirebaseFirestore.instance
         .collection("Restaurants/${widget.id}/Tables")
         .doc(widget.tableNo)
         .get()
-        .then((document) {
+        .then((document) async {
       users = document.data()!['users'];
       bool isAdmin = users.isEmpty ||
           users.contains(
@@ -35,7 +32,7 @@ class _MenuScreenState extends State<MenuScreen> {
 
       if (isAdmin) {
         String userId = '${LoginPage.userID}${isAdmin ? '-admin' : ''}';
-        FirebaseFirestore.instance
+        await FirebaseFirestore.instance
             .collection("Restaurants/${widget.id}/Tables")
             .doc(widget.tableNo)
             .update({
@@ -43,7 +40,7 @@ class _MenuScreenState extends State<MenuScreen> {
         });
       } else if (users.contains(LoginPage.userID)) {
       } else {
-        FirebaseFirestore.instance
+        await FirebaseFirestore.instance
             .collection("Restaurants/${widget.id}/Tables")
             .doc(widget.tableNo)
             .update({
@@ -59,7 +56,7 @@ class _MenuScreenState extends State<MenuScreen> {
             .snapshots()
             .listen((documentSnapshot) {
           List<dynamic> unAuthorizedUsers =
-              documentSnapshot.data()!['unAuthorizedUsers'];
+          documentSnapshot.data()!['unAuthorizedUsers'];
           if (unAuthorizedUsers.isNotEmpty) {
             // New user joined, display popup dialog to admin
             for (var user in unAuthorizedUsers) {
@@ -68,7 +65,7 @@ class _MenuScreenState extends State<MenuScreen> {
                 builder: (BuildContext context) {
                   return AlertDialog(
                     title: const Text('New User Joined'),
-                    content: Text('Allow user $user to access orders?'),
+                    content: Text('Allow user $user to access menu?'),
                     actions: <Widget>[
                       TextButton(
                         onPressed: () {
@@ -96,10 +93,17 @@ class _MenuScreenState extends State<MenuScreen> {
               );
             }
           }
+          setState(() {}); //when new user access,
           users = documentSnapshot.data()!['users'];
         });
       }
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    listenUnauthorizedUsers();
   }
 
   @override
@@ -174,6 +178,52 @@ class CategoryItemsList extends StatelessWidget {
   final String selectedCategory;
   final String table;
 
+  void addToOrder(DocumentSnapshot document, context) async {
+    final usersSnapshot = await FirebaseFirestore.instance
+        .collection("$restaurantPath/Tables")
+        .doc(table)
+        .get();
+    final List<dynamic> users = usersSnapshot.data()!['users'];
+    if (users.contains(LoginPage.userID) || users.contains("${LoginPage.userID}-admin")) {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection("$restaurantPath/Tables")
+          .doc(table)
+          .collection("Orders")
+          .where("itemRef", isEqualTo: document.reference)
+          .get();
+      if (querySnapshot.size > 0) {
+        // Item already exists in order, update its quantity
+        final orderDoc = querySnapshot.docs.first;
+        final quantity = orderDoc["quantity_notSubmitted_notServiced"] + 1;
+        orderDoc.reference.update({
+          "quantity_notSubmitted_notServiced": quantity
+        });
+      } else {
+        // Item doesn't exist in order, add it with quantity 1
+        FirebaseFirestore.instance
+            .collection("$restaurantPath/Tables")
+            .doc(table)
+            .collection("Orders")
+            .doc()
+            .set({
+          "itemRef": document.reference,
+          "quantity_notSubmitted_notServiced": 1,
+          "quantity_Submitted_notServiced": 0,
+          "quantity_Submitted_Serviced": 0,
+        });
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("${document['name']} added to order list, now you can confirm your order!"),
+          ));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("You are not authorized to add items to the order list."),
+          ));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -221,36 +271,8 @@ class CategoryItemsList extends StatelessWidget {
                           Icons.add,
                           color: Colors.green,
                         ),
-                        onPressed: () async {
-                          final querySnapshot = await FirebaseFirestore.instance
-                              .collection("$restaurantPath/Tables")
-                              .doc(table)
-                              .collection("Orders")
-                              .where("itemRef", isEqualTo: document.reference)
-                              .get();
-                          if (querySnapshot.size > 0) {
-                            // Item already exists in order, update its quantity
-                            final orderDoc = querySnapshot.docs.first;
-                            final quantity =
-                                orderDoc["quantity_notSubmitted_notServiced"] +
-                                    1;
-                            orderDoc.reference.update({
-                              "quantity_notSubmitted_notServiced": quantity
-                            });
-                          } else {
-                            // Item doesn't exist in order, add it with quantity 1
-                            FirebaseFirestore.instance
-                                .collection("$restaurantPath/Tables")
-                                .doc(table)
-                                .collection("Orders")
-                                .doc()
-                                .set({
-                              "itemRef": document.reference,
-                              "quantity_notSubmitted_notServiced": 1,
-                              "quantity_Submitted_notServiced": 0,
-                              "quantity_Submitted_Serviced": 0,
-                            });
-                          }
+                        onPressed: () {
+                          addToOrder(document, context);
                         },
                       ),
                     ),
@@ -288,7 +310,7 @@ class ShoppingCartFloatingButton extends StatelessWidget {
           return const CircularProgressIndicator();
         }
         final users = snapshot.data ?? [];
-        final isAdmin = users.isEmpty || users.contains("$userID-admin");
+        final isAdmin = users.contains("$userID-admin");
         final currentUserIsAuthorized = users.contains(userID) || isAdmin;
         return FloatingActionButton(
           onPressed: currentUserIsAuthorized
@@ -304,6 +326,8 @@ class ShoppingCartFloatingButton extends StatelessWidget {
                         tableRef: FirebaseFirestore.instance
                             .collection("Restaurants/$restaurantID/Tables")
                             .doc(tableNo),
+                        table: tableNo,
+                        restaurantPath: "Restaurants/$restaurantID",
                       ),
                     ),
                   );
