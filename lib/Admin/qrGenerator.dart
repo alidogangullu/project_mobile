@@ -78,8 +78,7 @@ class QRHomePage extends StatelessWidget {
               children: [
                 Expanded(
                   flex: 25,
-                  child: inputField(const Icon(Icons.table_restaurant),
-                      "Number of tables", tableNumberController, true),
+                  child: inputField(context, "Number of tables", tableNumberController, true),
                 ),
                 Expanded(
                   flex: 10,

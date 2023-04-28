@@ -65,20 +65,36 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    const MaterialColor myColor = MaterialColor(
+      0xFF008C8C,
+      <int, Color>{
+        50: Color(0xFFE0F2F2),
+        100: Color(0xFFB3CCCC),
+        200: Color(0xFF80B2B2),
+        300: Color(0xFF4D9999),
+        400: Color(0xFF267F7F),
+        500: Color(0xFF008C8C),
+        600: Color(0xFF007474),
+        700: Color(0xFF006060),
+        800: Color(0xFF004C4C),
+        900: Color(0xFF003838),
+      },
+    );
 
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.blue,
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light.copyWith(
+      statusBarColor: Colors.white,
+      statusBarIconBrightness: Brightness.dark,
     ));
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: myColor,
       ),
 
       //login durumuna göre sayfaya yönlendirme
       home: FirebaseAuth.instance.currentUser == null
-          ? LoginPage()
+          ? const LoginPage()
           : navigateUserType(),
     );
   }

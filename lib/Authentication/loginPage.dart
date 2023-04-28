@@ -7,7 +7,6 @@ import 'package:project_mobile/Admin/adminPanel.dart';
 import 'package:project_mobile/Customer/customerPanel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -38,43 +37,6 @@ class _LoginPageState extends State<LoginPage> {
   bool verificated = true;
   bool codeSent = false;
   bool buttonPressed = false;
-
-  final defaultPinTheme = PinTheme(
-    width: 65,
-    height: 65,
-    textStyle: const TextStyle(fontSize: 20),
-    decoration: BoxDecoration(
-      border: Border.all(color: Colors.grey),
-      borderRadius: BorderRadius.circular(25),
-    ),
-  );
-  final focusedPinTheme = PinTheme(
-    width: 65,
-    height: 65,
-    textStyle: const TextStyle(fontSize: 20),
-    decoration: BoxDecoration(
-      border: Border.all(color: Colors.blue),
-      borderRadius: BorderRadius.circular(25),
-    ),
-  );
-  final errorPinTheme = PinTheme(
-    width: 65,
-    height: 65,
-    textStyle: const TextStyle(fontSize: 20),
-    decoration: BoxDecoration(
-      border: Border.all(color: Colors.red),
-      borderRadius: BorderRadius.circular(25),
-    ),
-  );
-  final submittedPinTheme = PinTheme(
-    width: 65,
-    height: 65,
-    textStyle: const TextStyle(fontSize: 20),
-    decoration: BoxDecoration(
-      border: Border.all(color: Colors.green),
-      borderRadius: BorderRadius.circular(25),
-    ),
-  );
 
   void loginWithPhone() async {
     if (phoneNumberFormat) {
@@ -120,20 +82,19 @@ class _LoginPageState extends State<LoginPage> {
           LoginPage.userID = user.uid;
 
           //uygulamaya tekrar girişte doğru yönlendirmesi için isManager'ın lokal olarak saklanması
-          SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-          sharedPreferences.setBool('isManager', isManager); //isManager'ı kaydetmek için
-
+          SharedPreferences sharedPreferences =
+              await SharedPreferences.getInstance();
+          sharedPreferences.setBool(
+              'isManager', isManager); //isManager'ı kaydetmek için
 
           //doğrulama kodundan sonra uygulamaya yönlendirme
-          if(isManager == true){
-            Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (context) => const AdminHome()));
+          if (isManager == true) {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (context) => const AdminHome()));
+          } else if (isManager == false) {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (context) => const CustomerHome()));
           }
-          else if(isManager == false){
-            Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (context) => const CustomerHome()));
-          }
-
         });
       } else {
         setState(() {
@@ -167,19 +128,19 @@ class _LoginPageState extends State<LoginPage> {
 
     //uygulamaya tekrar girişte doğru yönlendirmesi için isManager'ın lokal olarak saklanması
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    sharedPreferences.setBool('isManager', isManager); //isManager'ı kaydetmek için
+    sharedPreferences.setBool(
+        'isManager', isManager); //isManager'ı kaydetmek için
 
     print(isManager);
     print(sharedPreferences.getBool('isManager'));
 
     //ilk kayıttan sonra kullanıcı tipine göre uygulamaya yönlendirme
-    if(isManager == true){
-    Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => const AdminHome()));
-    }
-    else if(isManager == false){
+    if (isManager == true) {
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => const CustomerHome()));
+          context, MaterialPageRoute(builder: (context) => const AdminHome()));
+    } else if (isManager == false) {
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => const CustomerHome()));
     }
   }
 
@@ -190,6 +151,43 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final defaultPinTheme = PinTheme(
+      width: 65,
+      height: 55,
+      textStyle: const TextStyle(fontSize: 16),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(4),
+      ),
+    );
+    final focusedPinTheme = PinTheme(
+      width: 65,
+      height: 55,
+      textStyle: const TextStyle(fontSize: 16),
+      decoration: BoxDecoration(
+        border: Border.all(color: Theme.of(context).primaryColor),
+        borderRadius: BorderRadius.circular(4),
+      ),
+    );
+    final errorPinTheme = PinTheme(
+      width: 65,
+      height: 55,
+      textStyle: const TextStyle(fontSize: 16),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.red),
+        borderRadius: BorderRadius.circular(4),
+      ),
+    );
+    final submittedPinTheme = PinTheme(
+      width: 65,
+      height: 55,
+      textStyle: const TextStyle(fontSize: 16),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.green),
+        borderRadius: BorderRadius.circular(4),
+      ),
+    );
+
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -202,78 +200,89 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(50, 0, 30, 0),
-                      child: InternationalPhoneNumberInput(
-                        isEnabled: !phoneNumberFormat,
-                        onInputValidated: (bool value) {
-                          phoneNumberFormat = value;
-                        },
-                        textAlign: TextAlign.center,
-                        searchBoxDecoration: const InputDecoration(
-                          hintText: "Country",
-                          hintStyle: TextStyle(
-                            color: Colors.grey,
-                          ),
-                          fillColor: Colors.white,
-                          filled: true,
-                          prefixIcon: Icon(Icons.add_outlined),
-                          prefixIconConstraints: BoxConstraints(
-                            minWidth: 75,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(50),
-                            ),
-                            borderSide: BorderSide(color: Colors.grey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(50),
-                            ),
-                            borderSide: BorderSide(color: Colors.blue),
+                      padding: const EdgeInsets.only(left: 15),
+                      child: Container(
+                        alignment: Alignment.centerLeft,
+                        child: const Text(
+                          'Phone Number',
+                          style: TextStyle(
+                            fontSize: 18,
                           ),
                         ),
-                        inputDecoration: const InputDecoration(
-                          hintText: "5xx xxx xxxx",
-                          hintStyle: TextStyle(
-                            color: Colors.grey,
-                          ),
-                          fillColor: Colors.white,
-                          filled: true,
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(50),
-                            ),
-                            borderSide: BorderSide(color: Colors.grey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(50),
-                            ),
-                            borderSide: BorderSide(color: Colors.blue),
-                          ),
-                        ),
-                        onInputChanged: (PhoneNumber number) {
-                          phoneNumber = number.phoneNumber;
-                        },
-                        selectorConfig: const SelectorConfig(
-                          selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
-                          trailingSpace: false,
-                        ),
-                        ignoreBlank: false,
-                        autoValidateMode: AutovalidateMode.disabled,
-                        initialValue: PhoneNumber(isoCode: 'TR'),
-                        formatInput: false,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            signed: true, decimal: true),
                       ),
                     ),
-                    const SizedBox(
-                      height: 20,
+                    Padding(
+                      padding: const EdgeInsets.all(15),
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.grey,
+                          ),
+                          borderRadius: BorderRadius.circular(4.0),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: InternationalPhoneNumberInput(
+                            isEnabled: !phoneNumberFormat,
+                            onInputValidated: (bool value) {
+                              phoneNumberFormat = value;
+                            },
+                            selectorConfig: const SelectorConfig(
+                              selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
+                              trailingSpace: false,
+                            ),
+                            ignoreBlank: false,
+                            textAlign: TextAlign.center,
+                            searchBoxDecoration: InputDecoration(
+                              hintText: "Country",
+                              hintStyle: const TextStyle(
+                                color: Colors.grey,
+                              ),
+                              fillColor: Colors.white,
+                              filled: true,
+                              prefixIcon: const Icon(Icons.add_outlined),
+                              enabledBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.grey),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                            ),
+                            inputDecoration: InputDecoration(
+                              hintText: "5xx xxx xxxx",
+                              hintStyle: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                              fillColor: Colors.white,
+                              filled: true,
+                              enabledBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.grey),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                            ),
+                            onInputChanged: (PhoneNumber number) {
+                              phoneNumber = number.phoneNumber;
+                            },
+                            autoValidateMode: AutovalidateMode.disabled,
+                            initialValue: PhoneNumber(isoCode: 'TR'),
+                            formatInput: false,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                signed: true, decimal: true),
+                          ),
+                        ),
+                      ),
                     ),
                     showOTPbox
                         ? Padding(
-                            padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                            padding: const EdgeInsets.all(15),
                             child: Pinput(
                               length: 6,
                               closeKeyboardWhenCompleted: true,
@@ -289,97 +298,133 @@ class _LoginPageState extends State<LoginPage> {
                         : const SizedBox(
                             height: 0,
                           ),
-                    const SizedBox(
-                      height: 20,
-                    ),
                     if (phoneNumberFormat & codeSent)
-                      const Text(
-                        'Verification Code Sent',
-                        style: TextStyle(color: Colors.green),
+                      const Padding(
+                        padding: EdgeInsets.all(15),
+                        child: Text(
+                          'Verification Code Sent',
+                          style: TextStyle(color: Colors.green),
+                        ),
                       )
                     else if (!phoneNumberFormat & buttonPressed)
-                      const Text(
-                        'Check your phone number',
-                        style: TextStyle(color: Colors.red),
+                      const Padding(
+                        padding: EdgeInsets.all(15),
+                        child: Text(
+                          'Check your phone number',
+                          style: TextStyle(color: Colors.red),
+                        ),
                       )
                     else if (!verificated)
-                      const Text(
-                        'Wrong verification code',
-                        style: TextStyle(color: Colors.red),
+                      const Padding(
+                        padding: EdgeInsets.all(15),
+                        child: Text(
+                          'Wrong verification code',
+                          style: TextStyle(color: Colors.red),
+                        ),
                       ),
-                    const SizedBox(
-                      height: 20,
-                    ),
                     loading
-                        ? const Center(child: CircularProgressIndicator())
-                        : ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                //primary: Colors.green,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
+                        ? const Center(
+                            child: Padding(
+                            padding: EdgeInsets.all(15),
+                            child: CircularProgressIndicator(),
+                          ))
+                        : Padding(
+                            padding: const EdgeInsets.all(15.0),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: 45,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  if (showOTPbox) {
+                                    verifyOTP();
+                                  } else {
+                                    loginWithPhone();
+                                    setState(() {
+                                      buttonPressed = true;
+                                    });
+                                  }
+                                },
+                                child: Text(
+                                  showOTPbox ? "Verify" : "Sign In Now",
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                  ),
                                 ),
-                                minimumSize: const Size(150, 55)),
-                            onPressed: () {
-                              if (showOTPbox) {
-                                verifyOTP();
-                              } else {
-                                loginWithPhone();
-                                setState(() {
-                                  buttonPressed = true;
-                                });
-                              }
-                            },
-                            child: Text(
-                              showOTPbox ? "Verify" : "Sign In",
-                              style: const TextStyle(
-                                fontSize: 20,
                               ),
                             ),
                           ),
-                    if(showOTPbox == false && loading == false)
-                      Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text("as Manager"),
-                        Switch(
-                          value: isManager,
-                          onChanged: (bool value) async {
+                    if (showOTPbox == false && loading == false)
+                      TextButton(
+                        onPressed: () {
                           setState(() {
-                            isManager = value;
+                            isManager = !isManager;
                           });
-                        },),
-                      ],
-                    )
+                        },
+                        child: RichText(
+                          text: TextSpan(
+                            text: "You are signing in as a ",
+                            style: const TextStyle(
+                                color: Colors.grey, fontSize: 16),
+                            children: [
+                              TextSpan(
+                                text: isManager ? "manager." : "customer.",
+                                style: TextStyle(
+                                    color: Theme.of(context).primaryColor,
+                                    fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                   ],
                 ),
           showSignUp
               ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    inputField(
-                        const Icon(Icons.person_outlined), "Name", nameController,false),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    inputField(const Icon(Icons.person_outlined), "Surname",
-                        surnameController, false),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 15),
+                      child: Container(
+                        alignment: Alignment.centerLeft,
+                        child: const Text(
+                          'Name',
+                          style: TextStyle(
+                            fontSize: 18,
                           ),
-                          minimumSize: const Size(150, 55)),
-                      onPressed: () {
-                        signUp(user);
-                      },
-                      child: const Text(
-                        "Sign Up",
-                        style: TextStyle(
-                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                    inputField(context, "Name", nameController, false),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 15),
+                      child: Container(
+                        alignment: Alignment.centerLeft,
+                        child: const Text(
+                          'Surname',
+                          style: TextStyle(
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                    inputField(context, "Surname", surnameController, false),
+                    Padding(
+                      padding: const EdgeInsets.all(15),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 45,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                          ),
+                          onPressed: () {
+                            signUp(user);
+                          },
+                          child: const Text(
+                            "Sign Up Now",
+                            style: TextStyle(
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -396,9 +441,12 @@ class _LoginPageState extends State<LoginPage> {
 
 Widget inputField(
     //textbox; numeric ya da metin olarak değişebilir birkaç yerde kullanıldı
-    Icon prefixIcon, String hintText, TextEditingController controller, bool isNumeric) {
+    BuildContext context,
+    String hintText,
+    TextEditingController controller,
+    bool isNumeric) {
   return Padding(
-    padding: const EdgeInsets.fromLTRB(30, 10, 30, 10),
+    padding: const EdgeInsets.all(15),
     child: TextField(
       keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
       controller: controller,
@@ -409,21 +457,11 @@ Widget inputField(
         ),
         fillColor: Colors.white,
         filled: true,
-        prefixIcon: prefixIcon,
-        prefixIconConstraints: const BoxConstraints(
-          minWidth: 75,
-        ),
         enabledBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(50),
-          ),
           borderSide: BorderSide(color: Colors.grey),
         ),
-        focusedBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(50),
-          ),
-          borderSide: BorderSide(color: Colors.blue),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Theme.of(context).primaryColor),
         ),
       ),
     ),
