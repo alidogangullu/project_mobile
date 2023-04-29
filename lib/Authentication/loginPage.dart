@@ -3,9 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:pinput/pinput.dart';
-import 'package:project_mobile/Admin/adminPanel.dart';
+import 'package:project_mobile/Admin/managerPanel.dart';
 import 'package:project_mobile/Customer/customerPanel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../customWidgets.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -236,9 +237,6 @@ class _LoginPageState extends State<LoginPage> {
                             textAlign: TextAlign.center,
                             searchBoxDecoration: InputDecoration(
                               hintText: "Country",
-                              hintStyle: const TextStyle(
-                                color: Colors.grey,
-                              ),
                               fillColor: Colors.white,
                               filled: true,
                               prefixIcon: const Icon(Icons.add_outlined),
@@ -252,10 +250,9 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                             inputDecoration: InputDecoration(
-                              hintText: "5xx xxx xxxx",
+                              hintText: "(5xx) xxx xxxx",
                               hintStyle: const TextStyle(
                                 fontSize: 16,
-                                color: Colors.grey,
                               ),
                               fillColor: Colors.white,
                               filled: true,
@@ -393,7 +390,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    inputField(context, "Name", nameController, false),
+                    textInputField(context, "Name", nameController, false),
                     Padding(
                       padding: const EdgeInsets.only(left: 15),
                       child: Container(
@@ -406,7 +403,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    inputField(context, "Surname", surnameController, false),
+                    textInputField(context, "Surname", surnameController, false),
                     Padding(
                       padding: const EdgeInsets.all(15),
                       child: SizedBox(
@@ -437,33 +434,4 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
-}
-
-Widget inputField(
-    //textbox; numeric ya da metin olarak değişebilir birkaç yerde kullanıldı
-    BuildContext context,
-    String hintText,
-    TextEditingController controller,
-    bool isNumeric) {
-  return Padding(
-    padding: const EdgeInsets.all(15),
-    child: TextField(
-      keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
-      controller: controller,
-      decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: const TextStyle(
-          color: Colors.grey,
-        ),
-        fillColor: Colors.white,
-        filled: true,
-        enabledBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Theme.of(context).primaryColor),
-        ),
-      ),
-    ),
-  );
 }

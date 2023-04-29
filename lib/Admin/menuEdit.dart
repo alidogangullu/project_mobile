@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -411,7 +410,7 @@ class addCategoryItems extends StatelessWidget {
                       print(e);
                     }
                   } else {
-                    final snackBar = SnackBar(
+                    const snackBar = SnackBar(
                       content: Text('Please fill in all required fields.'),
                     );
                     ScaffoldMessenger.of(context).showSnackBar(snackBar);

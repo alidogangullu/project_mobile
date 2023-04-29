@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:project_mobile/Admin/menuEdit.dart';
-import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import '../customWidgets.dart';
 
 class QRHomePage extends StatelessWidget {
   QRHomePage({Key? key, required this.selectedRestaurantID}) : super(key: key);
@@ -78,7 +78,7 @@ class QRHomePage extends StatelessWidget {
               children: [
                 Expanded(
                   flex: 25,
-                  child: inputField(context, "Number of tables", tableNumberController, true),
+                  child: textInputField(context, "Number of tables", tableNumberController, true),
                 ),
                 Expanded(
                   flex: 10,
