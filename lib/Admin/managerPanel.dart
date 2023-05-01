@@ -98,62 +98,104 @@ class Home extends StatelessWidget {
                     if (!snapshot.hasData) {
                       return const SizedBox();
                     }
-
                     final restaurantName = snapshot.data!.get('name') as String;
-                    final timestamp = order["timestamp"];
-                    final comment = order["text"];
-                    final rating = order["rating"];
-                    final dateTime = timestamp.toDate().toLocal();
-                    final formattedDate =
-                        "${dateTime.day.toString().padLeft(2, '0')}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.year.toString()} ${dateTime.hour.toString().padLeft(2, '0')}.${dateTime.minute.toString().padLeft(2, '0')}";
 
-                    return FutureBuilder<DocumentSnapshot>(
-                      future: item.get(),
-                      builder: (BuildContext context,
-                          AsyncSnapshot<DocumentSnapshot> snapshot) {
-                        if (snapshot.hasError) {
-                          return Text('Error: ${snapshot.error}');
-                        }
-                        if (!snapshot.hasData) {
-                          return const SizedBox();
-                        }
-                        final itemName =
-                        snapshot.data!.get('name') as String;
-                        return Card(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                itemName,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16.0,
-                                ),
+                    return
+
+                         FutureBuilder<DocumentSnapshot>(
+                          future: item.get(),
+                          builder: (BuildContext context,
+                              AsyncSnapshot<DocumentSnapshot> snapshot) {
+                            if (snapshot.hasError) {
+                              return Text('Error: ${snapshot.error}');
+                            }
+                            if (!snapshot.hasData) {
+                              return const SizedBox();
+                            }
+                            final itemName = snapshot.data!.get('name') as String;
+                            final timestamp = order["timestamp"];
+                            final comment = order["text"];
+                            final rating = order["rating"];
+                            final dateTime = timestamp.toDate().toLocal();
+                            final formattedDate =
+                                "${dateTime.day.toString().padLeft(2, '0')}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.year.toString()} ${dateTime.hour.toString().padLeft(2, '0')}.${dateTime.minute.toString().padLeft(2, '0')}";
+
+                            return Container(
+                              margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                              padding: EdgeInsets.all(16.0),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12.0),
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.3),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: Offset(0, 3),
+                                  ),
+                                ],
                               ),
-                              SizedBox(height: 4.0),
-                              Text(restaurantName),
-                              SizedBox(height: 4.0),
-                              Text(
-                                comment,
-                                style: TextStyle(fontSize: 16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          '$itemName',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20.0,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      SizedBox(width: 8.0),
+                                      Icon(
+                                        Icons.star,
+                                        color: Colors.amber[700],
+                                      ),
+                                      SizedBox(width: 4.0),
+                                      Text(
+                                        '$rating',
+                                        style: TextStyle(fontSize: 18.0),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 12.0),
+                                  Text(
+                                    '$comment',
+                                    style: TextStyle(fontSize: 18.0),
+                                  ),
+                                  SizedBox(height: 12.0),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        '$formattedDate',
+                                        style: TextStyle(
+                                          fontSize: 14.0,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      Text(
+                                        '$restaurantName',
+                                        style: TextStyle(
+                                          fontSize: 16.0,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                              SizedBox(height: 4.0),
-                              Text(
-                                'Rating: $rating',
-                                style: TextStyle(fontSize: 16.0),
-                              ),
-                              SizedBox(height: 4.0),
-                              Text(
-                                formattedDate,
-                                style: TextStyle(fontSize: 14.0),
-                              ),
-                            ],
-                          ),
+                            );
+                          },
                         );
-
                       },
-                    );
-                  },
+
                 );
               },
             );
