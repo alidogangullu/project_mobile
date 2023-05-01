@@ -254,6 +254,8 @@ Widget createItemsGrid(
         return GestureDetector(
           onTap: () {
             showModalBottomSheet(
+              isScrollControlled: true,
+              enableDrag: true,
               context: context,
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.only(
@@ -263,110 +265,108 @@ Widget createItemsGrid(
               ),
               builder: (BuildContext context) {
                 var selectedItem = document.reference;
-                return SingleChildScrollView(
-                  child: Wrap(
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(20),
-                          topRight: Radius.circular(20),
+                return Wrap(
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
+                      child: AspectRatio(
+                        aspectRatio: 1.5,
+                        child: Image.network(
+                          document["image_url"],
+                          fit: BoxFit.fitWidth,
                         ),
-                        child: AspectRatio(
-                          aspectRatio: 1.5,
-                          child: Image.network(
-                            document["image_url"],
-                            fit: BoxFit.fitWidth,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 15, 10),
+                      child: Text(
+                        document['name'],
+                        style: const TextStyle(
+                          fontSize: 24,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
+                      child: Row(
+                        children: [
+                          Row(
+                            children: List.generate(5, (index) {
+                              if (index < document["rating"]) {
+                                return const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                );
+                              } else {
+                                return const Icon(
+                                  Icons.star_border,
+                                  color: Colors.amber,
+                                );
+                              }
+                            }),
                           ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 20, 15, 10),
-                        child: Text(
-                          document['name'],
-                          style: const TextStyle(
-                            fontSize: 24,
+                          const SizedBox(width: 4),
+                          Text(
+                            document["rating"].toString(),
+                            style: const TextStyle(
+                                fontSize: 16, color: Colors.grey),
                           ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
-                        child: Row(
-                          children: [
-                            Row(
-                              children: List.generate(5, (index) {
-                                if (index < document["rating"]) {
-                                  return const Icon(
-                                    Icons.star,
-                                    color: Colors.amber,
-                                  );
-                                } else {
-                                  return const Icon(
-                                    Icons.star_border,
-                                    color: Colors.amber,
-                                  );
-                                }
-                              }),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              document["rating"].toString(),
-                              style: const TextStyle(
-                                  fontSize: 16, color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
-                        child: Row(
-                          children: [
-                            const Text(
-                              'Price: ',
-                              style: TextStyle(fontSize: 20),
-                            ),
-                            SizedBox(
-                              width: 100,
-                              child: TextFormField(
-                                controller: priceController,
-                                keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                  hintText: initialPrice,
-                                  border: const OutlineInputBorder(),
-                                ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
+                      child: Row(
+                        children: [
+                          const Text(
+                            'Price: ',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                          SizedBox(
+                            width: 100,
+                            child: TextFormField(
+                              controller: priceController,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                hintText: initialPrice,
+                                border: const OutlineInputBorder(),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      menuButton("Save", () {
-                        final newPrice =
-                            double.tryParse(priceController.text) ??
-                                document['price'];
-                        FirebaseFirestore.instance.doc(selectedItem.path).update({'price': newPrice});
-                        setState();
-                        Navigator.pop(context);
-                      }),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 45,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              FirebaseFirestore.instance.doc(selectedItem.path).delete();
-                              setState();
-                              Navigator.pop(context);
-                            },
-                            child: const Text(
-                              'Delete',
-                              style: TextStyle(fontSize: 16),
-                            ),
+                    ),
+                    menuButton("Save", () {
+                      final newPrice =
+                          double.tryParse(priceController.text) ??
+                              document['price'];
+                      FirebaseFirestore.instance.doc(selectedItem.path).update({'price': newPrice});
+                      setState();
+                      Navigator.pop(context);
+                    }),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 45,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            FirebaseFirestore.instance.doc(selectedItem.path).delete();
+                            setState();
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(fontSize: 16),
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 );
               },
             );
