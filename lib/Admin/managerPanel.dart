@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -64,10 +65,100 @@ class Home extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MyAppBar(),
-      body: const Center(
+      body:  Center(
         //todo
-        child: Text("feedback and comments will be listed here for manager"),
-      ),
+        child:
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('/comments')
+              .snapshots(),
+          builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+            if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            }
+            if (!snapshot.hasData) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            return ListView.builder(
+              itemCount: snapshot.data!.docs.length,
+              itemBuilder: (BuildContext context, int index) {
+                final order = snapshot.data!.docs[index];
+                DocumentReference item = order.get("itemRef") ;
+                final restaurantRef = item.path.split("/")[1];
+
+                return FutureBuilder<DocumentSnapshot>(
+                  future: FirebaseFirestore.instance.doc("Restaurants/$restaurantRef").get(),
+                  builder: (BuildContext context,
+                      AsyncSnapshot<DocumentSnapshot> snapshot) {
+                    if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    }
+                    if (!snapshot.hasData) {
+                      return const SizedBox();
+                    }
+
+                    final restaurantName = snapshot.data!.get('name') as String;
+                    final timestamp = order["timestamp"];
+                    final comment = order["text"];
+                    final rating = order["rating"];
+                    final dateTime = timestamp.toDate().toLocal();
+                    final formattedDate =
+                        "${dateTime.day.toString().padLeft(2, '0')}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.year.toString()} ${dateTime.hour.toString().padLeft(2, '0')}.${dateTime.minute.toString().padLeft(2, '0')}";
+
+                    return FutureBuilder<DocumentSnapshot>(
+                      future: item.get(),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<DocumentSnapshot> snapshot) {
+                        if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        }
+                        if (!snapshot.hasData) {
+                          return const SizedBox();
+                        }
+                        final itemName =
+                        snapshot.data!.get('name') as String;
+                        return Card(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                itemName,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16.0,
+                                ),
+                              ),
+                              SizedBox(height: 4.0),
+                              Text(restaurantName),
+                              SizedBox(height: 4.0),
+                              Text(
+                                comment,
+                                style: TextStyle(fontSize: 16.0),
+                              ),
+                              SizedBox(height: 4.0),
+                              Text(
+                                'Rating: $rating',
+                                style: TextStyle(fontSize: 16.0),
+                              ),
+                              SizedBox(height: 4.0),
+                              Text(
+                                formattedDate,
+                                style: TextStyle(fontSize: 14.0),
+                              ),
+                            ],
+                          ),
+                        );
+
+                      },
+                    );
+                  },
+                );
+              },
+            );
+          },
+        ),      ),
     );
   }
 }
