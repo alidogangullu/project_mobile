@@ -333,6 +333,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                   onPressed: () async {
                     if (await checkAuthorizedUser()) {
                       var submittedOrdersLength = submittedOrders.length;
+                      // ignore: use_build_context_synchronously
                       showModalBottomSheet(
                         shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.only(

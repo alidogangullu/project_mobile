@@ -14,7 +14,9 @@ class QRHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Create QR Code"),
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
+        title: const Text("Create QR Code", style: TextStyle(color: Colors.black),),
         actions: const [
           //todo pdf vb. yöntemler ile qr kodunu dışarı verdirtme
           Icon(Icons.picture_as_pdf),
@@ -25,96 +27,102 @@ class QRHomePage extends StatelessWidget {
         children: [
           Expanded(
             flex: 7,
-            child: StreamBuilder(
-              stream: FirebaseFirestore.instance
-                  .collection("Restaurants/$selectedRestaurantID/Tables")
-                  .orderBy("number", descending: false)
-                  .snapshots(),
-              builder: (BuildContext context,
-                  AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else {
-                  return GridView(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                    ),
-                    primary: false,
-                    shrinkWrap: true,
-                    children: snapshot.data!.docs.map((document) {
-                      //restorant masalarının qr kodlarını listeleme
-                      return Card(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              flex: 1,
-                              child: QrImage(
-                                  version: QrVersions.auto,
-                                  data:
-                                      //qr kodun içeriği
-                                      "https://restaurantapp-2a43d.web.app/?id=$selectedRestaurantID&tableNo=${document['number']}"),
+            child: Padding(
+              padding: const EdgeInsets.all(15),
+              child: StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection("Restaurants/$selectedRestaurantID/Tables")
+                    .orderBy("number", descending: false)
+                    .snapshots(),
+                builder: (BuildContext context,
+                    AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else {
+                    return GridView(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                      ),
+                      primary: false,
+                      shrinkWrap: true,
+                      children: snapshot.data!.docs.map((document) {
+                        //restorant masalarının qr kodlarını listeleme
+                        return ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20),
+                          ),
+                          child: Card(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: QrImage(
+                                      version: QrVersions.auto,
+                                      data:
+                                          //qr kodun içeriği
+                                          "https://restaurantapp-2a43d.web.app/?id=$selectedRestaurantID&tableNo=${document['number']}"),
+                                ),
+                                Text(
+                                  "Table ${document['number']}",
+                                  style: const TextStyle(fontSize: 18,),
+                                ),
+                              ],
                             ),
-                            Text(
-                              "Table ${document['number']}",
-                              style: const TextStyle(fontSize: 18),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  );
-                }
-              },
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  }
+                },
+              ),
             ),
           ),
-          Expanded(
-            //masa sayısı girerek masa numarasına qr kod oluşturma
-            flex: 1,
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 25,
-                  child: textInputField(context, "Number of tables", tableNumberController, true),
-                ),
-                Expanded(
-                  flex: 10,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 0, 16, 0),
-                    child: MenuButton('', const Icon(Icons.done), () async {
-                      int numberOfTables =
-                          int.parse(tableNumberController.text);
-                      final ref = FirebaseFirestore.instance.collection(
-                          "/Restaurants/$selectedRestaurantID/Tables");
+          Row(
+            children: [
+              Expanded(
+                flex: 20,
+                child: textInputField(
+                    context, "Number of tables", tableNumberController, true),
+              ),
+              Expanded(
+                flex: 10,
+                child: menuButton(
+                  'Save',
+                  () async {
+                    int numberOfTables =
+                        int.parse(tableNumberController.text);
+                    final ref = FirebaseFirestore.instance.collection(
+                        "/Restaurants/$selectedRestaurantID/Tables");
 
-                      var snapshots = await ref.get();
+                    var snapshots = await ref.get();
 
-                      for (int i = numberOfTables; i > 0; i--) {
-                        if (!snapshots.docs.contains("$i")) {
-                          ref.doc("$i").set({
-                            "number": i,
-                            "newNotification": false,
-                            'users': FieldValue.arrayUnion([]),
-                            'unAuthorizedUsers': FieldValue.arrayUnion([]),
-                          });
-                        }
+                    for (int i = numberOfTables; i > 0; i--) {
+                      if (!snapshots.docs.contains("$i")) {
+                        ref.doc("$i").set({
+                          "number": i,
+                          "newNotification": false,
+                          'users': FieldValue.arrayUnion([]),
+                          'unAuthorizedUsers': FieldValue.arrayUnion([]),
+                        });
                       }
-                      if (snapshots.docs.length > numberOfTables) {
-                        for (int i = snapshots.docs.length;
-                            i > numberOfTables;
-                            i--) {
-                          ref.doc("$i").delete();
-                        }
+                    }
+                    if (snapshots.docs.length > numberOfTables) {
+                      for (int i = snapshots.docs.length;
+                          i > numberOfTables;
+                          i--) {
+                        ref.doc("$i").delete();
                       }
-                      tableNumberController.clear();
-                    }),
-                  ),
+                    }
+                    tableNumberController.clear();
+                  },
                 ),
-              ],
-            ),
+              ),
+            ],
           )
         ],
       ),

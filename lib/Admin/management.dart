@@ -59,7 +59,7 @@ class _ManagementPanelState extends State<ManagementPanel> {
               iconData: Icons.search, onChanged: _onSearchQueryChanged),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(15),
+              padding: const EdgeInsets.symmetric(vertical: 0,horizontal: 15),
               child: StreamBuilder(
                 stream: FirebaseFirestore.instance
                     .collection("Restaurants")
@@ -75,6 +75,7 @@ class _ManagementPanelState extends State<ManagementPanel> {
                   }).toList();
                   return GridView.count(
                     crossAxisCount: 1,
+                    childAspectRatio: 1.075,
                     //manager olunan restorantların listelenmesi
                     children: filteredDocs
                         .map(
@@ -83,7 +84,7 @@ class _ManagementPanelState extends State<ManagementPanel> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => editRestaurant(
+                                  builder: (context) => EditRestaurant(
                                     collection:
                                         "Restaurants/${doc.id}/MenuCategory",
                                     restaurantName: doc["name"],
@@ -98,13 +99,12 @@ class _ManagementPanelState extends State<ManagementPanel> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Flexible(
-                                      child: Center(
-                                        child: Image.network(
-                                          doc["image_url"],
-                                          fit: BoxFit
-                                              .cover,
-                                        ),
+                                    AspectRatio(
+                                      aspectRatio: 2,
+                                      child: Image.network(
+                                        doc["image_url"],
+                                        fit: BoxFit
+                                            .fitWidth,
                                       ),
                                     ),
                                     Padding(
@@ -435,9 +435,6 @@ class _AddRestaurantState extends State<AddRestaurant> {
               width: double.infinity,
               height: 45,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                ),
                 onPressed: () async {
                   if(canAddRestaurant){
 
