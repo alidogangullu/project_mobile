@@ -3,6 +3,7 @@
 A new Flutter project.
 
 ## Getting Started
+## Project uses Flutter version 3.7.12 as of May 2, 2023
 
 This project is a starting point for a Flutter application.
 
