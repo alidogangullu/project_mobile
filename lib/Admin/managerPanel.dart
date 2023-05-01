@@ -99,10 +99,15 @@ class Home extends StatelessWidget {
                       return const SizedBox();
                     }
                     final restaurantName = snapshot.data!.get('name') as String;
+                    final managers = snapshot.data!.get('managers') as List<dynamic>;
+                    final currentUserID = LoginPage.userID;
 
-                    return
+                    if (!managers.contains(currentUserID)) {
+                      // if the current user is not a manager of the restaurant, do not show the comment
+                      return const SizedBox();
+                    }
 
-                         FutureBuilder<DocumentSnapshot>(
+                    return FutureBuilder<DocumentSnapshot>(
                           future: item.get(),
                           builder: (BuildContext context,
                               AsyncSnapshot<DocumentSnapshot> snapshot) {
@@ -119,6 +124,8 @@ class Home extends StatelessWidget {
                             final dateTime = timestamp.toDate().toLocal();
                             final formattedDate =
                                 "${dateTime.day.toString().padLeft(2, '0')}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.year.toString()} ${dateTime.hour.toString().padLeft(2, '0')}.${dateTime.minute.toString().padLeft(2, '0')}";
+
+
 
                             return Container(
                               margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
