@@ -39,7 +39,7 @@ dependencies:
   firebase_auth: ^4.1.2
   cloud_firestore: ^4.0.2
   intl_phone_number_input: ^0.7.1
-  pinput: ^2.2.16
+  pinput: ^2.2.31
   qr_flutter: ^4.0.0
   shared_preferences: ^2.0.18
   mobile_scanner: ^3.1.1
