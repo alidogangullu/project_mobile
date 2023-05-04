@@ -98,10 +98,6 @@ class _MenuScreenState extends State<MenuScreen> {
     });
   }
 
-  void passSetState() {
-    setState(() {});
-  }
-
   void _onSearchQueryChanged(String query) {
     setState(() {
       _searchQuery = query.toLowerCase();
@@ -240,14 +236,14 @@ class _MenuScreenState extends State<MenuScreen> {
                         final name = item['name'].toString().toLowerCase();
                         return name.contains(_searchQuery);
                       }).toList();
-                      return createItemsGrid(
-                          filteredItems,
-                          context,
-                          selected,
-                          "Restaurants/${widget.id}/MenuCategory",
-                          widget.id,
-                          widget.tableNo,
-                          setState: passSetState);
+                      return ItemsGrid(
+                        documents: filteredItems,
+                          collection:  "Restaurants/${widget.id}/MenuCategory",
+                          context: context,
+                          id: widget.id,
+                          selected: selected,
+                          tableNo: widget.tableNo,
+                          );
                     },
                   );
                 },
@@ -260,13 +256,35 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 }
 
-Widget createItemsGrid(List<QueryDocumentSnapshot> documents, context, selected,
-    collection, id, tableNo,
-    {required VoidCallback setState}) {
-  return GridView.count(
+class ItemsGrid extends StatefulWidget {
+  final List<QueryDocumentSnapshot> documents;
+  final dynamic context;
+  final dynamic selected;
+  final String collection;
+  final String id;
+  final String tableNo;
+
+  const ItemsGrid({
+    required this.documents,
+    required this.context,
+    required this.selected,
+    required this.collection,
+    required this.id,
+    required this.tableNo,
+  });
+
+  @override
+  _ItemsGridState createState() => _ItemsGridState();
+}
+
+class _ItemsGridState extends State<ItemsGrid> {
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
       crossAxisCount: 2,
       childAspectRatio: 0.70,
-      children: documents.map((document) {
+      children: widget.documents.map((document) {
         return GestureDetector(
           onTap: () {
             showModalBottomSheet(
@@ -280,162 +298,174 @@ Widget createItemsGrid(List<QueryDocumentSnapshot> documents, context, selected,
                 ),
               ),
               builder: (BuildContext context) {
-                int quantity = 0;
-                return Wrap(
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
-                      ),
-                      child: AspectRatio(
-                        aspectRatio: 1.5,
-                        child: Image.network(
-                          document["image_url"],
-                          fit: BoxFit.fitWidth,
-                        ),
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                int selectedQuantity = 0;
+                return StatefulBuilder(
+                  builder: (BuildContext context, setState) {
+                    return Wrap(
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(20, 20, 15, 10),
-                              child: Text(
-                                document['name'],
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                        ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20),
+                          ),
+                          child: AspectRatio(
+                            aspectRatio: 1.5,
+                            child: Image.network(
+                              document["image_url"],
+                              fit: BoxFit.fitWidth,
                             ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
-                              child: Row(
-                                children: [
-                                  Row(
-                                    children: List.generate(5, (index) {
-                                      if (index < document["rating"]) {
-                                        return const Icon(
-                                          Icons.star,
-                                          color: Colors.amber,
-                                        );
-                                      } else {
-                                        return const Icon(
-                                          Icons.star_border,
-                                          color: Colors.amber,
-                                        );
-                                      }
-                                    }),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    document["rating"].toString(),
-                                    style: const TextStyle(
-                                        fontSize: 16, color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            IconButton(
-                                onPressed: () {
-                                  if (quantity != 0) {
-                                    quantity--;
-                                    setState;
-                                  }
-                                },
-                                icon: const Icon(Icons.remove)),
-                            Text(quantity.toString()),
-                            IconButton(
-                                onPressed: () {
-                                  quantity++;
-                                  setState;
-                                },
-                                icon: const Icon(Icons.add)),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(20, 20, 15, 10),
+                                  child: Text(
+                                    document['name'],
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(20, 0, 15, 15),
+                                  child: Row(
+                                    children: [
+                                      Row(
+                                        children: List.generate(5, (index) {
+                                          if (index < document["rating"]) {
+                                            return const Icon(
+                                              Icons.star,
+                                              color: Colors.amber,
+                                            );
+                                          } else {
+                                            return const Icon(
+                                              Icons.star_border,
+                                              color: Colors.amber,
+                                            );
+                                          }
+                                        }),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        document["rating"].toString(),
+                                        style: const TextStyle(
+                                            fontSize: 16, color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                IconButton(
+                                  onPressed: () {
+                                    if (selectedQuantity != 0) {
+                                      setState(() {
+                                        selectedQuantity--;
+                                      });
+                                    }
+                                  },
+                                  icon: const Icon(Icons.remove),
+                                ),
+                                Text(selectedQuantity.toString()),
+                                IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      selectedQuantity++;
+                                    });
+                                  },
+                                  icon: const Icon(Icons.add),
+                                ),
+                              ],
+                            ),
                           ],
-                        )
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Content: ${document['content']}',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Price: ${document['price']}',
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                            ],
+                          ),
+                        ),
+                        menuButton("Add to Order List", () async {
+                          final usersSnapshot = await FirebaseFirestore.instance
+                              .collection("Restaurants/${widget.id}/Tables")
+                              .doc(widget.tableNo)
+                              .get();
+                          final List<dynamic> users =
+                              usersSnapshot.data()!['users'];
+                          if (users.contains(LoginPage.userID) ||
+                              users.contains("${LoginPage.userID}-admin")) {
+                            final querySnapshot = await FirebaseFirestore
+                                .instance
+                                .collection("Restaurants/${widget.id}/Tables")
+                                .doc(widget.tableNo)
+                                .collection("Orders")
+                                .where("itemRef", isEqualTo: document.reference)
+                                .get();
+                            if (querySnapshot.size > 0) {
+                              // Item already exists in order, update its quantity
+                              final orderDoc = querySnapshot.docs.first;
+                              final quantity = orderDoc[
+                                      "quantity_notSubmitted_notServiced"] + selectedQuantity;
+                              orderDoc.reference.update({
+                                "quantity_notSubmitted_notServiced": quantity
+                              });
+                            } else {
+                              // Item doesn't exist in order, add it with quantity 1
+                              FirebaseFirestore.instance
+                                  .collection("Restaurants/${widget.id}/Tables")
+                                  .doc(widget.tableNo)
+                                  .collection("Orders")
+                                  .doc()
+                                  .set({
+                                "itemRef": document.reference,
+                                "quantity_notSubmitted_notServiced": selectedQuantity,
+                                "quantity_Submitted_notServiced": 0,
+                                "quantity_Submitted_Serviced": 0,
+                              });
+                            }
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(
+                                  "${document['name']} added to order list, now you can confirm your order!"),
+                            ));
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    "You are not authorized to add items to the order list."),
+                              ),
+                            );
+                          }
+                          Navigator.of(context).pop();
+                        }),
                       ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
-                      child: Row(
-                        children: [
-                          Text(
-                            'Content: ${document['content']}',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
-                      child: Row(
-                        children: [
-                          Text(
-                            'Price: ${document['price']}',
-                            style: const TextStyle(fontSize: 20),
-                          ),
-                        ],
-                      ),
-                    ),
-                    menuButton("Add to Order List", () async {
-                      final usersSnapshot = await FirebaseFirestore.instance
-                          .collection("Restaurants/$id/Tables")
-                          .doc(tableNo)
-                          .get();
-                      final List<dynamic> users =
-                          usersSnapshot.data()!['users'];
-                      if (users.contains(LoginPage.userID) ||
-                          users.contains("${LoginPage.userID}-admin")) {
-                        final querySnapshot = await FirebaseFirestore.instance
-                            .collection("Restaurants/$id/Tables")
-                            .doc(tableNo)
-                            .collection("Orders")
-                            .where("itemRef", isEqualTo: document.reference)
-                            .get();
-                        if (querySnapshot.size > 0) {
-                          // Item already exists in order, update its quantity
-                          final orderDoc = querySnapshot.docs.first;
-                          final quantity =
-                              orderDoc["quantity_notSubmitted_notServiced"] + 1;
-                          orderDoc.reference.update(
-                              {"quantity_notSubmitted_notServiced": quantity});
-                        } else {
-                          // Item doesn't exist in order, add it with quantity 1
-                          FirebaseFirestore.instance
-                              .collection("Restaurants/$id/Tables")
-                              .doc(tableNo)
-                              .collection("Orders")
-                              .doc()
-                              .set({
-                            "itemRef": document.reference,
-                            "quantity_notSubmitted_notServiced": 1,
-                            "quantity_Submitted_notServiced": 0,
-                            "quantity_Submitted_Serviced": 0,
-                          });
-                        }
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(
-                              "${document['name']} added to order list, now you can confirm your order!"),
-                        ));
-                      } else {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(
-                          content: Text(
-                              "You are not authorized to add items to the order list."),
-                        ));
-                      }
-                      Navigator.of(context).pop();
-                    }),
-                  ],
+                    );
+                  },
                 );
               },
             );
@@ -492,7 +522,9 @@ Widget createItemsGrid(List<QueryDocumentSnapshot> documents, context, selected,
             ),
           ),
         );
-      }).toList());
+      }).toList(),
+    );
+  }
 }
 
 class ShoppingCartButton extends StatelessWidget {
