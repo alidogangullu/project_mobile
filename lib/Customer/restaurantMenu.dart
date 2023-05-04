@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:project_mobile/Customer/customerPanel.dart';
 import 'package:project_mobile/Customer/order.dart';
-
-//todo detaylandirma (managerin menu olusturma ekrani ile birlikte)
+import '../customWidgets.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key, required this.id, required this.tableNo});
@@ -18,7 +17,6 @@ class MenuScreen extends StatefulWidget {
 
 class _MenuScreenState extends State<MenuScreen> {
   List<dynamic> users = [];
-
   Future<void> listenUnauthorizedUsers() async {
     await FirebaseFirestore.instance
         .collection("Restaurants/${widget.id}/Tables")
@@ -56,7 +54,7 @@ class _MenuScreenState extends State<MenuScreen> {
             .snapshots()
             .listen((documentSnapshot) {
           List<dynamic> unAuthorizedUsers =
-          documentSnapshot.data()!['unAuthorizedUsers'];
+              documentSnapshot.data()!['unAuthorizedUsers'];
           if (unAuthorizedUsers.isNotEmpty) {
             // New user joined, display popup dialog to admin
             for (var user in unAuthorizedUsers) {
@@ -100,6 +98,32 @@ class _MenuScreenState extends State<MenuScreen> {
     });
   }
 
+  void passSetState() {
+    setState(() {});
+  }
+
+  void _onSearchQueryChanged(String query) {
+    setState(() {
+      _searchQuery = query.toLowerCase();
+    });
+  }
+
+  String selected = "";
+  String _searchQuery = '';
+  final searchController = TextEditingController();
+
+  Future<List<QueryDocumentSnapshot>> getItemsForAllCategories(
+      List<QueryDocumentSnapshot> categories) async {
+    List<QueryDocumentSnapshot> allDocuments = [];
+    for (var doc in categories) {
+      final items = await FirebaseFirestore.instance
+          .collection('Restaurants/${widget.id}/MenuCategory/${doc.id}/list')
+          .get();
+      allDocuments.addAll(items.docs);
+    }
+    return allDocuments;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -109,11 +133,15 @@ class _MenuScreenState extends State<MenuScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: ShoppingCartFloatingButton(
-          userID: LoginPage.userID,
-          tableNo: widget.tableNo,
-          restaurantID: widget.id),
       appBar: AppBar(
+        actions: [
+          ShoppingCartButton(
+              userID: LoginPage.userID,
+              tableNo: widget.tableNo,
+              restaurantID: widget.id),
+        ],
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
         leading: IconButton(
           onPressed: () {
             Navigator.pushReplacement(context,
@@ -125,168 +153,350 @@ class _MenuScreenState extends State<MenuScreen> {
           id: widget.id,
         ),
       ),
-      body: StreamBuilder(
-        stream: FirebaseFirestore.instance
-            .collection("Restaurants/${widget.id}/MenuCategory")
-            .orderBy("name", descending: true)
-            .snapshots(),
-        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else {
-            return ListView(
-              children: snapshot.data!.docs.map((document) {
-                //restorant menüsü kategorileri listeleme
-                return InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CategoryItemsList(
-                          restaurantPath: "Restaurants/${widget.id}",
-                          selectedCategory: document['name'],
-                          table: widget.tableNo,
+      body: Column(
+        children: [
+          textInputField(context, "Search Item", searchController, false,
+              iconData: Icons.search, onChanged: _onSearchQueryChanged),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 5, 0, 0),
+            child: SizedBox(
+              height: 30,
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection("Restaurants/${widget.id}/MenuCategory")
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Text('Loading categories...');
+                  }
+                  final categories =
+                      snapshot.data!.docs.map((doc) => doc.id).toList();
+                  return ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final category = categories[index];
+                      return GestureDetector(
+                        onTap: () => setState(() => selected == category
+                            ? selected = ''
+                            : selected = category),
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: selected == category
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            category,
+                            style: TextStyle(
+                              color: selected == category
+                                  ? Colors.white
+                                  : Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  child: Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.emoji_food_beverage),
-                      title: Text(document['name']),
-                    ),
-                  ),
-                );
-              }).toList(),
-            );
-          }
-        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection("Restaurants/${widget.id}/MenuCategory")
+                    .snapshots(),
+                builder: (BuildContext context,
+                    AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final categories = snapshot.data!.docs;
+                  return FutureBuilder(
+                    future: getItemsForAllCategories(categories),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<List<QueryDocumentSnapshot>>
+                            itemsSnapshot) {
+                      if (itemsSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      final items = itemsSnapshot.data!;
+                      final visibleItems = selected.isEmpty
+                          ? items
+                          : items
+                              .where((item) => item.reference.path.startsWith(
+                                  'Restaurants/${widget.id}/MenuCategory/$selected'))
+                              .toList();
+                      final filteredItems = visibleItems.where((item) {
+                        final name = item['name'].toString().toLowerCase();
+                        return name.contains(_searchQuery);
+                      }).toList();
+                      return createItemsGrid(
+                          filteredItems,
+                          context,
+                          selected,
+                          "Restaurants/${widget.id}/MenuCategory",
+                          widget.id,
+                          widget.tableNo,
+                          setState: passSetState);
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class CategoryItemsList extends StatelessWidget {
-  const CategoryItemsList(
-      {Key? key,
-      required this.restaurantPath,
-      required this.selectedCategory,
-      required this.table})
-      : super(key: key);
-
-  final String restaurantPath;
-  final String selectedCategory;
-  final String table;
-
-  void addToOrder(DocumentSnapshot document, context) async {
-    final usersSnapshot = await FirebaseFirestore.instance
-        .collection("$restaurantPath/Tables")
-        .doc(table)
-        .get();
-    final List<dynamic> users = usersSnapshot.data()!['users'];
-    if (users.contains(LoginPage.userID) || users.contains("${LoginPage.userID}-admin")) {
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection("$restaurantPath/Tables")
-          .doc(table)
-          .collection("Orders")
-          .where("itemRef", isEqualTo: document.reference)
-          .get();
-      if (querySnapshot.size > 0) {
-        // Item already exists in order, update its quantity
-        final orderDoc = querySnapshot.docs.first;
-        final quantity = orderDoc["quantity_notSubmitted_notServiced"] + 1;
-        orderDoc.reference.update({
-          "quantity_notSubmitted_notServiced": quantity
-        });
-      } else {
-        // Item doesn't exist in order, add it with quantity 1
-        FirebaseFirestore.instance
-            .collection("$restaurantPath/Tables")
-            .doc(table)
-            .collection("Orders")
-            .doc()
-            .set({
-          "itemRef": document.reference,
-          "quantity_notSubmitted_notServiced": 1,
-          "quantity_Submitted_notServiced": 0,
-          "quantity_Submitted_Serviced": 0,
-        });
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("${document['name']} added to order list, now you can confirm your order!"),
-          ));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("You are not authorized to add items to the order list."),
-          ));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(selectedCategory),
-      ),
-      floatingActionButton: ShoppingCartFloatingButton(
-          restaurantID: restaurantPath.split("/").last,
-          tableNo: table,
-          userID: LoginPage.userID),
-      body: StreamBuilder(
-          stream: FirebaseFirestore.instance
-              .collection('$restaurantPath/MenuCategory/$selectedCategory/list')
-              .orderBy('name', descending: true)
-              .snapshots(),
-          builder:
-              (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else {
-              return ListView(
-                children: snapshot.data!.docs.map((document) {
-                  //kategornin içindeki ürünleri listeme
-                  //todo yorum, estimated time vb diğer bilgiler
-                  return Card(
-                    child: ListTile(
-                      leading: document['image_url'] != null
-                          ? Image.network(
-                        document['image_url'],
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.cover,
-                      )
-                          : const SizedBox.shrink(),
-                      title: Text(document['name']),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+Widget createItemsGrid(List<QueryDocumentSnapshot> documents, context, selected,
+    collection, id, tableNo,
+    {required VoidCallback setState}) {
+  return GridView.count(
+      crossAxisCount: 2,
+      childAspectRatio: 0.70,
+      children: documents.map((document) {
+        return GestureDetector(
+          onTap: () {
+            showModalBottomSheet(
+              isScrollControlled: true,
+              enableDrag: true,
+              context: context,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              builder: (BuildContext context) {
+                int quantity = 0;
+                return Wrap(
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
+                      child: AspectRatio(
+                        aspectRatio: 1.5,
+                        child: Image.network(
+                          document["image_url"],
+                          fit: BoxFit.fitWidth,
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(20, 20, 15, 10),
+                              child: Text(
+                                document['name'],
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
+                              child: Row(
+                                children: [
+                                  Row(
+                                    children: List.generate(5, (index) {
+                                      if (index < document["rating"]) {
+                                        return const Icon(
+                                          Icons.star,
+                                          color: Colors.amber,
+                                        );
+                                      } else {
+                                        return const Icon(
+                                          Icons.star_border,
+                                          color: Colors.amber,
+                                        );
+                                      }
+                                    }),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    document["rating"].toString(),
+                                    style: const TextStyle(
+                                        fontSize: 16, color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            IconButton(
+                                onPressed: () {
+                                  if (quantity != 0) {
+                                    quantity--;
+                                    setState;
+                                  }
+                                },
+                                icon: const Icon(Icons.remove)),
+                            Text(quantity.toString()),
+                            IconButton(
+                                onPressed: () {
+                                  quantity++;
+                                  setState;
+                                },
+                                icon: const Icon(Icons.add)),
+                          ],
+                        )
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
+                      child: Row(
                         children: [
-                          Text('Price: ${document['price']}'),
-                          Text('Content: ${document['content']}'),
+                          Text(
+                            'Content: ${document['content']}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
                         ],
                       ),
-                      trailing: IconButton(
-                        icon: const Icon(
-                          Icons.add,
-                          color: Colors.green,
-                        ),
-                        onPressed: () {
-                          addToOrder(document, context);
-                        },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Price: ${document['price']}',
+                            style: const TextStyle(fontSize: 20),
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                }).toList(),
-              );
-            }
-          }),
-    );
-  }
+                    menuButton("Add to Order List", () async {
+                      final usersSnapshot = await FirebaseFirestore.instance
+                          .collection("Restaurants/$id/Tables")
+                          .doc(tableNo)
+                          .get();
+                      final List<dynamic> users =
+                          usersSnapshot.data()!['users'];
+                      if (users.contains(LoginPage.userID) ||
+                          users.contains("${LoginPage.userID}-admin")) {
+                        final querySnapshot = await FirebaseFirestore.instance
+                            .collection("Restaurants/$id/Tables")
+                            .doc(tableNo)
+                            .collection("Orders")
+                            .where("itemRef", isEqualTo: document.reference)
+                            .get();
+                        if (querySnapshot.size > 0) {
+                          // Item already exists in order, update its quantity
+                          final orderDoc = querySnapshot.docs.first;
+                          final quantity =
+                              orderDoc["quantity_notSubmitted_notServiced"] + 1;
+                          orderDoc.reference.update(
+                              {"quantity_notSubmitted_notServiced": quantity});
+                        } else {
+                          // Item doesn't exist in order, add it with quantity 1
+                          FirebaseFirestore.instance
+                              .collection("Restaurants/$id/Tables")
+                              .doc(tableNo)
+                              .collection("Orders")
+                              .doc()
+                              .set({
+                            "itemRef": document.reference,
+                            "quantity_notSubmitted_notServiced": 1,
+                            "quantity_Submitted_notServiced": 0,
+                            "quantity_Submitted_Serviced": 0,
+                          });
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(
+                              "${document['name']} added to order list, now you can confirm your order!"),
+                        ));
+                      } else {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(const SnackBar(
+                          content: Text(
+                              "You are not authorized to add items to the order list."),
+                        ));
+                      }
+                      Navigator.of(context).pop();
+                    }),
+                  ],
+                );
+              },
+            );
+          },
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Card(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1.3,
+                    child: Image.network(
+                      document["image_url"],
+                      fit: BoxFit.fitWidth,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Text(
+                      document['name'],
+                      style: const TextStyle(
+                        fontSize: 20,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.star,
+                          color: Colors.amber,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          document["rating"].toString(),
+                          style:
+                              const TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
+                    child: Text(
+                      "\$ ${document['price']}",
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList());
 }
 
-class ShoppingCartFloatingButton extends StatelessWidget {
-  const ShoppingCartFloatingButton({
+class ShoppingCartButton extends StatelessWidget {
+  const ShoppingCartButton({
     super.key,
     required this.restaurantID,
     required this.tableNo,
@@ -312,7 +522,7 @@ class ShoppingCartFloatingButton extends StatelessWidget {
         final users = snapshot.data ?? [];
         final isAdmin = users.contains("$userID-admin");
         final currentUserIsAuthorized = users.contains(userID) || isAdmin;
-        return FloatingActionButton(
+        return IconButton(
           onPressed: currentUserIsAuthorized
               ? () {
                   Navigator.push(
@@ -348,7 +558,7 @@ class ShoppingCartFloatingButton extends StatelessWidget {
                     ),
                   );
                 },
-          child: const Icon(Icons.shopping_basket),
+          icon: const Icon(Icons.shopping_cart),
         );
       },
     );
@@ -368,7 +578,12 @@ class RestaurantNameText extends StatelessWidget {
           FirebaseFirestore.instance.collection("Restaurants").doc(id).get(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          return Text(snapshot.data!['name']);
+          return Text(
+            snapshot.data!['name'],
+            style: const TextStyle(
+              color: Colors.black,
+            ),
+          );
         } else if (snapshot.hasError) {
           return Text("Error: ${snapshot.error}");
         }
