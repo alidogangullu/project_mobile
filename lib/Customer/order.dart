@@ -65,19 +65,24 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
           .toList();
 
       for (final order in orders) {
-        final oldQuantity = order['quantity_notSubmitted_notServiced'];
+        final toSubmitQuantity = order['quantity_notSubmitted_notServiced'];
         final submittedQuantity = order['quantity_Submitted_notServiced'];
         int newQuantity;
         if (submittedQuantity != null) {
-          newQuantity = oldQuantity + submittedQuantity;
+          newQuantity = toSubmitQuantity + submittedQuantity;
         } else {
-          newQuantity = oldQuantity;
+          newQuantity = toSubmitQuantity;
         }
         await widget.ordersRef.doc(order.id).update({
           'quantity_notSubmitted_notServiced': 0,
           'quantity_Submitted_notServiced': newQuantity,
-          'newNotification': true
         });
+
+        await widget.tableRef.update({
+          'newNotification': true,
+          'notifications': FieldValue.arrayUnion(["New order: ${toSubmitQuantity}x ${order['itemRef'].toString().split("/").last.split(")").first}"]),
+        });
+
       }
 
       setState(() {

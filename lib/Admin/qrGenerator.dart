@@ -108,6 +108,7 @@ class QRHomePage extends StatelessWidget {
                           "newNotification": false,
                           'users': FieldValue.arrayUnion([]),
                           'unAuthorizedUsers': FieldValue.arrayUnion([]),
+                          'notifications': FieldValue.arrayUnion([]),
                         });
                       }
                     }

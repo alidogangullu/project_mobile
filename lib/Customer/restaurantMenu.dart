@@ -24,6 +24,17 @@ class _MenuScreenState extends State<MenuScreen> {
         .get()
         .then((document) async {
       users = document.data()!['users'];
+
+      if(users.isEmpty){
+        await FirebaseFirestore.instance
+            .collection("Restaurants/${widget.id}/Tables")
+            .doc(widget.tableNo)
+            .update({
+          'newNotification' : true,
+          'notifications': FieldValue.arrayUnion(["A new customer has been seated at Table."]),
+        });
+      }
+
       bool isAdmin = users.isEmpty ||
           users.contains(
               "${LoginPage.userID}-admin"); // First accessed user is admin
@@ -298,7 +309,7 @@ class _ItemsGridState extends State<ItemsGrid> {
                 ),
               ),
               builder: (BuildContext context) {
-                int selectedQuantity = 0;
+                int selectedQuantity = 1;
                 return StatefulBuilder(
                   builder: (BuildContext context, setState) {
                     return Wrap(
@@ -405,7 +416,7 @@ class _ItemsGridState extends State<ItemsGrid> {
                           child: Row(
                             children: [
                               Text(
-                                'Price: ${document['price']}',
+                                '${document['price']} \$',
                                 style: const TextStyle(fontSize: 20),
                               ),
                             ],
