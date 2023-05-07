@@ -50,7 +50,7 @@ class _QRScannerState extends State<QRScanner> {
   }
 
   static bool isDesiredLocation(LocationData? locationData, double desiredLatitude, double desiredLongitude) {
-    double maxDistanceMeters = 10000000;
+    double maxDistanceMeters = 10; //Erisilebilir mesafe
 
     if (locationData == null) {
       return false;
