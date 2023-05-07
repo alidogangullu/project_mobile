@@ -379,7 +379,7 @@ class _ItemsGridState extends State<ItemsGrid> {
                               children: [
                                 IconButton(
                                   onPressed: () {
-                                    if (selectedQuantity != 0) {
+                                    if (selectedQuantity != 1) {
                                       setState(() {
                                         selectedQuantity--;
                                       });

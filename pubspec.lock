@@ -648,6 +648,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
+  safe_device:
+    dependency: "direct main"
+    description:
+      name: safe_device
+      sha256: "3ce39c9f853860ca2647204204dd5da41be2448963673184c7b8184f49271375"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.2"
   shared_preferences:
     dependency: "direct main"
     description:
@@ -789,6 +797,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.4.16"
+  trust_location:
+    dependency: transitive
+    description:
+      name: trust_location
+      sha256: "2457f4bcd9ef8423fd12d8ae1701040ecef37a488e4a46bfa50bad26d8cf7d80"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.13"
   typed_data:
     dependency: transitive
     description:
