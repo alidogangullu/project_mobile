@@ -7,8 +7,6 @@ import 'package:project_mobile/Customer/restaurantMenu.dart';
 import 'package:location/location.dart';
 import 'package:geolocator/geolocator.dart';
 
-//todo security, location check vb...
-
 class CustomerHome extends StatefulWidget {
   const CustomerHome({Key? key}) : super(key: key);
 
@@ -129,7 +127,6 @@ class _CustomerHomeState extends State<CustomerHome> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue,
         onTap: _onItemTapped,
       ),
     );
