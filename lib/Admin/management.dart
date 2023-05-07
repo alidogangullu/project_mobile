@@ -33,6 +33,7 @@ class _ManagementPanelState extends State<ManagementPanel> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
         backgroundColor: Colors.white,
         title: const Text(
           "Restaurants",

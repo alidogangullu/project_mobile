@@ -227,7 +227,7 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.hasError) {
-            return AppBar(title: const Text('Error', style: TextStyle(color: Colors.black)),backgroundColor: Colors.white,);
+            return AppBar(title: const Text('Error', style: TextStyle(color: Colors.black)),backgroundColor: Colors.white,elevation: 0,);
           } else {
             final managerName = snapshot.data!.get('name');
             return AppBar(
@@ -269,7 +269,7 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
             );
           }
         } else {
-          return AppBar(title: const Text('Loading...', style: TextStyle(color: Colors.black),),backgroundColor: Colors.white,);
+          return AppBar(title: const Text('Loading...', style: TextStyle(color: Colors.black),),backgroundColor: Colors.white,elevation: 0,);
         }
       },
     );

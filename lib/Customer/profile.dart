@@ -36,7 +36,7 @@ class _ProfileState extends State<Profile> {
     } else {
       setState(() {
         _profilePhotoUrl =
-        'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
+            'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
       });
     }
   }
@@ -64,7 +64,7 @@ class _ProfileState extends State<Profile> {
 
   Future<void> _updateProfileImageUrl(String profileImageUrl) async {
     final userRef =
-    FirebaseFirestore.instance.collection('users').doc(widget.userId);
+        FirebaseFirestore.instance.collection('users').doc(widget.userId);
     await userRef.update({'profileImageUrl': profileImageUrl});
   }
 
@@ -95,19 +95,19 @@ class _ProfileState extends State<Profile> {
                 ClipOval(
                   child: _image != null
                       ? Image.file(
-                    _image!,
-                    width: 75,
-                    height: 75,
-                    fit: BoxFit.cover,
-                  )
+                          _image!,
+                          width: 75,
+                          height: 75,
+                          fit: BoxFit.cover,
+                        )
                       : _profilePhotoUrl != null
-                      ? Image.network(
-                    _profilePhotoUrl!,
-                    width: 75,
-                    height: 75,
-                    fit: BoxFit.cover,
-                  )
-                      : const SizedBox(),
+                          ? Image.network(
+                              _profilePhotoUrl!,
+                              width: 75,
+                              height: 75,
+                              fit: BoxFit.cover,
+                            )
+                          : const SizedBox(),
                 ),
                 const SizedBox(
                   width: 15,
@@ -162,6 +162,7 @@ class _ProfileState extends State<Profile> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                //todo column icinde ProfilePageButton kullan.
                 const ProfilePageButton(
                   icon: Icon(Icons.credit_card),
                   text: "Payment Methods",
@@ -186,8 +187,7 @@ class _ProfileState extends State<Profile> {
                   },
                   child: ProfilePageButton(
                     icon: Icon(Icons.rate_review),
-
-                    text:'Comments',
+                    text: 'Comments',
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -203,6 +203,7 @@ class _ProfileState extends State<Profile> {
     );
   }
 }
+
 class CommentsPage extends StatefulWidget {
   @override
   _CommentsPageState createState() => _CommentsPageState();
@@ -215,9 +216,7 @@ class _CommentsPageState extends State<CommentsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-
           backgroundColor: Colors.white,
-          elevation: 0,
           centerTitle: false,
           title: const Text(
             'Comments',
@@ -229,15 +228,14 @@ class _CommentsPageState extends State<CommentsPage> {
           ),
           iconTheme: IconThemeData(color: Colors.black),
           textTheme: Theme.of(context).textTheme.copyWith(
-            headline6: TextStyle(color: Colors.black),
-          ),
-
+                headline6: TextStyle(color: Colors.black),
+              ),
         ),
         body: StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('/comments')
-              .snapshots(),
-          builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          stream:
+              FirebaseFirestore.instance.collection('/comments').snapshots(),
+          builder:
+              (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
             if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}');
             }
@@ -255,11 +253,14 @@ class _CommentsPageState extends State<CommentsPage> {
                   // if the comment was not made by the current user, do not show it
                   return const SizedBox();
                 }
-                DocumentReference item = order.get("itemRef") ;
+                DocumentReference item = order.get("itemRef");
                 final restaurantRef = item.path.split("/")[1];
                 return FutureBuilder<DocumentSnapshot>(
-                  future: FirebaseFirestore.instance.doc("Restaurants/$restaurantRef").get(),
-                  builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+                  future: FirebaseFirestore.instance
+                      .doc("Restaurants/$restaurantRef")
+                      .get(),
+                  builder: (BuildContext context,
+                      AsyncSnapshot<DocumentSnapshot> snapshot) {
                     if (snapshot.hasError) {
                       return Text('Error: ${snapshot.error}');
                     }
@@ -267,7 +268,8 @@ class _CommentsPageState extends State<CommentsPage> {
                       return const SizedBox();
                     }
                     final restaurantName = snapshot.data!.get('name') as String;
-                    final managers = snapshot.data!.get('managers') as List<dynamic>;
+                    final managers =
+                        snapshot.data!.get('managers') as List<dynamic>;
                     final currentUserID = LoginPage.userID;
 
                     if (!managers.contains(currentUserID)) {
@@ -277,7 +279,8 @@ class _CommentsPageState extends State<CommentsPage> {
 
                     return FutureBuilder<DocumentSnapshot>(
                       future: item.get(),
-                      builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+                      builder: (BuildContext context,
+                          AsyncSnapshot<DocumentSnapshot> snapshot) {
                         if (snapshot.hasError) {
                           return Text('Error: ${snapshot.error}');
                         }
@@ -293,7 +296,8 @@ class _CommentsPageState extends State<CommentsPage> {
                             "${dateTime.day.toString().padLeft(2, '0')}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.year.toString()} ${dateTime.hour.toString().padLeft(2, '0')}.${dateTime.minute.toString().padLeft(2, '0')}";
 
                         return Container(
-                          margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                          margin: EdgeInsets.symmetric(
+                              vertical: 8.0, horizontal: 16.0),
                           padding: EdgeInsets.all(16.0),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12.0),
@@ -311,7 +315,8 @@ class _CommentsPageState extends State<CommentsPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Expanded(
@@ -331,7 +336,8 @@ class _CommentsPageState extends State<CommentsPage> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => EditCommentPage(order: order),
+                                          builder: (context) =>
+                                              EditCommentPage(order: order),
                                         ),
                                       );
                                     },
@@ -339,8 +345,7 @@ class _CommentsPageState extends State<CommentsPage> {
                                   SizedBox(width: 8.0),
                                   Icon(
                                     Icons.star,
-                                    color:
-                                    Colors.amber[700],
+                                    color: Colors.amber[700],
                                   ),
                                   SizedBox(width: 4.0),
                                   Text(
@@ -356,7 +361,8 @@ class _CommentsPageState extends State<CommentsPage> {
                               ),
                               SizedBox(height: 12.0),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     '$formattedDate',
@@ -384,9 +390,7 @@ class _CommentsPageState extends State<CommentsPage> {
               },
             );
           },
-        )
-
-    );
+        ));
   }
 }
 
@@ -415,6 +419,7 @@ class ProfilePageButton extends StatelessWidget {
     );
   }
 }
+
 class EditCommentPage extends StatefulWidget {
   final DocumentSnapshot order;
 
@@ -446,16 +451,12 @@ class _EditCommentPageState extends State<EditCommentPage> {
     Navigator.pop(context);
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar:
-      AppBar(
-
+      appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
         centerTitle: false,
         title: const Text(
           'Edit Comment',
@@ -467,9 +468,8 @@ class _EditCommentPageState extends State<EditCommentPage> {
         ),
         iconTheme: IconThemeData(color: Colors.black),
         textTheme: Theme.of(context).textTheme.copyWith(
-          headline6: TextStyle(color: Colors.black),
-        ),
-
+              headline6: TextStyle(color: Colors.black),
+            ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -527,7 +527,6 @@ class _EditCommentPageState extends State<EditCommentPage> {
                 style: TextStyle(
                   fontSize: 18.0,
                   fontWeight: FontWeight.bold,
-
                 ),
               ),
               style: ElevatedButton.styleFrom(
@@ -535,12 +534,10 @@ class _EditCommentPageState extends State<EditCommentPage> {
                   horizontal: 32.0,
                   vertical: 16.0,
                 ),
-
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
                 primary: Theme.of(context).shadowColor,
-
                 elevation: 5.0,
               ),
             ),
@@ -549,7 +546,6 @@ class _EditCommentPageState extends State<EditCommentPage> {
       ),
     );
   }
-
 }
 
 class ProfileDetails extends StatelessWidget implements PreferredSizeWidget {

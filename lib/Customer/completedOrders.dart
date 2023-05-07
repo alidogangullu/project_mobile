@@ -3,29 +3,161 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
 
-class CompletedOrdersScreen extends StatelessWidget {
+enum SortBy {
+  priceAscending,
+  priceDescending,
+  timeAscending,
+  timeDescending,
+}
+
+class OrderWithPrice {
+  final QueryDocumentSnapshot order;
+  final double totalPrice;
+
+  OrderWithPrice({required this.order, required this.totalPrice});
+}
+
+
+class CompletedOrdersScreen extends StatefulWidget {
   final String customerId;
 
   const CompletedOrdersScreen({Key? key, required this.customerId})
       : super(key: key);
 
   @override
+  State<CompletedOrdersScreen> createState() => _CompletedOrdersScreenState();
+}
+
+class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
+  SortBy _sortBy = SortBy.timeDescending;
+
+  Future<double> _calculateTotalPrice(List<dynamic> items) async {
+    double totalPrice = 0;
+    for (var item in items) {
+      final itemRef = item['itemRef'] as DocumentReference;
+      final itemDoc = await itemRef.get();
+      final itemPrice = itemDoc.get('price');
+      totalPrice += itemPrice;
+    }
+    return totalPrice;
+  }
+
+  Future<List<double>> _getTotalPricesForOrders(List<QueryDocumentSnapshot> orders) async {
+    List<double> totalPrices = [];
+    for (var order in orders) {
+      double totalPrice = await _calculateTotalPrice(order.get('items') as List<dynamic>);
+      totalPrices.add(totalPrice);
+    }
+    return totalPrices;
+  }
+
+  Future<List<OrderWithPrice>> _sortOrders(
+      List<QueryDocumentSnapshot> orders,
+      SortBy sortBy,
+      ) async {
+    List<OrderWithPrice> sortedOrdersWithPrice = [];
+    List<double> totalPrices = await _getTotalPricesForOrders(orders);
+
+    for (int i = 0; i < orders.length; i++) {
+      sortedOrdersWithPrice.add(OrderWithPrice(order: orders[i], totalPrice: totalPrices[i]));
+    }
+
+    switch (sortBy) {
+      case SortBy.priceAscending:
+        sortedOrdersWithPrice.sort((a, b) => a.totalPrice.compareTo(b.totalPrice));
+        break;
+      case SortBy.priceDescending:
+        sortedOrdersWithPrice.sort((a, b) => b.totalPrice.compareTo(a.totalPrice));
+        break;
+      case SortBy.timeAscending:
+        sortedOrdersWithPrice.sort((a, b) =>
+            a.order.get('timestamp').toDate().compareTo(b.order.get('timestamp').toDate()));
+        break;
+      case SortBy.timeDescending:
+        sortedOrdersWithPrice.sort((a, b) =>
+            b.order.get('timestamp').toDate().compareTo(a.order.get('timestamp').toDate()));
+        break;
+    }
+
+    return sortedOrdersWithPrice;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Completed Orders'),
         actions: [
           IconButton(
-            onPressed: () {}, //todo sort
-            icon: const Icon(Icons.sort),
-          )
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        title: const Text('Price (Low to High)'),
+                        onTap: () {
+                          setState(() {
+                            _sortBy = SortBy.priceAscending;
+                          });
+                          Navigator.pop(context);
+                        },
+                      ),
+                      ListTile(
+                        title: const Text('Price (High to Low)'),
+                        onTap: () {
+                          setState(() {
+                            _sortBy = SortBy.priceDescending;
+                          });
+                          Navigator.pop(context);
+                        },
+                      ),
+                      ListTile(
+                        title: const Text('Time (Oldest First)'),
+                        onTap: () {
+                          setState(() {
+                            _sortBy = SortBy.timeAscending;
+                          });
+                          Navigator.pop(context);
+                        },
+                      ),
+                      ListTile(
+                        title: const Text('Time (Newest First)'),
+                        onTap: () {
+                          setState(() {
+                            _sortBy = SortBy.timeDescending;
+                          });
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            icon: const Icon(Icons.sort, color: Colors.black),
+          ),
         ],
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
+        title: const Text(
+          'Recent',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 22,
+            height: 1.5,
+          ),
+        ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
+      body: StreamBuilder<List<OrderWithPrice>>(
         stream: FirebaseFirestore.instance
-            .collection('/users/$customerId/completedOrders')
-            .snapshots(),
-        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+            .collection('/users/${widget.customerId}/completedOrders')
+            .snapshots()
+            .asyncMap((snapshot) => _sortOrders(snapshot.docs, _sortBy)),
+        builder: (BuildContext context,
+            AsyncSnapshot<List<OrderWithPrice>> snapshot) {
           if (snapshot.hasError) {
             return Text('Error: ${snapshot.error}');
           }
@@ -35,9 +167,11 @@ class CompletedOrdersScreen extends StatelessWidget {
             );
           }
           return ListView.builder(
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (BuildContext context, int index) {
-              final order = snapshot.data!.docs[index];
+          itemCount: snapshot.data!.length,
+          itemBuilder: (BuildContext context, int index) {
+            final orderWithPrice = snapshot.data![index];
+            final order = orderWithPrice.order;
+            final totalPrice = orderWithPrice.totalPrice;
               final items = order.get('items') as List<dynamic>;
               final restaurantRef =
                   order.get('restaurantRef') as DocumentReference;
@@ -51,72 +185,87 @@ class CompletedOrdersScreen extends StatelessWidget {
                   if (!snapshot.hasData) {
                     return const SizedBox();
                   }
-
                   final restaurantName = snapshot.data!.get('name') as String;
+                  final restaurantImageUrl =
+                      snapshot.data!.get('image_url') as String;
                   final timestamp = order["timestamp"];
                   final dateTime = timestamp.toDate().toLocal();
                   final formattedDate =
                       "${dateTime.day.toString().padLeft(2, '0')}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.year.toString()} ${dateTime.hour.toString().padLeft(2, '0')}.${dateTime.minute.toString().padLeft(2, '0')}";
-
-                  return Card(
+                  return SizedBox(
+                    child: Card(
                       child: ListTile(
-                    title: Text(restaurantName),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(6.0),
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: items.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              final itemRef =
-                                  items[index]['itemRef'] as DocumentReference;
-                              return FutureBuilder<DocumentSnapshot>(
-                                future: itemRef.get(),
-                                builder: (BuildContext context,
-                                    AsyncSnapshot<DocumentSnapshot> snapshot) {
-                                  if (snapshot.hasError) {
-                                    return Text('Error: ${snapshot.error}');
+                        leading: Image.network(
+                          restaurantImageUrl,
+                          fit: BoxFit.contain,
+                        ),
+                        title: Text(restaurantName),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(6.0),
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: items.length > 2 ? 3 : items.length,
+                                itemBuilder: (BuildContext context, int index) {
+                                  if (index == 2 && items.length > 2) {
+                                    return const Text('...');
                                   }
-                                  if (!snapshot.hasData) {
-                                    return const SizedBox();
-                                  }
-                                  final itemName =
-                                      snapshot.data!.get('name') as String;
-                                  return Text('- $itemName');
+                                  final itemRef = items[index]['itemRef']
+                                      as DocumentReference;
+                                  return FutureBuilder<DocumentSnapshot>(
+                                    future: itemRef.get(),
+                                    builder: (BuildContext context,
+                                        AsyncSnapshot<DocumentSnapshot>
+                                            snapshot) {
+                                      if (snapshot.hasError) {
+                                        return Text('Error: ${snapshot.error}');
+                                      }
+                                      if (!snapshot.hasData) {
+                                        return const SizedBox();
+                                      }
+                                      final itemName =
+                                          snapshot.data!.get('name') as String;
+                                      return Text('- $itemName');
+                                    },
+                                  );
                                 },
-                              );
-                            },
+                              ),
+                            ),
+                            Text(
+                              formattedDate,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ],
+                        ),
+                        trailing: SizedBox(
+                          width: 100,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text("${totalPrice.toStringAsFixed(2)}\$"),
+                              IconButton(
+                                icon: const Icon(Icons.arrow_forward),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          OrderDetailsPage(
+                                            orderRef: order.reference,
+                                          ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
                           ),
                         ),
-                        Text(formattedDate),
-                      ],
-                    ),
-                    trailing: SizedBox(
-                      width: 100,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          const Text(
-                              "250\$"), //test için eklendi databaseden çekilecek
-                          IconButton(
-                            icon: const Icon(Icons.arrow_forward),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => OrderDetailsPage(
-                                          orderRef: order.reference,
-                                        )),
-                              );
-                            },
-                          ),
-                        ],
                       ),
                     ),
-                  ));
+                  );
                 },
               );
             },
@@ -142,8 +291,11 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
   final Map<DocumentReference, bool> _showCommentSection = {};
   final Map<DocumentReference, bool> _feedbackChanged = {};
 
-  Future<void> _loadPreviousComment(DocumentReference itemRef,
-      TextEditingController commentController, double itemRating, bool isChanged) async {
+  Future<void> _loadPreviousComment(
+      DocumentReference itemRef,
+      TextEditingController commentController,
+      double itemRating,
+      bool isChanged) async {
     final previousFeedbackSnapshot = await FirebaseFirestore.instance
         .collection('comments')
         .where('userId', isEqualTo: LoginPage.userID)
@@ -170,7 +322,17 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Order Feedback'),
+        iconTheme: const IconThemeData(color: Colors.black),
+        backgroundColor: Colors.white,
+        centerTitle: false,
+        title: const Text(
+          'Give Feedback',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 22,
+            height: 1.5,
+          ),
+        ),
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: widget.orderRef.snapshots(),
@@ -195,18 +357,15 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   _commentControllers[itemRef] ?? TextEditingController();
               _commentControllers[itemRef] = commentController;
 
-              final showCommentSection =
-                  _showCommentSection[itemRef] ?? false;
+              final showCommentSection = _showCommentSection[itemRef] ?? false;
               _showCommentSection[itemRef] = showCommentSection;
 
-              final bool isChanged =
-                  _feedbackChanged[itemRef] ?? false;
+              final bool isChanged = _feedbackChanged[itemRef] ?? false;
 
-              final double itemRating =
-                  _itemRating[itemRef] ?? 3;
+              final double itemRating = _itemRating[itemRef] ?? 3;
 
-              _loadPreviousComment(itemRef, commentController, itemRating, isChanged);
-
+              _loadPreviousComment(
+                  itemRef, commentController, itemRating, isChanged);
 
               return FutureBuilder<DocumentSnapshot>(
                 future: itemRef.get(),
@@ -270,15 +429,16 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (commentController.text.isNotEmpty && !isChanged)
+                                if (commentController.text.isNotEmpty &&
+                                    !isChanged)
                                   const Text(
                                     'You previously left this comment:',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold),
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 TextField(
-                                  onChanged: (value){
-                                      setState(() {
+                                  onChanged: (value) {
+                                    setState(() {
                                       _feedbackChanged[itemRef] = true;
                                     });
                                   },
@@ -299,32 +459,48 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                       },
                                     ),
                                     TextButton(
-                                      child: Text('Save',style: TextStyle(
-                                        color: isChanged ? Colors.green : Colors.blue,
-                                      ),),
+                                      child: Text(
+                                        'Save',
+                                        style: TextStyle(
+                                          color: isChanged
+                                              ? Colors.green
+                                              : Colors.blue,
+                                        ),
+                                      ),
                                       onPressed: () async {
-                                        final commentText = commentController.text.trim();
-                                        final commentQuerySnapshot = await FirebaseFirestore.instance
-                                            .collection('comments')
-                                            .where('userId', isEqualTo: LoginPage.userID)
-                                            .where('itemRef', isEqualTo: itemRef)
-                                            .limit(1)
-                                            .get();
+                                        final commentText =
+                                            commentController.text.trim();
+                                        final commentQuerySnapshot =
+                                            await FirebaseFirestore.instance
+                                                .collection('comments')
+                                                .where('userId',
+                                                    isEqualTo: LoginPage.userID)
+                                                .where('itemRef',
+                                                    isEqualTo: itemRef)
+                                                .limit(1)
+                                                .get();
                                         if (commentQuerySnapshot.size > 0) {
                                           // Update the existing comment
-                                          final commentRef = commentQuerySnapshot.docs[0].reference;
+                                          final commentRef =
+                                              commentQuerySnapshot
+                                                  .docs[0].reference;
                                           await commentRef.set({
                                             'rating': itemRating,
                                             'text': commentText,
-                                            'timestamp': FieldValue.serverTimestamp(),
+                                            'timestamp':
+                                                FieldValue.serverTimestamp(),
                                           }, SetOptions(merge: true));
                                         } else {
                                           // Save a new comment
-                                          final commentRef = FirebaseFirestore.instance.collection('comments').doc();
+                                          final commentRef = FirebaseFirestore
+                                              .instance
+                                              .collection('comments')
+                                              .doc();
                                           await commentRef.set({
                                             'rating': itemRating,
                                             'text': commentText,
-                                            'timestamp': FieldValue.serverTimestamp(),
+                                            'timestamp':
+                                                FieldValue.serverTimestamp(),
                                             'itemRef': itemRef,
                                             'userId': LoginPage.userID,
                                           });
@@ -335,7 +511,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                           _itemRating[itemRef] = itemRating;
                                         });
                                       },
-
                                     ),
                                   ],
                                 ),

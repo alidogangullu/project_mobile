@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:project_mobile/Customer/completedOrders.dart';
 import 'package:project_mobile/Customer/profile.dart';
 import 'package:project_mobile/Customer/qrScanner.dart';
 import 'package:project_mobile/Customer/restaurantMenu.dart';
+import '../Authentication/loginPage.dart';
 
 class CustomerHome extends StatefulWidget {
   const CustomerHome({Key? key}) : super(key: key);
@@ -34,15 +36,6 @@ class _CustomerHomeState extends State<CustomerHome> {
       body: Center(
         child: _pageOptions.elementAt(_selectedIndex),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          //Navigator.push(context, MaterialPageRoute(builder: (context) => const QRScanner()));
-
-          //kolaylık açısından direkt yönlendirme
-          Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const MenuScreen(id: "vAkYpJA6Pd6UTEPDysvj", tableNo: "1"),),);
-        },
-        child: const Icon(Icons.qr_code_scanner),
-      ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -72,21 +65,86 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("App Name"),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              //todo search for restaurant, another user etc
-            },
-            icon: const Icon(Icons.search),
-          ),
-        ],
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          //Navigator.push(context, MaterialPageRoute(builder: (context) => const QRScanner()));
+
+          //kolaylık açısından direkt yönlendirme
+          Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const MenuScreen(id: "vAkYpJA6Pd6UTEPDysvj", tableNo: "1"),),);
+        },
+        child: const Icon(Icons.qr_code_scanner),
       ),
+      appBar: const MyAppBar(),
       body: const Center(
         //todo
         child: Text("Customer Screen Test"),
       ),
     );
   }
+}
+
+class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final double height;
+
+  const MyAppBar({
+    Key? key,
+    this.height = kToolbarHeight,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance.collection('users').doc(LoginPage.userID).get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasError) {
+            return AppBar(title: const Text('Error', style: TextStyle(color: Colors.black)),backgroundColor: Colors.white,elevation: 0,);
+          } else {
+            final managerName = snapshot.data!.get('name');
+            return AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              centerTitle: false,
+              actions: [
+                IconButton(
+                  onPressed: () async {
+                    //todo search for restaurant, another user etc
+                  },
+                  icon: const Icon(Icons.search),
+                ),
+              ],
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Hi, $managerName',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 24,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Get your favourite food here!',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+        } else {
+          return AppBar(title: const Text('Loading...', style: TextStyle(color: Colors.black),),backgroundColor: Colors.white,elevation: 0,);
+        }
+      },
+    );
+  }
+
+  @override
+  Size get preferredSize => Size.fromHeight(height * 1.1);
 }
