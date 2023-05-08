@@ -181,10 +181,14 @@ class _ProfileState extends State<Profile> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text(
-                  'Notification',
-                  style: Theme.of(context).textTheme.headline6,
-                ),
+                ProfilePageButton(text: 'Notifications', icon: Icon(Icons.notifications)),
+                const SizedBox(height: 20),
+                InkWell(
+                  onTap: () async {
+                    await FirebaseAuth.instance.signOut();
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+                  },
+                    child: ProfilePageButton(text: 'Logout', icon: Icon(Icons.logout))),
               ],
             ),
           ],

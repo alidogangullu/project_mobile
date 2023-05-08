@@ -66,7 +66,6 @@ class Home extends StatelessWidget {
     return Scaffold(
       appBar: MyAppBar(),
       body:  Center(
-        //todo
         child:
         StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
@@ -124,9 +123,6 @@ class Home extends StatelessWidget {
                             final dateTime = timestamp.toDate().toLocal();
                             final formattedDate =
                                 "${dateTime.day.toString().padLeft(2, '0')}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.year.toString()} ${dateTime.hour.toString().padLeft(2, '0')}.${dateTime.minute.toString().padLeft(2, '0')}";
-
-
-
                             return Container(
                               margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                               padding: EdgeInsets.all(16.0),

@@ -2,10 +2,12 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:project_mobile/Admin/desktopApplicationConnection.dart';
 import 'package:project_mobile/Admin/qrGenerator.dart';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:project_mobile/Admin/restaurantManagers.dart';
 import 'package:simple_speed_dial/simple_speed_dial.dart';
 
 import '../customWidgets.dart';
@@ -50,10 +52,6 @@ class _EditRestaurantState extends State<EditRestaurant> {
 
   void passSetState() {
     setState(() {});
-  }
-
-  void onPressed() {
-    //TODO Edit Restaurant Managers
   }
 
   @override
@@ -111,9 +109,16 @@ class _EditRestaurantState extends State<EditRestaurant> {
           ),
           SpeedDialChild(
             child: const Icon(Icons.manage_accounts),
-            label: 'Edit Restaurant Manager',
+            label: 'Edit Restaurant Managers',
             onPressed: () {
-              //todo
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditRestaurantManagers(
+                    restaurantId: widget.restaurantID,
+                  ),
+                ),
+              );
             },
             closeSpeedDialOnPressed: true,
           ),
@@ -135,7 +140,16 @@ class _EditRestaurantState extends State<EditRestaurant> {
           SpeedDialChild(
             child: const Icon(Icons.desktop_windows_outlined),
             label: 'Edit Waiters Access',
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DesktopAppConnect(
+                    restaurantId: widget.restaurantID,
+                  ),
+                ),
+              );
+            },
             closeSpeedDialOnPressed: true,
           ),
         ],
