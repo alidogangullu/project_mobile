@@ -192,76 +192,82 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
                   final dateTime = timestamp.toDate().toLocal();
                   final formattedDate =
                       "${dateTime.day.toString().padLeft(2, '0')}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.year.toString()} ${dateTime.hour.toString().padLeft(2, '0')}.${dateTime.minute.toString().padLeft(2, '0')}";
-                  return SizedBox(
-                    child: Card(
-                      child: ListTile(
-                        leading: Image.network(
-                          restaurantImageUrl,
-                          fit: BoxFit.contain,
+                  return Card(
+                    child: ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: SizedBox(
+                          width: 85,
+                          height: 85,
+                          child: Image.network(
+                            restaurantImageUrl,
+                            fit: BoxFit.cover,
+                          ),
                         ),
-                        title: Text(restaurantName),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(6.0),
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: items.length > 2 ? 3 : items.length,
-                                itemBuilder: (BuildContext context, int index) {
-                                  if (index == 2 && items.length > 2) {
-                                    return const Text('...');
-                                  }
-                                  final itemRef = items[index]['itemRef']
-                                      as DocumentReference;
-                                  return FutureBuilder<DocumentSnapshot>(
-                                    future: itemRef.get(),
-                                    builder: (BuildContext context,
-                                        AsyncSnapshot<DocumentSnapshot>
-                                            snapshot) {
-                                      if (snapshot.hasError) {
-                                        return Text('Error: ${snapshot.error}');
-                                      }
-                                      if (!snapshot.hasData) {
-                                        return const SizedBox();
-                                      }
-                                      final itemName =
-                                          snapshot.data!.get('name') as String;
-                                      return Text('- $itemName');
-                                    },
-                                  );
-                                },
-                              ),
+                      ),
+                      title: Text(restaurantName),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: items.length > 2 ? 3 : items.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                if (index == 2 && items.length > 2) {
+                                  return const Text('...');
+                                }
+                                final itemRef = items[index]['itemRef']
+                                    as DocumentReference;
+                                return FutureBuilder<DocumentSnapshot>(
+                                  future: itemRef.get(),
+                                  builder: (BuildContext context,
+                                      AsyncSnapshot<DocumentSnapshot>
+                                          snapshot) {
+                                    if (snapshot.hasError) {
+                                      return Text('Error: ${snapshot.error}');
+                                    }
+                                    if (!snapshot.hasData) {
+                                      return const SizedBox();
+                                    }
+                                    final itemName =
+                                        snapshot.data!.get('name') as String;
+                                    return Text('- $itemName');
+                                  },
+                                );
+                              },
                             ),
-                            Text(
-                              formattedDate,
-                              style: const TextStyle(fontSize: 13),
+                          ),
+                          Text(
+                            formattedDate,
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ],
+                      ),
+                      trailing: SizedBox(
+                        width: 100,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text("${totalPrice.toStringAsFixed(2)}\$"),
+                            IconButton(
+                              icon: const Icon(Icons.arrow_forward),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        OrderDetailsPage(
+                                          orderRef: order.reference,
+                                        ),
+                                  ),
+                                );
+                              },
                             ),
                           ],
-                        ),
-                        trailing: SizedBox(
-                          width: 100,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Text("${totalPrice.toStringAsFixed(2)}\$"),
-                              IconButton(
-                                icon: const Icon(Icons.arrow_forward),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          OrderDetailsPage(
-                                            orderRef: order.reference,
-                                          ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
                         ),
                       ),
                     ),
