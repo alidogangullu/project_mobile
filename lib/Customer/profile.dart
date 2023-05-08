@@ -163,16 +163,6 @@ class _ProfileState extends State<Profile> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 //todo column icinde ProfilePageButton kullan.
-                const ProfilePageButton(
-                  icon: Icon(Icons.credit_card),
-                  text: "Payment Methods",
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'My Cart',
-                  style: Theme.of(context).textTheme.headline6,
-                ),
-                const SizedBox(height: 20),
                 Text(
                   'Help',
                   style: Theme.of(context).textTheme.headline6,
@@ -211,74 +201,108 @@ class CommentsPage extends StatefulWidget {
 
 class _CommentsPageState extends State<CommentsPage> {
   final String userId = FirebaseAuth.instance.currentUser!.uid;
+  String? _selectedRestaurantId;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          centerTitle: false,
-          title: const Text(
-            'Comments',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 22,
-              height: 1.5,
+      appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.black),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
+        title: const Text(
+          'Comments',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 22,
+            height: 1.5,
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('Restaurants')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const CircularProgressIndicator();
+                }
+
+                final restaurants = snapshot.data!.docs;
+
+                return DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Select a restaurant',
+                    enabledBorder: OutlineInputBorder(
+                      borderSide:
+                          const BorderSide(color: Colors.black, width: 0.0),
+                    ),
+                    labelStyle: TextStyle(
+                      color: Colors
+                          .black, // sets the color of the label text to black
+                    ),
+                  ),
+                  value: _selectedRestaurantId,
+                  onChanged: (newValue) {
+                    setState(() {
+                      _selectedRestaurantId = newValue;
+                    });
+                  },
+                  items: restaurants.map((restaurant) {
+                    final restaurantName = restaurant.get('name') as String;
+                    final restaurantId = restaurant.id;
+
+                    return DropdownMenuItem<String>(
+                      value: restaurantId,
+                      child: Text(restaurantName),
+                    );
+                  }).toList(),
+                );
+              },
             ),
           ),
-          iconTheme: IconThemeData(color: Colors.black),
-          textTheme: Theme.of(context).textTheme.copyWith(
-                headline6: TextStyle(color: Colors.black),
-              ),
-        ),
-        body: StreamBuilder<QuerySnapshot>(
-          stream:
-              FirebaseFirestore.instance.collection('/comments').snapshots(),
-          builder:
-              (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-            if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
-            }
-            if (!snapshot.hasData) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
-            return ListView.builder(
-              itemCount: snapshot.data!.docs.length,
-              itemBuilder: (BuildContext context, int index) {
-                final order = snapshot.data!.docs[index];
-                final userId = order.get('userId');
-                if (userId != LoginPage.userID) {
-                  // if the comment was not made by the current user, do not show it
-                  return const SizedBox();
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('/comments')
+                  .snapshots(),
+              builder: (BuildContext context,
+                  AsyncSnapshot<QuerySnapshot> snapshot) {
+                if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
                 }
-                DocumentReference item = order.get("itemRef");
-                final restaurantRef = item.path.split("/")[1];
-                return FutureBuilder<DocumentSnapshot>(
-                  future: FirebaseFirestore.instance
-                      .doc("Restaurants/$restaurantRef")
-                      .get(),
-                  builder: (BuildContext context,
-                      AsyncSnapshot<DocumentSnapshot> snapshot) {
-                    if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
-                    }
-                    if (!snapshot.hasData) {
+                if (!snapshot.hasData) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                final List<DocumentSnapshot> documents = snapshot.data!.docs;
+                final List<DocumentSnapshot> filteredDocuments = documents
+                    .where((doc) =>
+                        doc.get('itemRef').toString().split('/')[1] ==
+                        _selectedRestaurantId)
+                    .toList();
+                return ListView.builder(
+                  itemCount: filteredDocuments.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    final order = filteredDocuments[index];
+                    final userId = order.get('userId');
+                    if (userId != LoginPage.userID) {
+                      // if the comment was not made by the current user, do not show it
                       return const SizedBox();
                     }
-                    final restaurantName = snapshot.data!.get('name') as String;
-                    final managers =
-                        snapshot.data!.get('managers') as List<dynamic>;
-                    final currentUserID = LoginPage.userID;
-
-                    if (!managers.contains(currentUserID)) {
-                      // if the current user is not a manager of the restaurant, do not show the comment
-                      return const SizedBox();
-                    }
-
+                    DocumentReference item = order.get("itemRef");
+                    final restaurantRef = item.path.split("/")[1];
                     return FutureBuilder<DocumentSnapshot>(
-                      future: item.get(),
+                      future: FirebaseFirestore.instance
+                          .doc("Restaurants/$restaurantRef")
+                          .get(),
                       builder: (BuildContext context,
                           AsyncSnapshot<DocumentSnapshot> snapshot) {
                         if (snapshot.hasError) {
@@ -287,110 +311,128 @@ class _CommentsPageState extends State<CommentsPage> {
                         if (!snapshot.hasData) {
                           return const SizedBox();
                         }
-                        final itemName = snapshot.data!.get('name') as String;
-                        final timestamp = order["timestamp"];
-                        final comment = order["text"];
-                        final rating = order["rating"];
-                        final dateTime = timestamp.toDate().toLocal();
-                        final formattedDate =
-                            "${dateTime.day.toString().padLeft(2, '0')}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.year.toString()} ${dateTime.hour.toString().padLeft(2, '0')}.${dateTime.minute.toString().padLeft(2, '0')}";
+                        final restaurantName =
+                            snapshot.data!.get('name') as String;
 
-                        return Container(
-                          margin: EdgeInsets.symmetric(
-                              vertical: 8.0, horizontal: 16.0),
-                          padding: EdgeInsets.all(16.0),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12.0),
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.3),
-                                spreadRadius: 2,
-                                blurRadius: 5,
-                                offset: Offset(0, 3),
+                        return FutureBuilder<DocumentSnapshot>(
+                          future: item.get(),
+                          builder: (BuildContext context,
+                              AsyncSnapshot<DocumentSnapshot> snapshot) {
+                            if (snapshot.hasError) {
+                              return Text('Error: ' + '  ${snapshot.error}');
+                            }
+                            if (!snapshot.hasData) {
+                              return const SizedBox();
+                            }
+                            final itemName =
+                                snapshot.data!.get('name') as String;
+                            final timestamp = order["timestamp"];
+                            final comment = order["text"];
+                            final rating = order["rating"];
+                            final dateTime = timestamp.toDate().toLocal();
+                            final formattedDate =
+                                "${dateTime.day.toString().padLeft(2, '0')}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.year.toString()} ${dateTime.hour.toString().padLeft(2, '0')}.${dateTime.minute.toString().padLeft(2, '0')}";
+                            return Container(
+                              margin: EdgeInsets.symmetric(
+                                  vertical: 8.0, horizontal: 16.0),
+                              padding: EdgeInsets.all(16.0),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12.0),
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.3),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: Offset(0, 3),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.center,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
-                                    child: Text(
-                                      '$itemName',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20.0,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.edit),
-                                    onPressed: () {
-                                      // navigate to edit comment page
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              EditCommentPage(order: order),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          '$itemName',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20.0,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                      );
-                                    },
+                                      ),
+                                      IconButton(
+                                        icon: Icon(Icons.edit),
+                                        onPressed: () {
+                                          // navigate to edit comment page
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  EditCommentPage(order: order),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      SizedBox(width: 8.0),
+                                      Icon(
+                                        Icons.star,
+                                        color: Colors.amber[700],
+                                      ),
+                                      SizedBox(width: 4.0),
+                                      Text(
+                                        '$rating',
+                                        style: TextStyle(fontSize: 18.0),
+                                      ),
+                                    ],
                                   ),
-                                  SizedBox(width: 8.0),
-                                  Icon(
-                                    Icons.star,
-                                    color: Colors.amber[700],
-                                  ),
-                                  SizedBox(width: 4.0),
+                                  SizedBox(height: 12.0),
                                   Text(
-                                    '$rating',
+                                    '$comment',
                                     style: TextStyle(fontSize: 18.0),
                                   ),
-                                ],
-                              ),
-                              SizedBox(height: 12.0),
-                              Text(
-                                '$comment',
-                                style: TextStyle(fontSize: 18.0),
-                              ),
-                              SizedBox(height: 12.0),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    '$formattedDate',
-                                    style: TextStyle(
-                                      fontSize: 14.0,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                  Text(
-                                    '$restaurantName',
-                                    style: TextStyle(
-                                      fontSize: 16.0,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  SizedBox(height: 12.0),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        '$formattedDate',
+                                        style: TextStyle(
+                                          fontSize: 14.0,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      Text(
+                                        '$restaurantName',
+                                        style: TextStyle(
+                                          fontSize: 16.0,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         );
                       },
                     );
                   },
                 );
               },
-            );
-          },
-        ));
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -400,6 +442,7 @@ class ProfilePageButton extends StatelessWidget {
     required this.text,
     required this.icon,
   });
+
   final String text;
   final Icon icon;
 
@@ -456,6 +499,7 @@ class _EditCommentPageState extends State<EditCommentPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.black),
         backgroundColor: Colors.white,
         centerTitle: false,
         title: const Text(
@@ -466,7 +510,6 @@ class _EditCommentPageState extends State<EditCommentPage> {
             height: 1.5,
           ),
         ),
-        iconTheme: IconThemeData(color: Colors.black),
         textTheme: Theme.of(context).textTheme.copyWith(
               headline6: TextStyle(color: Colors.black),
             ),
