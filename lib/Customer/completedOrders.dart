@@ -379,144 +379,157 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   }
                   final itemData = snapshot.data!;
                   final itemName = itemData.get('name') as String;
-                  //final itemPrice = itemData.get('price') as int;
-                  //final imageUrl = itemData.get('imageUrl') as String;
+                  final itemPrice = itemData.get('price');
+                  final imageUrl = itemData.get('image_url') as String;
 
                   return Card(
-                    child: Column(
+                    child: Row(
                       children: [
-                        ListTile(
-                          title: Text(itemName),
-                          leading: const Image(
-                              image: NetworkImage(
-                                  "https://cdn-icons-png.flaticon.com/512/2771/2771401.png")),
-                          subtitle: Text('${10} \$'),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.comment),
-                            onPressed: () {
-                              setState(() {
-                                _showCommentSection[itemRef] =
-                                    !_showCommentSection[itemRef]!;
-                              });
-                            },
-                          ),
-                        ),
-                        RatingBar.builder(
-                          glowColor: Colors.amber,
-                          glowRadius: 0.5,
-                          initialRating: itemRating,
-                          minRating: 0,
-                          direction: Axis.horizontal,
-                          allowHalfRating: true,
-                          itemCount: 5,
-                          itemPadding: const EdgeInsets.fromLTRB(0, 0, 0, 5),
-                          itemBuilder: (context, _) => const Icon(
-                            Icons.star,
-                            color: Colors.amber,
-                          ),
-                          onRatingUpdate: (rating) {
-                            setState(() {
-                              _showCommentSection[itemRef] = true;
-                              _feedbackChanged[itemRef] = true;
-                              _itemRating[itemRef] = rating;
-                            });
-                          },
-                        ),
-                        if (showCommentSection)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (commentController.text.isNotEmpty &&
-                                    !isChanged)
-                                  const Text(
-                                    'You previously left this comment:',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                TextField(
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _feedbackChanged[itemRef] = true;
-                                    });
-                                  },
-                                  controller: commentController,
-                                  decoration: const InputDecoration(
-                                      hintText: 'Type your comment here'),
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: [
-                                    TextButton(
-                                      child: const Text('Cancel'),
-                                      onPressed: () {
-                                        setState(() {
-                                          _showCommentSection[itemRef] = false;
-                                        });
-                                      },
-                                    ),
-                                    TextButton(
-                                      child: Text(
-                                        'Save',
-                                        style: TextStyle(
-                                          color: isChanged
-                                              ? Colors.green
-                                              : Colors.blue,
-                                        ),
-                                      ),
-                                      onPressed: () async {
-                                        final commentText =
-                                            commentController.text.trim();
-                                        final commentQuerySnapshot =
-                                            await FirebaseFirestore.instance
-                                                .collection('comments')
-                                                .where('userId',
-                                                    isEqualTo: LoginPage.userID)
-                                                .where('itemRef',
-                                                    isEqualTo: itemRef)
-                                                .limit(1)
-                                                .get();
-                                        if (commentQuerySnapshot.size > 0) {
-                                          // Update the existing comment
-                                          final commentRef =
-                                              commentQuerySnapshot
-                                                  .docs[0].reference;
-                                          await commentRef.set({
-                                            'rating': itemRating,
-                                            'text': commentText,
-                                            'timestamp':
-                                                FieldValue.serverTimestamp(),
-                                          }, SetOptions(merge: true));
-                                        } else {
-                                          // Save a new comment
-                                          final commentRef = FirebaseFirestore
-                                              .instance
-                                              .collection('comments')
-                                              .doc();
-                                          await commentRef.set({
-                                            'rating': itemRating,
-                                            'text': commentText,
-                                            'timestamp':
-                                                FieldValue.serverTimestamp(),
-                                            'itemRef': itemRef,
-                                            'userId': LoginPage.userID,
-                                          });
-                                        }
-                                        setState(() {
-                                          _showCommentSection[itemRef] = false;
-                                          _feedbackChanged[itemRef] = false;
-                                          _itemRating[itemRef] = itemRating;
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ],
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: SizedBox(
+                            width: 75,
+                            child: Image.network(
+                              imageUrl,
+                              fit: BoxFit.contain,
                             ),
                           ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              ListTile(
+                                title: Text(itemName),
+                                subtitle: Text('$itemPrice\$'),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.comment),
+                                  onPressed: () {
+                                    setState(() {
+                                      _showCommentSection[itemRef] =
+                                          !_showCommentSection[itemRef]!;
+                                    });
+                                  },
+                                ),
+                              ),
+                              RatingBar.builder(
+                                glowColor: Colors.amber,
+                                glowRadius: 0.5,
+                                initialRating: itemRating,
+                                minRating: 0,
+                                direction: Axis.horizontal,
+                                allowHalfRating: true,
+                                itemCount: 5,
+                                itemPadding: const EdgeInsets.fromLTRB(0, 0, 0, 5),
+                                itemBuilder: (context, _) => const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                ),
+                                onRatingUpdate: (rating) {
+                                  setState(() {
+                                    _showCommentSection[itemRef] = true;
+                                    _feedbackChanged[itemRef] = true;
+                                    _itemRating[itemRef] = rating;
+                                  });
+                                },
+                              ),
+                              if (showCommentSection)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      if (commentController.text.isNotEmpty &&
+                                          !isChanged)
+                                        const Text(
+                                          'You previously left this comment:',
+                                          style:
+                                              TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                      TextField(
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _feedbackChanged[itemRef] = true;
+                                          });
+                                        },
+                                        controller: commentController,
+                                        decoration: const InputDecoration(
+                                            hintText: 'Type your comment here'),
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceAround,
+                                        children: [
+                                          TextButton(
+                                            child: const Text('Cancel'),
+                                            onPressed: () {
+                                              setState(() {
+                                                _showCommentSection[itemRef] = false;
+                                              });
+                                            },
+                                          ),
+                                          TextButton(
+                                            child: Text(
+                                              'Save',
+                                              style: TextStyle(
+                                                color: isChanged
+                                                    ? Colors.green
+                                                    : Colors.blue,
+                                              ),
+                                            ),
+                                            onPressed: () async {
+                                              final commentText =
+                                                  commentController.text.trim();
+                                              final commentQuerySnapshot =
+                                                  await FirebaseFirestore.instance
+                                                      .collection('comments')
+                                                      .where('userId',
+                                                          isEqualTo: LoginPage.userID)
+                                                      .where('itemRef',
+                                                          isEqualTo: itemRef)
+                                                      .limit(1)
+                                                      .get();
+                                              if (commentQuerySnapshot.size > 0) {
+                                                // Update the existing comment
+                                                final commentRef =
+                                                    commentQuerySnapshot
+                                                        .docs[0].reference;
+                                                await commentRef.set({
+                                                  'rating': itemRating,
+                                                  'text': commentText,
+                                                  'timestamp':
+                                                      FieldValue.serverTimestamp(),
+                                                }, SetOptions(merge: true));
+                                              } else {
+                                                // Save a new comment
+                                                final commentRef = FirebaseFirestore
+                                                    .instance
+                                                    .collection('comments')
+                                                    .doc();
+                                                await commentRef.set({
+                                                  'rating': itemRating,
+                                                  'text': commentText,
+                                                  'timestamp':
+                                                      FieldValue.serverTimestamp(),
+                                                  'itemRef': itemRef,
+                                                  'userId': LoginPage.userID,
+                                                });
+                                              }
+                                              setState(() {
+                                                _showCommentSection[itemRef] = false;
+                                                _feedbackChanged[itemRef] = false;
+                                                _itemRating[itemRef] = itemRating;
+                                              });
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   );
