@@ -70,7 +70,7 @@ class Home extends StatelessWidget {
           //Navigator.push(context, MaterialPageRoute(builder: (context) => const QRScanner()));
 
           //kolaylık açısından direkt yönlendirme
-          Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const MenuScreen(id: "vAkYpJA6Pd6UTEPDysvj", tableNo: "1"),),);
+          Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const MenuScreen(id: "qVu4d36x4BY9opVCDbtr", tableNo: "1"),),);
         },
         child: const Icon(Icons.qr_code_scanner),
       ),
