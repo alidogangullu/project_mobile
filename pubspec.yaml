@@ -55,6 +55,7 @@ dependencies:
   place_picker: ^0.9.19
   simple_speed_dial: ^0.1.7
   safe_device: ^1.1.2
+  share_plus: ^7.0.0
 
 dev_dependencies:
   flutter_test:
