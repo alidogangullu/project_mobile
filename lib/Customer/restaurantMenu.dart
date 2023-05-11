@@ -405,7 +405,7 @@ class _ItemsGridState extends State<ItemsGrid> {
                           child: Row(
                             children: [
                               Text(
-                                'Content: ${document['content']}',
+                                '${document['content']}',
                                 style: const TextStyle(fontSize: 16),
                               ),
                             ],

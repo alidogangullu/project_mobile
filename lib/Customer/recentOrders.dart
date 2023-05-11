@@ -17,18 +17,17 @@ class OrderWithPrice {
   OrderWithPrice({required this.order, required this.totalPrice});
 }
 
-
-class CompletedOrdersScreen extends StatefulWidget {
+class RecentOrdersScreen extends StatefulWidget {
   final String customerId;
 
-  const CompletedOrdersScreen({Key? key, required this.customerId})
+  const RecentOrdersScreen({Key? key, required this.customerId})
       : super(key: key);
 
   @override
-  State<CompletedOrdersScreen> createState() => _CompletedOrdersScreenState();
+  State<RecentOrdersScreen> createState() => _RecentOrdersScreenState();
 }
 
-class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
+class _RecentOrdersScreenState extends State<RecentOrdersScreen> {
   SortBy _sortBy = SortBy.timeDescending;
 
   Future<double> _calculateTotalPrice(List<dynamic> items) async {
@@ -42,40 +41,49 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
     return totalPrice;
   }
 
-  Future<List<double>> _getTotalPricesForOrders(List<QueryDocumentSnapshot> orders) async {
+  Future<List<double>> _getTotalPricesForOrders(
+      List<QueryDocumentSnapshot> orders) async {
     List<double> totalPrices = [];
     for (var order in orders) {
-      double totalPrice = await _calculateTotalPrice(order.get('items') as List<dynamic>);
+      double totalPrice =
+          await _calculateTotalPrice(order.get('items') as List<dynamic>);
       totalPrices.add(totalPrice);
     }
     return totalPrices;
   }
 
   Future<List<OrderWithPrice>> _sortOrders(
-      List<QueryDocumentSnapshot> orders,
-      SortBy sortBy,
-      ) async {
+    List<QueryDocumentSnapshot> orders,
+    SortBy sortBy,
+  ) async {
     List<OrderWithPrice> sortedOrdersWithPrice = [];
     List<double> totalPrices = await _getTotalPricesForOrders(orders);
 
     for (int i = 0; i < orders.length; i++) {
-      sortedOrdersWithPrice.add(OrderWithPrice(order: orders[i], totalPrice: totalPrices[i]));
+      sortedOrdersWithPrice
+          .add(OrderWithPrice(order: orders[i], totalPrice: totalPrices[i]));
     }
 
     switch (sortBy) {
       case SortBy.priceAscending:
-        sortedOrdersWithPrice.sort((a, b) => a.totalPrice.compareTo(b.totalPrice));
+        sortedOrdersWithPrice
+            .sort((a, b) => a.totalPrice.compareTo(b.totalPrice));
         break;
       case SortBy.priceDescending:
-        sortedOrdersWithPrice.sort((a, b) => b.totalPrice.compareTo(a.totalPrice));
+        sortedOrdersWithPrice
+            .sort((a, b) => b.totalPrice.compareTo(a.totalPrice));
         break;
       case SortBy.timeAscending:
-        sortedOrdersWithPrice.sort((a, b) =>
-            a.order.get('timestamp').toDate().compareTo(b.order.get('timestamp').toDate()));
+        sortedOrdersWithPrice.sort((a, b) => a.order
+            .get('timestamp')
+            .toDate()
+            .compareTo(b.order.get('timestamp').toDate()));
         break;
       case SortBy.timeDescending:
-        sortedOrdersWithPrice.sort((a, b) =>
-            b.order.get('timestamp').toDate().compareTo(a.order.get('timestamp').toDate()));
+        sortedOrdersWithPrice.sort((a, b) => b.order
+            .get('timestamp')
+            .toDate()
+            .compareTo(a.order.get('timestamp').toDate()));
         break;
     }
 
@@ -167,11 +175,11 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
             );
           }
           return ListView.builder(
-          itemCount: snapshot.data!.length,
-          itemBuilder: (BuildContext context, int index) {
-            final orderWithPrice = snapshot.data![index];
-            final order = orderWithPrice.order;
-            final totalPrice = orderWithPrice.totalPrice;
+            itemCount: snapshot.data!.length,
+            itemBuilder: (BuildContext context, int index) {
+              final orderWithPrice = snapshot.data![index];
+              final order = orderWithPrice.order;
+              final totalPrice = orderWithPrice.totalPrice;
               final items = order.get('items') as List<dynamic>;
               final restaurantRef =
                   order.get('restaurantRef') as DocumentReference;
@@ -259,10 +267,9 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        OrderDetailsPage(
-                                          orderRef: order.reference,
-                                        ),
+                                    builder: (context) => OrderDetailsPage(
+                                      orderRef: order.reference,
+                                    ),
                                   ),
                                 );
                               },
@@ -324,6 +331,57 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     }
   }
 
+  Future<void> _updateItemRatingAndCount(
+      DocumentReference itemRef, double newRating) async {
+    final itemSnapshot = await itemRef.get();
+    double currentAvgRating =
+        double.parse(itemSnapshot['rating'].toString()) ?? 0.0;
+    int currentRatingCount = itemSnapshot['ratingCount'] ?? 0;
+
+    // Check if the user has previously rated
+    final previousFeedbackSnapshot = await FirebaseFirestore.instance
+        .collection('comments')
+        .where('userId', isEqualTo: LoginPage.userID)
+        .where('itemRef', isEqualTo: itemRef)
+        .limit(1)
+        .get();
+    bool hasPreviouslyRated = previousFeedbackSnapshot.size > 0;
+
+    if (hasPreviouslyRated) {
+      // User has previously rated, update the average rating
+      final previousFeedback = previousFeedbackSnapshot.docs[0];
+      double userOldRating = previousFeedback.get('rating').toDouble();
+      double updatedAvgRating =
+          (currentAvgRating * currentRatingCount) - userOldRating + newRating /
+              currentRatingCount;
+
+      await itemRef.update({
+        'rating': updatedAvgRating,
+      });
+    } else {
+      // User's first rating, set the average rating and increment rating count
+
+      //items first rating
+      if (currentRatingCount == 0) {
+        currentRatingCount++;
+        double updatedAvgRating =
+            newRating / currentRatingCount;
+        await itemRef.update({
+          'rating': updatedAvgRating,
+          'ratingCount': 1,
+        });
+      } else {
+        double updatedAvgRating =
+            (currentAvgRating * currentRatingCount + newRating) /
+                (currentRatingCount + 1);
+        await itemRef.update({
+          'rating': updatedAvgRating,
+          'ratingCount': currentRatingCount + 1,
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -368,7 +426,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
 
               final bool isChanged = _feedbackChanged[itemRef] ?? false;
 
-              final double itemRating = _itemRating[itemRef] ?? 3;
+              final double itemRating = _itemRating[itemRef] ?? 0;
 
               _loadPreviousComment(
                   itemRef, commentController, itemRating, isChanged);
@@ -425,7 +483,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                 direction: Axis.horizontal,
                                 allowHalfRating: true,
                                 itemCount: 5,
-                                itemPadding: const EdgeInsets.fromLTRB(0, 0, 0, 5),
+                                itemPadding:
+                                    const EdgeInsets.fromLTRB(0, 0, 0, 5),
                                 itemBuilder: (context, _) => const Icon(
                                   Icons.star,
                                   color: Colors.amber,
@@ -443,14 +502,15 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16, vertical: 8),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       if (commentController.text.isNotEmpty &&
                                           !isChanged)
                                         const Text(
                                           'You previously left this comment:',
-                                          style:
-                                              TextStyle(fontWeight: FontWeight.bold),
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
                                         ),
                                       TextField(
                                         onChanged: (value) {
@@ -470,7 +530,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                             child: const Text('Cancel'),
                                             onPressed: () {
                                               setState(() {
-                                                _showCommentSection[itemRef] = false;
+                                                _showCommentSection[itemRef] =
+                                                    false;
                                               });
                                             },
                                           ),
@@ -484,18 +545,26 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                               ),
                                             ),
                                             onPressed: () async {
+
+                                              // Update the item rating and count
+                                              await _updateItemRatingAndCount(
+                                                  itemRef, itemRating);
+
                                               final commentText =
                                                   commentController.text.trim();
                                               final commentQuerySnapshot =
-                                                  await FirebaseFirestore.instance
+                                                  await FirebaseFirestore
+                                                      .instance
                                                       .collection('comments')
                                                       .where('userId',
-                                                          isEqualTo: LoginPage.userID)
+                                                          isEqualTo:
+                                                              LoginPage.userID)
                                                       .where('itemRef',
                                                           isEqualTo: itemRef)
                                                       .limit(1)
                                                       .get();
-                                              if (commentQuerySnapshot.size > 0) {
+                                              if (commentQuerySnapshot.size >
+                                                  0) {
                                                 // Update the existing comment
                                                 final commentRef =
                                                     commentQuerySnapshot
@@ -503,28 +572,32 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                                 await commentRef.set({
                                                   'rating': itemRating,
                                                   'text': commentText,
-                                                  'timestamp':
-                                                      FieldValue.serverTimestamp(),
+                                                  'timestamp': FieldValue
+                                                      .serverTimestamp(),
                                                 }, SetOptions(merge: true));
                                               } else {
                                                 // Save a new comment
-                                                final commentRef = FirebaseFirestore
-                                                    .instance
-                                                    .collection('comments')
-                                                    .doc();
+                                                final commentRef =
+                                                    FirebaseFirestore.instance
+                                                        .collection('comments')
+                                                        .doc();
                                                 await commentRef.set({
                                                   'rating': itemRating,
                                                   'text': commentText,
-                                                  'timestamp':
-                                                      FieldValue.serverTimestamp(),
+                                                  'timestamp': FieldValue
+                                                      .serverTimestamp(),
                                                   'itemRef': itemRef,
                                                   'userId': LoginPage.userID,
                                                 });
                                               }
+
                                               setState(() {
-                                                _showCommentSection[itemRef] = false;
-                                                _feedbackChanged[itemRef] = false;
-                                                _itemRating[itemRef] = itemRating;
+                                                _showCommentSection[itemRef] =
+                                                    false;
+                                                _feedbackChanged[itemRef] =
+                                                    false;
+                                                _itemRating[itemRef] =
+                                                    itemRating;
                                               });
                                             },
                                           ),

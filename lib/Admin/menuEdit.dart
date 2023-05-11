@@ -673,7 +673,8 @@ class _AddCategoryItemsState extends State<AddCategoryItems> {
                         "price": double.parse(priceController.text),
                         "content": contentController.text,
                         "image_url": imageUrl,
-                        "rating": 0
+                        "rating": 0,
+                        "ratingCount" : 0
                       });
 
                       nameController.clear();
