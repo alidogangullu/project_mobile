@@ -4,8 +4,15 @@ import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:project_mobile/Customer/customerPanel.dart';
 import 'package:project_mobile/Customer/order.dart';
 import '../customWidgets.dart';
+import 'package:flutter/material.dart';
+import 'package:project_mobile/customWidgets.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:project_mobile/Authentication/loginPage.dart';
+import 'package:project_mobile/Customer/customerPanel.dart';
+import 'package:slide_to_act/slide_to_act.dart';
 
-class MenuScreen extends StatefulWidget {
+class MenuScreen extends StatefulWidget  {
   const MenuScreen({super.key, required this.id, required this.tableNo});
 
   final String id;
@@ -16,7 +23,11 @@ class MenuScreen extends StatefulWidget {
 }
 
 class _MenuScreenState extends State<MenuScreen> {
+
   List<dynamic> users = [];
+
+
+
   Future<void> listenUnauthorizedUsers() async {
     await FirebaseFirestore.instance
         .collection("Restaurants/${widget.id}/Tables")
@@ -25,13 +36,14 @@ class _MenuScreenState extends State<MenuScreen> {
         .then((document) async {
       users = document.data()!['users'];
 
-      if(users.isEmpty){
+      if (users.isEmpty) {
         await FirebaseFirestore.instance
             .collection("Restaurants/${widget.id}/Tables")
             .doc(widget.tableNo)
             .update({
-          'newNotification' : true,
-          'notifications': FieldValue.arrayUnion(["A new customer has been seated at Table."]),
+          'newNotification': true,
+          'notifications': FieldValue.arrayUnion(
+              ["A new customer has been seated at Table."]),
         });
       }
 
@@ -135,6 +147,7 @@ class _MenuScreenState extends State<MenuScreen> {
   void initState() {
     super.initState();
     listenUnauthorizedUsers();
+
   }
 
   @override
@@ -249,21 +262,51 @@ class _MenuScreenState extends State<MenuScreen> {
                       }).toList();
                       return ItemsGrid(
                         documents: filteredItems,
-                          collection:  "Restaurants/${widget.id}/MenuCategory",
-                          context: context,
-                          id: widget.id,
-                          selected: selected,
-                          tableNo: widget.tableNo,
-                          );
+                        collection: "Restaurants/${widget.id}/MenuCategory",
+                        context: context,
+                        id: widget.id,
+                        selected: selected,
+                        tableNo: widget.tableNo,
+                      );
                     },
                   );
                 },
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
+            child: Row(
+              children: [
+                FloatingActionButton(
+                  onPressed: () {
+                    // Send waiterRequested value to Firebase
+                    FirebaseFirestore.instance
+                        .collection("Restaurants/${widget.id}/Tables")
+                        .doc(widget.tableNo)
+                        .update({'waiterRequested': true});
+                    sendNotification();
+                  },
+                  child: Icon(Icons.notifications),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  void sendNotification() async {
+    await FirebaseFirestore.instance
+        .collection("Restaurants/${widget.id}/Tables")
+        .doc(widget.tableNo).update({
+      'newNotification': true,
+      'notifications': FieldValue.arrayUnion([
+        "deneme"
+      ]),
+    });
+
   }
 }
 
@@ -289,7 +332,6 @@ class ItemsGrid extends StatefulWidget {
 }
 
 class _ItemsGridState extends State<ItemsGrid> {
-
   @override
   Widget build(BuildContext context) {
     return GridView.count(
@@ -442,7 +484,8 @@ class _ItemsGridState extends State<ItemsGrid> {
                               // Item already exists in order, update its quantity
                               final orderDoc = querySnapshot.docs.first;
                               final quantity = orderDoc[
-                                      "quantity_notSubmitted_notServiced"] + selectedQuantity;
+                                      "quantity_notSubmitted_notServiced"] +
+                                  selectedQuantity;
                               orderDoc.reference.update({
                                 "quantity_notSubmitted_notServiced": quantity
                               });
@@ -455,7 +498,8 @@ class _ItemsGridState extends State<ItemsGrid> {
                                   .doc()
                                   .set({
                                 "itemRef": document.reference,
-                                "quantity_notSubmitted_notServiced": selectedQuantity,
+                                "quantity_notSubmitted_notServiced":
+                                    selectedQuantity,
                                 "quantity_Submitted_notServiced": 0,
                                 "quantity_Submitted_Serviced": 0,
                               });
@@ -534,6 +578,68 @@ class _ItemsGridState extends State<ItemsGrid> {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+void showNotifications(BuildContext context, DocumentSnapshot document) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Table ${document['number']}'),
+        content: Notifications(
+          tableRef: document.reference.path,
+        ),
+      );
+    },
+  );
+}
+
+
+
+class Notifications extends StatelessWidget {
+  const Notifications({Key? key, required this.tableRef}) : super(key: key);
+
+  final String tableRef;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: FirebaseFirestore.instance
+          .collection("Restaurants")
+          .doc(tableRef)
+          .get()
+          .asStream(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const SizedBox(height: 50, child: Center(child: SizedBox()));
+        }
+        final data = snapshot.data!;
+        final notifications = data['notifications'] as List<dynamic>;
+        if (notifications.isEmpty) {
+          return const Text("No notifications");
+        }
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Notifications:",
+                style: TextStyle(fontSize: 20),
+              ),
+              const SizedBox(height: 8),
+              for (final notification in notifications) ...[
+                Text(
+                  "- $notification",
+                  style: const TextStyle(fontSize: 18),
+                ),
+                const SizedBox(height: 4),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 }
