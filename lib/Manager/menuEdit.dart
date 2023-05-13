@@ -2,15 +2,15 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:project_mobile/Admin/desktopApplicationConnection.dart';
-import 'package:project_mobile/Admin/qrGenerator.dart';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:project_mobile/Admin/restaurantManagers.dart';
+import 'package:project_mobile/Manager/qrGenerator.dart';
+import 'package:project_mobile/Manager/restaurantManagers.dart';
 import 'package:simple_speed_dial/simple_speed_dial.dart';
 
 import '../customWidgets.dart';
+import 'desktopApplicationConnection.dart';
 
 class EditRestaurant extends StatefulWidget {
   const EditRestaurant(

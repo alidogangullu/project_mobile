@@ -8,18 +8,18 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:place_picker/entities/location_result.dart';
 import 'package:place_picker/widgets/place_picker.dart';
-import 'package:project_mobile/Admin/menuEdit.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
 import '../customWidgets.dart';
+import 'menuEdit.dart';
 
-class ManagementPanel extends StatefulWidget {
-  const ManagementPanel({Key? key}) : super(key: key);
+class ManagerPanel extends StatefulWidget {
+  const ManagerPanel({Key? key}) : super(key: key);
 
   @override
-  State<ManagementPanel> createState() => _ManagementPanelState();
+  State<ManagerPanel> createState() => _ManagerPanelState();
 }
 
-class _ManagementPanelState extends State<ManagementPanel> {
+class _ManagerPanelState extends State<ManagerPanel> {
   String _searchQuery = '';
   TextEditingController searchRestaurantController = TextEditingController();
 
@@ -60,7 +60,7 @@ class _ManagementPanelState extends State<ManagementPanel> {
               iconData: Icons.search, onChanged: _onSearchQueryChanged),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 0,horizontal: 15),
+              padding: const EdgeInsets.symmetric(vertical: 0,horizontal: 10),
               child: StreamBuilder(
                 stream: FirebaseFirestore.instance
                     .collection("Restaurants")

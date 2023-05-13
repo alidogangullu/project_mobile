@@ -3,9 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:pinput/pinput.dart';
-import 'package:project_mobile/Admin/managerPanel.dart';
 import 'package:project_mobile/Customer/customerPanel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../Manager/managerPanel.dart';
 import '../customWidgets.dart';
 
 class LoginPage extends StatefulWidget {
@@ -91,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
           //doğrulama kodundan sonra uygulamaya yönlendirme
           if (isManager == true) {
             Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (context) => const AdminHome()));
+                MaterialPageRoute(builder: (context) => const ManagerHome()));
           } else if (isManager == false) {
             Navigator.pushReplacement(context,
                 MaterialPageRoute(builder: (context) => const CustomerHome()));
@@ -138,7 +138,7 @@ class _LoginPageState extends State<LoginPage> {
     //ilk kayıttan sonra kullanıcı tipine göre uygulamaya yönlendirme
     if (isManager == true) {
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => const AdminHome()));
+          context, MaterialPageRoute(builder: (context) => const ManagerHome()));
     } else if (isManager == false) {
       Navigator.pushReplacement(context,
           MaterialPageRoute(builder: (context) => const CustomerHome()));

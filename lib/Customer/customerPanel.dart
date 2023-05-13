@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:project_mobile/Customer/recentOrders.dart';
 import 'package:project_mobile/Customer/profile.dart';
 import 'package:project_mobile/Customer/qrScanner.dart';
 import 'package:project_mobile/Customer/restaurantMenu.dart';
+import 'package:project_mobile/customWidgets.dart';
 import '../Authentication/loginPage.dart';
 
 class CustomerHome extends StatefulWidget {
@@ -58,26 +60,166 @@ class _CustomerHomeState extends State<CustomerHome> {
   }
 }
 
-class Home extends StatelessWidget {
+class Home extends StatefulWidget {
   const Home({Key? key, required this.userId}) : super(key: key);
   final String userId;
+
+  @override
+  _HomeState createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  final searchButtonController = TextEditingController();
+  bool _searchMode = false;
+  List<DocumentSnapshot> searchResults = [];
+
+  void _toggleSearchMode() {
+    setState(() {
+      _searchMode = !_searchMode;
+      if (!_searchMode) {
+        searchButtonController.clear();
+        searchResults.clear();
+      }
+    });
+  }
+
+  Future<void> _searchRestaurants(String searchText) async {
+    if (searchText.length >= 3) {
+      final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('Restaurants')
+          .where("name", isGreaterThanOrEqualTo: searchText.toUpperCase())
+          .where("name", isLessThanOrEqualTo: "${searchText.toLowerCase()}\uf8ff")
+          .get();
+      setState(() {
+        searchResults = querySnapshot.docs;
+      });
+    } else {
+      setState(() {
+        searchResults = [];
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          //Navigator.push(context, MaterialPageRoute(builder: (context) => const QRScanner()));
-
-          //kolaylık açısından direkt yönlendirme
-          Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const MenuScreen(id: "GixzDeIROMDRAn2mAnMG", tableNo: "1"),),);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const MenuScreen(
+                id: "GixzDeIROMDRAn2mAnMG",
+                tableNo: "1",
+              ),
+            ),
+          );
         },
         child: const Icon(Icons.qr_code_scanner),
       ),
       appBar: const MyAppBar(),
-      body: const Center(
-        //todo
-        child: Text("Customer Screen Test"),
+      body: Column(
+        children: [
+          if (!_searchMode)
+            textInputField(
+              context,
+              "Search food, restaurant or something",
+              searchButtonController,
+              false,
+              iconData: Icons.search,
+              onTap: _toggleSearchMode,
+            ),
+          if (_searchMode)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: textInputField(
+                    context,
+                    "Search food, restaurant or something",
+                    searchButtonController,
+                    false,
+                    iconData: Icons.arrow_back,
+                    onChanged: (String value) {
+                      _searchRestaurants(value);
+                    },
+                    iconOnTap: _toggleSearchMode,
+                  ),
+                ),
+              ],
+            ),
+          if (!_searchMode)
+            Expanded(
+              child: Text("this is timeline"),
+            ),
+          if (_searchMode)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: GridView.count(
+                  crossAxisCount: 1,
+                  childAspectRatio: 1.075,
+                  children: searchResults.map((doc) {
+                    return GestureDetector(
+                      onTap: () {},
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Card(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AspectRatio(
+                                aspectRatio: 2,
+                                child: Image.network(
+                                  doc["image_url"],
+                                  fit: BoxFit
+                                      .fitWidth,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(15),
+                                child: Text(
+                                  doc["name"],
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                    15, 0, 15, 15),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.star,
+                                      color: Colors.amber,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      doc["rating"].toString(),
+                                      style: const TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                    15, 0, 15, 15),
+                                child: Text(
+                                  doc['address'],
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

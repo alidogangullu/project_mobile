@@ -1,23 +1,22 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:project_mobile/Admin/management.dart';
-import 'package:project_mobile/Admin/stats.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
+import 'package:project_mobile/Manager/stats.dart';
+import 'management.dart';
 
-class AdminHome extends StatefulWidget {
-  const AdminHome({Key? key}) : super(key: key);
+class ManagerHome extends StatefulWidget {
+  const ManagerHome({Key? key}) : super(key: key);
 
   @override
-  State<AdminHome> createState() => _AdminHomeState();
+  State<ManagerHome> createState() => _ManagerHomeState();
 }
 
-class _AdminHomeState extends State<AdminHome> {
+class _ManagerHomeState extends State<ManagerHome> {
   int _selectedIndex = 1;
   final _pageOptions = [
     //bottom bar sekmeleri
-    ManagementPanel(),
+    ManagerPanel(),
     Home(userId: FirebaseAuth.instance.currentUser!.uid,),
     Stats(),
   ];
