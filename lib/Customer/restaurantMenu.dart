@@ -280,11 +280,7 @@ class _MenuScreenState extends State<MenuScreen> {
               children: [
                 FloatingActionButton(
                   onPressed: () {
-                    // Send waiterRequested value to Firebase
-                    FirebaseFirestore.instance
-                        .collection("Restaurants/${widget.id}/Tables")
-                        .doc(widget.tableNo)
-                        .update({'waiterRequested': true});
+                    // Send newNotification value to Firebase
                     sendNotification();
                   },
                   child: Icon(Icons.notifications),
@@ -303,7 +299,7 @@ class _MenuScreenState extends State<MenuScreen> {
         .doc(widget.tableNo).update({
       'newNotification': true,
       'notifications': FieldValue.arrayUnion([
-        "deneme"
+        "Garson Çağırıldı"
       ]),
     });
 
