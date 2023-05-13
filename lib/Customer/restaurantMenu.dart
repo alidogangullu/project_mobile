@@ -302,7 +302,10 @@ class _MenuScreenState extends State<MenuScreen> {
         "Garson Çağırıldı"
       ]),
     });
-
+    final snackBar = SnackBar(
+      content: Text('Notification has been sent'),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }
 
