@@ -19,8 +19,6 @@ class _MenuScreenState extends State<MenuScreen> {
 
   List<dynamic> users = [];
 
-
-
   Future<void> listenUnauthorizedUsers() async {
     await FirebaseFirestore.instance
         .collection("Restaurants/${widget.id}/Tables")

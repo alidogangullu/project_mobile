@@ -97,17 +97,19 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Order Information"),
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
+        title: const Text("Orders", style: TextStyle(color: Colors.black),),
         bottom: TabBar(
           controller: _tabController,
+          labelColor: Theme.of(context).primaryColor,
+          unselectedLabelColor: Colors.grey,
           tabs: const [
             Tab(
-              icon: Icon(Icons.playlist_add),
-              text: "Unconfirmed Orders",
+              text: "Unconfirmed",
             ),
             Tab(
-              icon: Icon(Icons.playlist_add_check),
-              text: "Confirmed Orders",
+              text: "Confirmed",
             )
           ],
         ),
@@ -193,13 +195,14 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                       }
                       final name = snapshot.data!.get('name') as String;
                       final price = snapshot.data!.get('price');
+                      final content = snapshot.data!.get('content') as String;
                       return Card(
                         child: Row(
                           children: [
                             Expanded(
                               child: ListTile(
                                 title: Text(name),
-                                subtitle: const Text('Details'),
+                                subtitle: Text(content),
                               ),
                             ),
                             IconButton(
@@ -309,10 +312,11 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                       final price = snapshot.data!.get('price');
                       int quantity = order['quantity_Submitted_notServiced'] +
                           order['quantity_Submitted_Serviced'];
+                      final content = snapshot.data!.get('content') as String;
                       return Card(
                         child: ListTile(
                           title: Text(name),
-                          subtitle: const Text('details'),
+                          subtitle: Text(content),
                           trailing: Text(
                             "$price\$ x$quantity",
                           ),
