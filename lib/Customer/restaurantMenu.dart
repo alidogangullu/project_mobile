@@ -149,11 +149,11 @@ class _MenuScreenState extends State<MenuScreen> {
         .doc(widget.tableNo).update({
       'newNotification': true,
       'notifications': FieldValue.arrayUnion([
-        "Garson Çağırıldı"
+        "A waiter request has been sent."
       ]),
     });
     const snackBar = SnackBar(
-      content: Text('Notification has been sent'),
+      content: Text('A waiter request has been sent.'),
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
