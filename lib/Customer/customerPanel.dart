@@ -6,6 +6,7 @@ import 'package:project_mobile/Customer/recentOrders.dart';
 import 'package:project_mobile/Customer/profile.dart';
 import 'package:project_mobile/Customer/qrScanner.dart';
 import 'package:project_mobile/Customer/restaurantMenu.dart';
+import 'package:project_mobile/Customer/restaurantProfile.dart';
 import 'package:project_mobile/customWidgets.dart';
 import '../Authentication/loginPage.dart';
 
@@ -161,7 +162,14 @@ class _HomeState extends State<Home> {
                   childAspectRatio: 1.075,
                   children: searchResults.map((doc) {
                     return GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const RestaurantProfile(),
+                          ),
+                        );
+                      },
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
                         child: Card(
@@ -247,14 +255,6 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
               backgroundColor: Colors.white,
               elevation: 0,
               centerTitle: false,
-              actions: [
-                IconButton(
-                  onPressed: () async {
-                    //todo search for restaurant, another user etc
-                  },
-                  icon: const Icon(Icons.search),
-                ),
-              ],
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
