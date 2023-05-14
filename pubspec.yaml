@@ -56,6 +56,8 @@ dependencies:
   simple_speed_dial: ^0.1.7
   safe_device: ^1.1.2
   share_plus: ^7.0.0
+  google_maps_flutter: ^2.2.6
+  http: ^0.13.6
 
 dev_dependencies:
   flutter_test:
