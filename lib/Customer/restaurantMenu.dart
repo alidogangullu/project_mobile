@@ -4,13 +4,6 @@ import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:project_mobile/Customer/customerPanel.dart';
 import 'package:project_mobile/Customer/order.dart';
 import '../customWidgets.dart';
-import 'package:flutter/material.dart';
-import 'package:project_mobile/customWidgets.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:project_mobile/Authentication/loginPage.dart';
-import 'package:project_mobile/Customer/customerPanel.dart';
-import 'package:slide_to_act/slide_to_act.dart';
 
 class MenuScreen extends StatefulWidget  {
   const MenuScreen({super.key, required this.id, required this.tableNo});
@@ -150,9 +143,31 @@ class _MenuScreenState extends State<MenuScreen> {
 
   }
 
+  void sendWaiterRequest() async {
+    await FirebaseFirestore.instance
+        .collection("Restaurants/${widget.id}/Tables")
+        .doc(widget.tableNo).update({
+      'newNotification': true,
+      'notifications': FieldValue.arrayUnion([
+        "Garson Çağırıldı"
+      ]),
+    });
+    const snackBar = SnackBar(
+      content: Text('Notification has been sent'),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Send newNotification value to Firebase
+          sendWaiterRequest();
+        },
+        child: const Icon(Icons.notifications),
+      ),
       appBar: AppBar(
         actions: [
           ShoppingCartButton(
@@ -274,38 +289,9 @@ class _MenuScreenState extends State<MenuScreen> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
-            child: Row(
-              children: [
-                FloatingActionButton(
-                  onPressed: () {
-                    // Send newNotification value to Firebase
-                    sendNotification();
-                  },
-                  child: Icon(Icons.notifications),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
-  }
-
-  void sendNotification() async {
-    await FirebaseFirestore.instance
-        .collection("Restaurants/${widget.id}/Tables")
-        .doc(widget.tableNo).update({
-      'newNotification': true,
-      'notifications': FieldValue.arrayUnion([
-        "Garson Çağırıldı"
-      ]),
-    });
-    final snackBar = SnackBar(
-      content: Text('Notification has been sent'),
-    );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }
 
@@ -317,7 +303,7 @@ class ItemsGrid extends StatefulWidget {
   final String id;
   final String tableNo;
 
-  const ItemsGrid({
+  const ItemsGrid({super.key,
     required this.documents,
     required this.context,
     required this.selected,
@@ -577,68 +563,6 @@ class _ItemsGridState extends State<ItemsGrid> {
           ),
         );
       }).toList(),
-    );
-  }
-}
-
-void showNotifications(BuildContext context, DocumentSnapshot document) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Table ${document['number']}'),
-        content: Notifications(
-          tableRef: document.reference.path,
-        ),
-      );
-    },
-  );
-}
-
-
-
-class Notifications extends StatelessWidget {
-  const Notifications({Key? key, required this.tableRef}) : super(key: key);
-
-  final String tableRef;
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: FirebaseFirestore.instance
-          .collection("Restaurants")
-          .doc(tableRef)
-          .get()
-          .asStream(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const SizedBox(height: 50, child: Center(child: SizedBox()));
-        }
-        final data = snapshot.data!;
-        final notifications = data['notifications'] as List<dynamic>;
-        if (notifications.isEmpty) {
-          return const Text("No notifications");
-        }
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Notifications:",
-                style: TextStyle(fontSize: 20),
-              ),
-              const SizedBox(height: 8),
-              for (final notification in notifications) ...[
-                Text(
-                  "- $notification",
-                  style: const TextStyle(fontSize: 18),
-                ),
-                const SizedBox(height: 4),
-              ],
-            ],
-          ),
-        );
-      },
     );
   }
 }
