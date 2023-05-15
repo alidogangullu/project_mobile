@@ -7,7 +7,9 @@ class RestaurantProfile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Test Cafe'),
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
+        title: Text('Test Cafe', style: TextStyle(color: Colors.black),),
       ),
       body: Column(
         children: <Widget>[
@@ -43,18 +45,10 @@ class RestaurantProfile extends StatelessWidget {
             children: <Widget>[
               ElevatedButton(
                 onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                ),
                 child: Text('Follow Restaurant'),
               ),
               ElevatedButton(
                 onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.greenAccent,
-                  foregroundColor: Colors.white,
-                ),
                 child: Text('Restaurant Menu'),
               ),
             ],
