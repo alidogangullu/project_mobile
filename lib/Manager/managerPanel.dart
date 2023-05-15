@@ -115,6 +115,9 @@ class Home extends StatelessWidget {
                             if (!snapshot.hasData) {
                               return const SizedBox();
                             }
+                            if (snapshot.data == null || !snapshot.data!.exists) {
+                              return const SizedBox();
+                            }
                             final itemName = snapshot.data!.get('name') as String;
                             final timestamp = order["timestamp"];
                             final comment = order["text"];
@@ -197,12 +200,12 @@ class Home extends StatelessWidget {
                           },
                         );
                       },
-
                 );
               },
             );
           },
-        ),      ),
+        ),
+      ),
     );
   }
 }

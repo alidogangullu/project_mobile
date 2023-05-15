@@ -426,7 +426,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceEvenly,
                                     children: [
-                                      paymentButton(),
+                                      paymentButton(totalAmount),
                                     ],
                                   ),
                                 ],
@@ -450,7 +450,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
     );
   }
 
-  ElevatedButton paymentButton() {
+  ElevatedButton paymentButton(double totalPrice) {
     return ElevatedButton(
       onPressed: () async {
         if (await checkAuthorizedUser()) {
@@ -485,7 +485,8 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                   .set({
                 'restaurantRef': restaurantRef,
                 'timestamp': Timestamp.now(),
-                'items': []
+                'items': [],
+                'totalPrice': totalPrice,
               });
 
               for (final orderSnapshot in tableOrdersSnapshot.docs) {

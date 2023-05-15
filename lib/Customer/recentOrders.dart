@@ -30,38 +30,16 @@ class RecentOrdersScreen extends StatefulWidget {
 class _RecentOrdersScreenState extends State<RecentOrdersScreen> {
   SortBy _sortBy = SortBy.timeDescending;
 
-  Future<double> _calculateTotalPrice(List<dynamic> items) async {
-    double totalPrice = 0;
-    for (var item in items) {
-      final itemRef = item['itemRef'] as DocumentReference;
-      final itemDoc = await itemRef.get();
-      final itemPrice = itemDoc.get('price');
-      totalPrice += itemPrice;
-    }
-    return totalPrice;
-  }
-
-  Future<List<double>> _getTotalPricesForOrders(
-      List<QueryDocumentSnapshot> orders) async {
-    List<double> totalPrices = [];
-    for (var order in orders) {
-      double totalPrice =
-          await _calculateTotalPrice(order.get('items') as List<dynamic>);
-      totalPrices.add(totalPrice);
-    }
-    return totalPrices;
-  }
-
   Future<List<OrderWithPrice>> _sortOrders(
-    List<QueryDocumentSnapshot> orders,
-    SortBy sortBy,
-  ) async {
+      List<QueryDocumentSnapshot> orders,
+      SortBy sortBy,
+      ) async {
     List<OrderWithPrice> sortedOrdersWithPrice = [];
-    List<double> totalPrices = await _getTotalPricesForOrders(orders);
 
-    for (int i = 0; i < orders.length; i++) {
+    for (var order in orders) {
+      double totalPrice = order.get('totalPrice').toDouble();
       sortedOrdersWithPrice
-          .add(OrderWithPrice(order: orders[i], totalPrice: totalPrices[i]));
+          .add(OrderWithPrice(order: order, totalPrice: totalPrice));
     }
 
     switch (sortBy) {
@@ -166,13 +144,8 @@ class _RecentOrdersScreenState extends State<RecentOrdersScreen> {
             .asyncMap((snapshot) => _sortOrders(snapshot.docs, _sortBy)),
         builder: (BuildContext context,
             AsyncSnapshot<List<OrderWithPrice>> snapshot) {
-          if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
-          }
-          if (!snapshot.hasData) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+          if (!snapshot.hasData || snapshot.hasError) {
+            return const Center(child: CircularProgressIndicator());
           }
           return ListView.builder(
             itemCount: snapshot.data!.length,
@@ -187,10 +160,7 @@ class _RecentOrdersScreenState extends State<RecentOrdersScreen> {
                 future: restaurantRef.get(),
                 builder: (BuildContext context,
                     AsyncSnapshot<DocumentSnapshot> snapshot) {
-                  if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  }
-                  if (!snapshot.hasData) {
+                  if (!snapshot.hasData || snapshot.hasError) {
                     return const SizedBox();
                   }
                   final restaurantName = snapshot.data!.get('name') as String;
@@ -235,11 +205,8 @@ class _RecentOrdersScreenState extends State<RecentOrdersScreen> {
                                   builder: (BuildContext context,
                                       AsyncSnapshot<DocumentSnapshot>
                                           snapshot) {
-                                    if (snapshot.hasError) {
-                                      return Text('Error: ${snapshot.error}');
-                                    }
-                                    if (!snapshot.hasData) {
-                                      return const SizedBox();
+                                    if (snapshot.hasError || !snapshot.data!.exists) {
+                                      return const Text('- Deleted Item');
                                     }
                                     final itemName =
                                         snapshot.data!.get('name') as String;
@@ -402,10 +369,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
         stream: widget.orderRef.snapshots(),
         builder:
             (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-          if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
-          }
-          if (!snapshot.hasData) {
+          if (!snapshot.hasData || snapshot.hasError) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -435,12 +399,10 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                 future: itemRef.get(),
                 builder: (BuildContext context,
                     AsyncSnapshot<DocumentSnapshot> snapshot) {
-                  if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  }
-                  if (!snapshot.hasData) {
+                  if (snapshot.hasError || !snapshot.data!.exists || !snapshot.hasData) {
                     return const SizedBox();
                   }
+
                   final itemData = snapshot.data!;
                   final itemName = itemData.get('name') as String;
                   final itemPrice = itemData.get('price');
@@ -451,11 +413,14 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(left: 8),
-                          child: SizedBox(
-                            width: 75,
-                            child: Image.network(
-                              imageUrl,
-                              fit: BoxFit.contain,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: SizedBox(
+                              width: 75,
+                              child: Image.network(
+                                imageUrl,
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
                         ),

@@ -603,7 +603,7 @@ class _AddCategoryItemsState extends State<AddCategoryItems> {
               child: Container(
                 alignment: Alignment.centerLeft,
                 child: const Text(
-                  'Restaurant Image',
+                  'Item Image',
                   style: TextStyle(
                     fontSize: 18,
                   ),
