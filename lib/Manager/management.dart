@@ -9,8 +9,8 @@ import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:place_picker/entities/location_result.dart';
 import 'package:place_picker/widgets/place_picker.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
+import 'package:project_mobile/Manager/restaurantProfile.dart';
 import '../customWidgets.dart';
-import 'menuEdit.dart';
 
 class ManagerPanel extends StatefulWidget {
   const ManagerPanel({Key? key}) : super(key: key);
@@ -82,15 +82,29 @@ class _ManagerPanelState extends State<ManagerPanel> {
                         .map(
                           (doc) => GestureDetector(
                             onTap: () {
+                              /* old navigation
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => EditRestaurant(
                                     collection:
-                                        "Restaurants/${doc.id}/MenuCategory",
+                                    "Restaurants/${doc.id}/MenuCategory",
                                     restaurantName: doc["name"],
                                     restaurantID: doc.id,
                                   ),
+                                ),
+                              );
+                              */
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => RestaurantProfile(
+                                    restaurantID: doc.id,
+                                    restaurantName: doc['name'],
+                                    restaurantFollowersCount: 0,
+                                    restaurantPostsCount: 0,
+                                    restaurantImageUrl: doc['image_url'],
+                                  )
                                 ),
                               );
                             },

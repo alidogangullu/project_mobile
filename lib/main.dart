@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
-import 'package:project_mobile/Customer/customerPanel.dart';
+import 'package:project_mobile/Customer/customerHome.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'Manager/managerPanel.dart';
+import 'Manager/managerHome.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {

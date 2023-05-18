@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
-import 'package:project_mobile/Customer/customerPanel.dart';
+import 'package:project_mobile/Customer/customerHome.dart';
 import 'package:project_mobile/Customer/order.dart';
 import '../customWidgets.dart';
 

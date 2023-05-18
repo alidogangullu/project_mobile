@@ -1,7 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:project_mobile/Manager/newPost.dart';
+import 'package:project_mobile/Manager/qrGenerator.dart';
+import 'package:project_mobile/Manager/restaurantManagers.dart';
+import 'package:simple_speed_dial/simple_speed_dial.dart';
 import 'package:intl/intl.dart';
-import 'package:project_mobile/Customer/restaurantMenu.dart';
+import 'desktopApplicationConnection.dart';
+import 'manageRestaurant.dart';
 
 class RestaurantProfile extends StatelessWidget {
   const RestaurantProfile({
@@ -22,6 +27,57 @@ class RestaurantProfile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: SpeedDial(
+        openBackgroundColor: Colors.black,
+        speedDialChildren: [
+          SpeedDialChild(
+            child: const Icon(Icons.manage_accounts),
+            label: 'Edit Restaurant Managers',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditRestaurantManagers(
+                    restaurantId: restaurantID,
+                  ),
+                ),
+              );
+            },
+            closeSpeedDialOnPressed: true,
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.qr_code_2),
+            label: 'Create QR Codes for Tables',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => QRHomePage(
+                    selectedRestaurantID: restaurantID,
+                  ),
+                ),
+              );
+            },
+            closeSpeedDialOnPressed: true,
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.desktop_windows_outlined),
+            label: 'Edit Waiters Access',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DesktopAppConnect(
+                    restaurantId: restaurantID,
+                  ),
+                ),
+              );
+            },
+            closeSpeedDialOnPressed: true,
+          ),
+        ],
+        child: const Icon(Icons.settings),
+      ),
       appBar: AppBar(
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -64,15 +120,29 @@ class RestaurantProfile extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
               ElevatedButton(
-                onPressed: () {},
-                child: const Text('Follow Restaurant'),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CreateNewPost(
+                        restaurantID: restaurantID,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('Share New Post'),
               ),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pushReplacement(
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => MenuBrowseScreen(id: restaurantID),
+                      builder: (context) => EditRestaurantMenu(
+                        collection:
+                        "Restaurants/$restaurantID/MenuCategory",
+                        restaurantName: restaurantName,
+                        restaurantID: restaurantID,
+                      ),
                     ),
                   );
                 },
@@ -109,6 +179,7 @@ class RestaurantProfile extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) => PostsScreen(
+                              restaurantID: restaurantID,
                               posts: snapshot.data!.docs,
                               initialPostIndex: index,
                             ),
@@ -164,18 +235,28 @@ class RestaurantProfile extends StatelessWidget {
 class PostsScreen extends StatelessWidget {
   final List<DocumentSnapshot> posts;
   final int initialPostIndex;
+  final String restaurantID;
 
   const PostsScreen({
     Key? key,
     required this.posts,
     required this.initialPostIndex,
+    required this.restaurantID,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+
     PageController pageController = PageController(
       initialPage: initialPostIndex,
     );
+
+    Future<void> deletePost(String postId) async {
+      await FirebaseFirestore.instance
+          .collection('Restaurants/$restaurantID/Posts')
+          .doc(postId)
+          .delete();
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -196,32 +277,47 @@ class PostsScreen extends StatelessWidget {
           DateTime timestamp = (post['timestamp'] as Timestamp).toDate();
           String formattedTimestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(timestamp);
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          return Stack(
             children: [
-              Image.network(post['imageUrl']),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
-                child: Container(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    post['caption'],
-                    style: const TextStyle(
-                      fontSize: 17,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Image.network(post['imageUrl']),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
+                    child: Container(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        post['caption'],
+                        style: const TextStyle(
+                          fontSize: 17,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
+                    child: Container(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        formattedTimestamp,
+                        style: const TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
-                child: Container(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    formattedTimestamp,
-                    style: const TextStyle(
-                      fontSize: 13,
-                    ),
-                  ),
+              Positioned(
+                bottom: 10,
+                right: 10,
+                child: IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () {
+                    deletePost(post.id);
+                    Navigator.pop(context);
+                  },
                 ),
               ),
             ],
@@ -231,3 +327,4 @@ class PostsScreen extends StatelessWidget {
     );
   }
 }
+

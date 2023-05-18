@@ -3,9 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:pinput/pinput.dart';
-import 'package:project_mobile/Customer/customerPanel.dart';
+import 'package:project_mobile/Customer/customerHome.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../Manager/managerPanel.dart';
+import '../Manager/managerHome.dart';
 import '../customWidgets.dart';
 
 class LoginPage extends StatefulWidget {
