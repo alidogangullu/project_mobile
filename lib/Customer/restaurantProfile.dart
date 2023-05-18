@@ -1,7 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:project_mobile/Customer/restaurantMenu.dart';
 
 class RestaurantProfile extends StatelessWidget {
-  const RestaurantProfile({Key? key}) : super(key: key);
+  const RestaurantProfile({
+    Key? key,
+    required this.restaurantID,
+    required this.restaurantName,
+    required this.restaurantImageUrl,
+    required this.restaurantFollowersCount,
+    required this.restaurantPostsCount,
+  }) : super(key: key);
+
+  final String restaurantID;
+  final String restaurantName;
+  final String restaurantImageUrl;
+  final int restaurantFollowersCount;
+  final int restaurantPostsCount;
 
   @override
   Widget build(BuildContext context) {
@@ -9,7 +23,10 @@ class RestaurantProfile extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        title: Text('Test Cafe', style: TextStyle(color: Colors.black),),
+        title: Text(
+          restaurantName,
+          style: const TextStyle(color: Colors.black),
+        ),
       ),
       body: Column(
         children: <Widget>[
@@ -20,9 +37,9 @@ class RestaurantProfile extends StatelessWidget {
               children: <Widget>[
                 CircleAvatar(
                   radius: 50,
-                  backgroundImage: NetworkImage('https://link-to-your-image.jpg'),
+                  backgroundImage: NetworkImage(restaurantImageUrl),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -30,8 +47,9 @@ class RestaurantProfile extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: <Widget>[
-                          buildStatColumn('Posts', 0),
-                          buildStatColumn('Followers', 0),
+                          buildStatColumn('Posts', restaurantPostsCount),
+                          buildStatColumn(
+                              'Followers', restaurantFollowersCount),
                         ],
                       ),
                     ],
@@ -45,11 +63,18 @@ class RestaurantProfile extends StatelessWidget {
             children: <Widget>[
               ElevatedButton(
                 onPressed: () {},
-                child: Text('Follow Restaurant'),
+                child: const Text('Follow Restaurant'),
               ),
               ElevatedButton(
-                onPressed: () {},
-                child: Text('Restaurant Menu'),
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MenuBrowseScreen(id: restaurantID),
+                    ),
+                  );
+                },
+                child: const Text('Restaurant Menu'),
               ),
             ],
           ),
@@ -77,7 +102,7 @@ class RestaurantProfile extends StatelessWidget {
       children: <Widget>[
         Text(
           number.toString(),
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 22.0,
             fontWeight: FontWeight.bold,
           ),
@@ -86,7 +111,7 @@ class RestaurantProfile extends StatelessWidget {
           margin: const EdgeInsets.only(top: 4.0),
           child: Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 15.0,
               fontWeight: FontWeight.w400,
             ),

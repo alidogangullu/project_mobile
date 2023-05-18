@@ -166,7 +166,13 @@ class _HomeState extends State<Home> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const RestaurantProfile(),
+                            builder: (context) => RestaurantProfile(
+                              restaurantID: doc.id,
+                              restaurantName: doc['name'],
+                              restaurantFollowersCount: 0,
+                              restaurantPostsCount: 0,
+                              restaurantImageUrl: doc['image_url'],
+                            ),
                           ),
                         );
                       },

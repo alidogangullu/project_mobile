@@ -5,7 +5,7 @@ import 'package:project_mobile/Customer/customerPanel.dart';
 import 'package:project_mobile/Customer/order.dart';
 import '../customWidgets.dart';
 
-class MenuScreen extends StatefulWidget  {
+class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key, required this.id, required this.tableNo});
 
   final String id;
@@ -16,7 +16,6 @@ class MenuScreen extends StatefulWidget  {
 }
 
 class _MenuScreenState extends State<MenuScreen> {
-
   List<dynamic> users = [];
 
   Future<void> listenUnauthorizedUsers() async {
@@ -138,17 +137,16 @@ class _MenuScreenState extends State<MenuScreen> {
   void initState() {
     super.initState();
     listenUnauthorizedUsers();
-
   }
 
   void sendWaiterRequest() async {
     await FirebaseFirestore.instance
         .collection("Restaurants/${widget.id}/Tables")
-        .doc(widget.tableNo).update({
+        .doc(widget.tableNo)
+        .update({
       'newNotification': true,
-      'notifications': FieldValue.arrayUnion([
-        "A waiter request has been sent."
-      ]),
+      'notifications':
+          FieldValue.arrayUnion(["A waiter request has been sent."]),
     });
     const snackBar = SnackBar(
       content: Text('A waiter request has been sent.'),
@@ -276,7 +274,6 @@ class _MenuScreenState extends State<MenuScreen> {
                       return ItemsGrid(
                         documents: filteredItems,
                         collection: "Restaurants/${widget.id}/MenuCategory",
-                        context: context,
                         id: widget.id,
                         selected: selected,
                         tableNo: widget.tableNo,
@@ -295,20 +292,21 @@ class _MenuScreenState extends State<MenuScreen> {
 
 class ItemsGrid extends StatefulWidget {
   final List<QueryDocumentSnapshot> documents;
-  final dynamic context;
-  final dynamic selected;
+  final String selected;
   final String collection;
   final String id;
-  final String tableNo;
+  final bool justBrowsing;
+  final String? tableNo; // Make tableNo nullable
 
-  const ItemsGrid({super.key,
+  const ItemsGrid({
+    Key? key,
     required this.documents,
-    required this.context,
     required this.selected,
     required this.collection,
     required this.id,
-    required this.tableNo,
-  });
+    this.tableNo, // Do not require tableNo
+    this.justBrowsing = false, // Default to false if not provided
+  }) : super(key: key);
 
   @override
   _ItemsGridState createState() => _ItemsGridState();
@@ -400,7 +398,9 @@ class _ItemsGridState extends State<ItemsGrid> {
                                 ),
                               ],
                             ),
-                            Row(
+                            widget.justBrowsing
+                                ? const SizedBox()
+                                : Row(
                               children: [
                                 IconButton(
                                   onPressed: () {
@@ -447,7 +447,9 @@ class _ItemsGridState extends State<ItemsGrid> {
                             ],
                           ),
                         ),
-                        menuButton("Add to Order List", () async {
+                        widget.justBrowsing
+                            ? const SizedBox()
+                            : menuButton("Add to Order List", () async {
                           final usersSnapshot = await FirebaseFirestore.instance
                               .collection("Restaurants/${widget.id}/Tables")
                               .doc(widget.tableNo)
@@ -659,6 +661,164 @@ class RestaurantNameText extends StatelessWidget {
         }
         return const Center(child: CircularProgressIndicator());
       },
+    );
+  }
+}
+
+//restaurant menu for just browsing
+
+class MenuBrowseScreen extends StatefulWidget {
+  final String id;
+
+
+  const MenuBrowseScreen(
+      {super.key, required this.id});
+
+  @override
+  State<MenuBrowseScreen> createState() => _MenuBrowseScreenState();
+}
+
+class _MenuBrowseScreenState extends State<MenuBrowseScreen> {
+  String selected = "";
+  String _searchQuery = '';
+  final searchController = TextEditingController();
+
+  void _onSearchQueryChanged(String query) {
+    setState(() {
+      _searchQuery = query.toLowerCase();
+    });
+  }
+
+  Future<List<QueryDocumentSnapshot>> getItemsForAllCategories(
+      List<QueryDocumentSnapshot> categories) async {
+    List<QueryDocumentSnapshot> allDocuments = [];
+    for (var doc in categories) {
+      final items = await FirebaseFirestore.instance
+          .collection('Restaurants/${widget.id}/MenuCategory/${doc.id}/list')
+          .get();
+      allDocuments.addAll(items.docs);
+    }
+    return allDocuments;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back),
+        ),
+        title: RestaurantNameText(
+          id: widget.id,
+        ),
+      ),
+      body: Column(
+        children: [
+          textInputField(context, "Search Item", searchController, false,
+              iconData: Icons.search, onChanged: _onSearchQueryChanged),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 5, 0, 0),
+            child: SizedBox(
+              height: 30,
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection("Restaurants/${widget.id}/MenuCategory")
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Text('Loading categories...');
+                  }
+                  final categories =
+                      snapshot.data!.docs.map((doc) => doc.id).toList();
+                  return ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final category = categories[index];
+                      return GestureDetector(
+                        onTap: () => setState(() => selected == category
+                            ? selected = ''
+                            : selected = category),
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: selected == category
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            category,
+                            style: TextStyle(
+                              color: selected == category
+                                  ? Colors.white
+                                  : Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection("Restaurants/${widget.id}/MenuCategory")
+                    .snapshots(),
+                builder: (BuildContext context,
+                    AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final categories = snapshot.data!.docs;
+                  return FutureBuilder(
+                    future: getItemsForAllCategories(categories),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<List<QueryDocumentSnapshot>>
+                            itemsSnapshot) {
+                      if (itemsSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      final items = itemsSnapshot.data!;
+                      final visibleItems = selected.isEmpty
+                          ? items
+                          : items
+                              .where((item) => item.reference.path.startsWith(
+                                  'Restaurants/${widget.id}/MenuCategory/$selected'))
+                              .toList();
+                      final filteredItems = visibleItems.where((item) {
+                        final name = item['name'].toString().toLowerCase();
+                        return name.contains(_searchQuery);
+                      }).toList();
+                      return ItemsGrid(
+                        documents: filteredItems,
+                        collection: "Restaurants/${widget.id}/MenuCategory",
+                        id: widget.id,
+                        selected: selected,
+                        justBrowsing: true,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
