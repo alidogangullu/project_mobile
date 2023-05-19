@@ -65,10 +65,10 @@ class Home extends StatefulWidget {
   final String userId;
 
   @override
-  _HomeState createState() => _HomeState();
+  HomeState createState() => HomeState();
 }
 
-class _HomeState extends State<Home> {
+class HomeState extends State<Home> {
   final searchButtonController = TextEditingController();
   final searchFocusNode = FocusNode();
   bool _searchMode = false;

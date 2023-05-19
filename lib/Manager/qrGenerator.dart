@@ -172,6 +172,6 @@ Future<void> _shareQRCode(String qrCodeData, int tableNumber) async {
         text: 'Here is the QR code for Table $tableNumber.',
         mimeTypes: ['image/png']);
   } catch (e) {
-    print('Failed to share QR code: $e');
+    //print('Failed to share QR code: $e');
   }
 }

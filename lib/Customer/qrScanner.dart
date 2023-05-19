@@ -10,10 +10,10 @@ class QRScanner extends StatefulWidget {
   const QRScanner({Key? key}) : super(key: key);
 
   @override
-  _QRScannerState createState() => _QRScannerState();
+  QRScannerState createState() => QRScannerState();
 }
 
-class _QRScannerState extends State<QRScanner> {
+class QRScannerState extends State<QRScanner> {
   final MobileScannerController qrScannerController = MobileScannerController();
   bool scanned = false;
   double desiredLatitude = 0;

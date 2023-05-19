@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:image_picker/image_picker.dart';
 import '../Authentication/loginPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,10 +12,10 @@ class Profile extends StatefulWidget {
   final String userId;
 
   @override
-  _ProfileState createState() => _ProfileState();
+  ProfileState createState() => ProfileState();
 }
 
-class _ProfileState extends State<Profile> {
+class ProfileState extends State<Profile> {
   File? _image;
   final _picker = ImagePicker();
   String? _profilePhotoUrl;
@@ -145,7 +146,7 @@ class _ProfileState extends State<Profile> {
                         ),
                       );
                     },
-                    icon: Icon(Icons.edit)),
+                    icon: const Icon(Icons.edit)),
                 const Text('Edit'),
                 const SizedBox(
                   width: 15,
@@ -162,33 +163,44 @@ class _ProfileState extends State<Profile> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                //todo column icinde ProfilePageButton kullan.
-                Text(
-                  'Help',
-                  style: Theme.of(context).textTheme.headline6,
+                //column icinde ProfilePageButton kullan.
+                const ProfilePageButton(
+                  text: 'Help',
+                  icon: Icon(Icons.help),
                 ),
                 const SizedBox(height: 20),
                 InkWell(
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => CommentsPage()),
+                      MaterialPageRoute(
+                          builder: (context) => const CommentsPage()),
                     );
                   },
-                  child: ProfilePageButton(
+                  child: const ProfilePageButton(
                     icon: Icon(Icons.rate_review),
                     text: 'Comments',
                   ),
                 ),
                 const SizedBox(height: 20),
-                ProfilePageButton(text: 'Notifications', icon: Icon(Icons.notifications)),
+                InkWell(
+                  onTap: () {},
+                  child: const ProfilePageButton(
+                    text: 'Notifications',
+                    icon: Icon(Icons.notifications),
+                  ),
+                ),
                 const SizedBox(height: 20),
                 InkWell(
-                  onTap: () async {
-                    await FirebaseAuth.instance.signOut();
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
-                  },
-                    child: ProfilePageButton(text: 'Logout', icon: Icon(Icons.logout))),
+                    onTap: () async {
+                      await FirebaseAuth.instance.signOut();
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const LoginPage()));
+                    },
+                    child: const ProfilePageButton(
+                        text: 'Logout', icon: Icon(Icons.logout))),
               ],
             ),
           ],
@@ -199,11 +211,13 @@ class _ProfileState extends State<Profile> {
 }
 
 class CommentsPage extends StatefulWidget {
+  const CommentsPage({Key? key}) : super(key: key);
+
   @override
-  _CommentsPageState createState() => _CommentsPageState();
+  CommentsPageState createState() => CommentsPageState();
 }
 
-class _CommentsPageState extends State<CommentsPage> {
+class CommentsPageState extends State<CommentsPage> {
   final String userId = FirebaseAuth.instance.currentUser!.uid;
   String? _selectedRestaurantId;
 
@@ -228,45 +242,64 @@ class _CommentsPageState extends State<CommentsPage> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('Restaurants')
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
+            child: FutureBuilder<QuerySnapshot>(
+              future: FirebaseFirestore.instance
+                  .collection('comments')
+                  .where('userId', isEqualTo: userId)
+                  .get(),
+              builder: (context, commentSnapshot) {
+                if (!commentSnapshot.hasData) {
                   return const CircularProgressIndicator();
                 }
-
-                final restaurants = snapshot.data!.docs;
-
-                return DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Select a restaurant',
-                    enabledBorder: OutlineInputBorder(
-                      borderSide:
-                          const BorderSide(color: Colors.black, width: 0.0),
-                    ),
-                    labelStyle: TextStyle(
-                      color: Colors
-                          .black, // sets the color of the label text to black
-                    ),
+                final restaurantIds = commentSnapshot.data!.docs
+                    .map((comment) =>
+                        comment.get('itemRef').toString().split('/')[1])
+                    .toSet()
+                    .toList();
+                return FutureBuilder<List<DocumentSnapshot>>(
+                  future: Future.wait(
+                    restaurantIds.map((restaurantId) => FirebaseFirestore
+                        .instance
+                        .collection('Restaurants')
+                        .doc(restaurantId)
+                        .get()),
                   ),
-                  value: _selectedRestaurantId,
-                  onChanged: (newValue) {
-                    setState(() {
-                      _selectedRestaurantId = newValue;
-                    });
-                  },
-                  items: restaurants.map((restaurant) {
-                    final restaurantName = restaurant.get('name') as String;
-                    final restaurantId = restaurant.id;
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const CircularProgressIndicator();
+                    }
 
-                    return DropdownMenuItem<String>(
-                      value: restaurantId,
-                      child: Text(restaurantName),
+                    final restaurants = snapshot.data!;
+
+                    return DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Select a restaurant',
+                        enabledBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: Colors.black, width: 0.0),
+                        ),
+                        labelStyle: TextStyle(
+                          color: Colors.black,
+                        ),
+                      ),
+                      value: _selectedRestaurantId,
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedRestaurantId = newValue;
+                        });
+                      },
+                      items: restaurants.map((restaurant) {
+                        final restaurantName = restaurant.get('name') as String;
+                        final restaurantId = restaurant.id;
+
+                        return DropdownMenuItem<String>(
+                          value: restaurantId,
+                          child: Text(restaurantName),
+                        );
+                      }).toList(),
                     );
-                  }).toList(),
+                  },
                 );
               },
             ),
@@ -289,23 +322,19 @@ class _CommentsPageState extends State<CommentsPage> {
                 final List<DocumentSnapshot> documents = snapshot.data!.docs;
                 final List<DocumentSnapshot> filteredDocuments = documents
                     .where((doc) =>
+                        doc.get('userId') == userId &&
                         doc.get('itemRef').toString().split('/')[1] ==
-                        _selectedRestaurantId)
+                            _selectedRestaurantId)
                     .toList();
                 return ListView.builder(
                   itemCount: filteredDocuments.length,
                   itemBuilder: (BuildContext context, int index) {
-                    final order = filteredDocuments[index];
-                    final userId = order.get('userId');
-                    if (userId != LoginPage.userID) {
-                      // if the comment was not made by the current user, do not show it
-                      return const SizedBox();
-                    }
-                    DocumentReference item = order.get("itemRef");
-                    final restaurantRef = item.path.split("/")[1];
+                    final commentDoc = filteredDocuments[index];
+                    DocumentReference itemRef = commentDoc.get("itemRef");
+                    final restaurantID = itemRef.path.split("/")[1];
                     return FutureBuilder<DocumentSnapshot>(
                       future: FirebaseFirestore.instance
-                          .doc("Restaurants/$restaurantRef")
+                          .doc("Restaurants/$restaurantID")
                           .get(),
                       builder: (BuildContext context,
                           AsyncSnapshot<DocumentSnapshot> snapshot) {
@@ -319,27 +348,27 @@ class _CommentsPageState extends State<CommentsPage> {
                             snapshot.data!.get('name') as String;
 
                         return FutureBuilder<DocumentSnapshot>(
-                          future: item.get(),
+                          future: itemRef.get(),
                           builder: (BuildContext context,
                               AsyncSnapshot<DocumentSnapshot> snapshot) {
                             if (snapshot.hasError) {
-                              return Text('Error: ' + '  ${snapshot.error}');
+                              return Text('Error: ${snapshot.error}');
                             }
                             if (!snapshot.hasData) {
                               return const SizedBox();
                             }
                             final itemName =
                                 snapshot.data!.get('name') as String;
-                            final timestamp = order["timestamp"];
-                            final comment = order["text"];
-                            final rating = order["rating"];
+                            final timestamp = commentDoc["timestamp"];
+                            final comment = commentDoc["text"];
+                            final rating = commentDoc["rating"];
                             final dateTime = timestamp.toDate().toLocal();
                             final formattedDate =
                                 "${dateTime.day.toString().padLeft(2, '0')}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.year.toString()} ${dateTime.hour.toString().padLeft(2, '0')}.${dateTime.minute.toString().padLeft(2, '0')}";
                             return Container(
-                              margin: EdgeInsets.symmetric(
+                              margin: const EdgeInsets.symmetric(
                                   vertical: 8.0, horizontal: 16.0),
-                              padding: EdgeInsets.all(16.0),
+                              padding: const EdgeInsets.all(16.0),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12.0),
                                 color: Colors.white,
@@ -348,7 +377,7 @@ class _CommentsPageState extends State<CommentsPage> {
                                     color: Colors.grey.withOpacity(0.3),
                                     spreadRadius: 2,
                                     blurRadius: 5,
-                                    offset: Offset(0, 3),
+                                    offset: const Offset(0, 3),
                                   ),
                                 ],
                               ),
@@ -363,8 +392,8 @@ class _CommentsPageState extends State<CommentsPage> {
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          '$itemName',
-                                          style: TextStyle(
+                                          itemName,
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 20.0,
                                           ),
@@ -372,50 +401,409 @@ class _CommentsPageState extends State<CommentsPage> {
                                         ),
                                       ),
                                       IconButton(
-                                        icon: Icon(Icons.edit),
+                                        icon: const Icon(Icons.edit),
                                         onPressed: () {
-                                          // navigate to edit comment page
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  EditCommentPage(order: order),
-                                            ),
+                                          showDialog<void>(
+                                            context: context,
+                                            barrierDismissible: false,
+                                            builder: (BuildContext context) {
+                                              //this codes (inside of the alert dialog) pasted here from recentOrders.dart and modified
+                                              Future<void>
+                                                  updateItemRatingAndCount(
+                                                      DocumentReference itemRef,
+                                                      double newRating) async {
+                                                final itemSnapshot =
+                                                    await itemRef.get();
+                                                double currentAvgRating =
+                                                    double.parse(itemSnapshot[
+                                                                'rating']
+                                                            .toString()) ??
+                                                        0.0;
+                                                int currentRatingCount =
+                                                    itemSnapshot[
+                                                            'ratingCount'] ??
+                                                        0;
+
+                                                // Check if the user has previously rated
+                                                final previousFeedbackSnapshot =
+                                                    await FirebaseFirestore
+                                                        .instance
+                                                        .collection('comments')
+                                                        .where('userId',
+                                                            isEqualTo: LoginPage
+                                                                .userID)
+                                                        .where('itemRef',
+                                                            isEqualTo: itemRef)
+                                                        .limit(1)
+                                                        .get();
+                                                bool hasPreviouslyRated =
+                                                    previousFeedbackSnapshot
+                                                            .size >
+                                                        0;
+
+                                                if (hasPreviouslyRated) {
+                                                  // User has previously rated, update the average rating
+                                                  final previousFeedback =
+                                                      previousFeedbackSnapshot
+                                                          .docs[0];
+                                                  double userOldRating =
+                                                      previousFeedback
+                                                          .get('rating')
+                                                          .toDouble();
+                                                  double updatedAvgRating =
+                                                      (currentAvgRating *
+                                                              currentRatingCount) -
+                                                          userOldRating +
+                                                          newRating /
+                                                              currentRatingCount;
+
+                                                  await itemRef.update({
+                                                    'rating': updatedAvgRating,
+                                                  });
+                                                } else {
+                                                  // User's first rating, set the average rating and increment rating count
+
+                                                  //items first rating
+                                                  if (currentRatingCount == 0) {
+                                                    currentRatingCount++;
+                                                    double updatedAvgRating =
+                                                        newRating /
+                                                            currentRatingCount;
+                                                    await itemRef.update({
+                                                      'rating':
+                                                          updatedAvgRating,
+                                                      'ratingCount': 1,
+                                                    });
+                                                  } else {
+                                                    double updatedAvgRating =
+                                                        (currentAvgRating *
+                                                                    currentRatingCount +
+                                                                newRating) /
+                                                            (currentRatingCount +
+                                                                1);
+                                                    await itemRef.update({
+                                                      'rating':
+                                                          updatedAvgRating,
+                                                      'ratingCount':
+                                                          currentRatingCount +
+                                                              1,
+                                                    });
+                                                  }
+                                                }
+                                              }
+
+                                              var commentController =
+                                                  TextEditingController();
+                                              var showCommentSection = false;
+                                              bool isChanged = false;
+                                              double itemRating = rating;
+
+                                              if (commentController
+                                                      .text.isEmpty &&
+                                                  !isChanged) {
+                                                commentController.text =
+                                                    comment;
+                                                showCommentSection = true;
+                                              }
+
+                                              return AlertDialog(
+                                                actions: <Widget>[
+                                                  TextButton(
+                                                    child: const Text(
+                                                      'Cancel',
+                                                      style: TextStyle(
+                                                          color: Colors.black),
+                                                    ),
+                                                    onPressed: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                  ),
+                                                  TextButton(
+                                                    child: const Text('Save'),
+                                                    onPressed: () async {
+                                                      if (isChanged) {
+                                                        // Update the item rating and count
+                                                        await updateItemRatingAndCount(
+                                                            itemRef,
+                                                            itemRating);
+
+                                                        final commentText =
+                                                            commentController
+                                                                .text
+                                                                .trim();
+                                                        final commentQuerySnapshot =
+                                                            await FirebaseFirestore
+                                                                .instance
+                                                                .collection(
+                                                                    'comments')
+                                                                .where('userId',
+                                                                    isEqualTo:
+                                                                        LoginPage
+                                                                            .userID)
+                                                                .where(
+                                                                    'itemRef',
+                                                                    isEqualTo:
+                                                                        itemRef)
+                                                                .limit(1)
+                                                                .get();
+                                                        if (commentQuerySnapshot
+                                                                .size >
+                                                            0) {
+                                                          // Update the existing comment
+                                                          final commentRef =
+                                                              commentQuerySnapshot
+                                                                  .docs[0]
+                                                                  .reference;
+                                                          await commentRef.set(
+                                                              {
+                                                                'rating':
+                                                                    itemRating,
+                                                                'text':
+                                                                    commentText,
+                                                                'timestamp':
+                                                                    FieldValue
+                                                                        .serverTimestamp(),
+                                                              },
+                                                              SetOptions(
+                                                                  merge: true));
+                                                        } else {
+                                                          // Save a new comment
+                                                          final commentRef =
+                                                              FirebaseFirestore
+                                                                  .instance
+                                                                  .collection(
+                                                                      'comments')
+                                                                  .doc();
+                                                          await commentRef.set({
+                                                            'rating':
+                                                                itemRating,
+                                                            'text': commentText,
+                                                            'timestamp': FieldValue
+                                                                .serverTimestamp(),
+                                                            'itemRef': itemRef,
+                                                            'userId': LoginPage
+                                                                .userID,
+                                                          });
+                                                        }
+                                                      }
+                                                      Navigator.pop(context);
+                                                    },
+                                                  ),
+                                                ],
+                                                content: SizedBox(
+                                                  height: 275,
+                                                  width: 500,
+                                                  child: StatefulBuilder(
+                                                    builder:
+                                                        (BuildContext context,
+                                                            setState) {
+                                                      return FutureBuilder<
+                                                          DocumentSnapshot>(
+                                                        future: itemRef.get(),
+                                                        builder: (BuildContext
+                                                                context,
+                                                            AsyncSnapshot<
+                                                                    DocumentSnapshot>
+                                                                snapshot) {
+                                                          if (snapshot
+                                                                  .hasError ||
+                                                              !snapshot.data!
+                                                                  .exists ||
+                                                              !snapshot
+                                                                  .hasData) {
+                                                            return const SizedBox();
+                                                          }
+                                                          final itemData =
+                                                              snapshot.data!;
+                                                          final itemName =
+                                                              itemData.get(
+                                                                      'name')
+                                                                  as String;
+                                                          final itemPrice =
+                                                              itemData
+                                                                  .get('price');
+                                                          final imageUrl =
+                                                              itemData.get(
+                                                                      'image_url')
+                                                                  as String;
+                                                          return Column(
+                                                            children: [
+                                                              Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .spaceBetween,
+                                                                children: [
+                                                                  ClipRRect(
+                                                                    borderRadius:
+                                                                        BorderRadius
+                                                                            .circular(6),
+                                                                    child:
+                                                                        SizedBox(
+                                                                      width: 75,
+                                                                      child: Image
+                                                                          .network(
+                                                                        imageUrl,
+                                                                        fit: BoxFit
+                                                                            .contain,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                  Column(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      Text(
+                                                                          itemName),
+                                                                      Text(
+                                                                        '$itemPrice\$',
+                                                                        style: const TextStyle(
+                                                                            fontSize:
+                                                                                14),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                  IconButton(
+                                                                    icon: const Icon(
+                                                                        Icons
+                                                                            .comment),
+                                                                    onPressed:
+                                                                        () {
+                                                                      setState(
+                                                                          () {
+                                                                        showCommentSection =
+                                                                            !showCommentSection;
+                                                                      });
+                                                                    },
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                              const SizedBox(
+                                                                  height: 20),
+                                                              RatingBar.builder(
+                                                                glowColor:
+                                                                    Colors
+                                                                        .amber,
+                                                                glowRadius: 0.5,
+                                                                initialRating:
+                                                                    itemRating,
+                                                                minRating: 0,
+                                                                direction: Axis
+                                                                    .horizontal,
+                                                                allowHalfRating:
+                                                                    true,
+                                                                itemCount: 5,
+                                                                itemPadding:
+                                                                    const EdgeInsets
+                                                                            .fromLTRB(
+                                                                        0,
+                                                                        0,
+                                                                        0,
+                                                                        5),
+                                                                itemBuilder:
+                                                                    (context,
+                                                                            _) =>
+                                                                        const Icon(
+                                                                  Icons.star,
+                                                                  color: Colors
+                                                                      .amber,
+                                                                ),
+                                                                onRatingUpdate:
+                                                                    (rating) {
+                                                                  setState(() {
+                                                                    showCommentSection =
+                                                                        true;
+                                                                    isChanged =
+                                                                        true;
+                                                                    itemRating =
+                                                                        rating;
+                                                                  });
+                                                                },
+                                                              ),
+                                                              if (showCommentSection)
+                                                                Padding(
+                                                                  padding: const EdgeInsets
+                                                                          .symmetric(
+                                                                      horizontal:
+                                                                          16,
+                                                                      vertical:
+                                                                          8),
+                                                                  child: Column(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      if (commentController
+                                                                              .text
+                                                                              .isNotEmpty &&
+                                                                          !isChanged)
+                                                                        const Text(
+                                                                          'You previously left this comment:',
+                                                                          style:
+                                                                              TextStyle(fontWeight: FontWeight.bold),
+                                                                        ),
+                                                                      TextField(
+                                                                        onChanged:
+                                                                            (value) {
+                                                                          setState(
+                                                                              () {
+                                                                            isChanged =
+                                                                                true;
+                                                                          });
+                                                                        },
+                                                                        controller:
+                                                                            commentController,
+                                                                        decoration:
+                                                                            const InputDecoration(hintText: 'Type your comment here'),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                            ],
+                                                          );
+                                                        },
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                              );
+                                            },
                                           );
                                         },
                                       ),
-                                      SizedBox(width: 8.0),
+                                      const SizedBox(width: 8.0),
                                       Icon(
                                         Icons.star,
                                         color: Colors.amber[700],
                                       ),
-                                      SizedBox(width: 4.0),
+                                      const SizedBox(width: 4.0),
                                       Text(
                                         '$rating',
-                                        style: TextStyle(fontSize: 18.0),
+                                        style: const TextStyle(fontSize: 18.0),
                                       ),
                                     ],
                                   ),
-                                  SizedBox(height: 12.0),
+                                  const SizedBox(height: 12.0),
                                   Text(
                                     '$comment',
-                                    style: TextStyle(fontSize: 18.0),
+                                    style: const TextStyle(fontSize: 18.0),
                                   ),
-                                  SizedBox(height: 12.0),
+                                  const SizedBox(height: 12.0),
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        '$formattedDate',
+                                        formattedDate,
                                         style: TextStyle(
                                           fontSize: 14.0,
                                           color: Colors.grey[600],
                                         ),
                                       ),
                                       Text(
-                                        '$restaurantName',
-                                        style: TextStyle(
+                                        restaurantName,
+                                        style: const TextStyle(
                                           fontSize: 16.0,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -435,161 +823,6 @@ class _CommentsPageState extends State<CommentsPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class ProfilePageButton extends StatelessWidget {
-  const ProfilePageButton({
-    super.key,
-    required this.text,
-    required this.icon,
-  });
-
-  final String text;
-  final Icon icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        icon,
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: const TextStyle(fontSize: 18),
-        ),
-        const Expanded(child: SizedBox()),
-        const Icon(Icons.arrow_forward, size: 20),
-      ],
-    );
-  }
-}
-
-class EditCommentPage extends StatefulWidget {
-  final DocumentSnapshot order;
-
-  const EditCommentPage({Key? key, required this.order}) : super(key: key);
-
-  @override
-  _EditCommentPageState createState() => _EditCommentPageState();
-}
-
-class _EditCommentPageState extends State<EditCommentPage> {
-  late TextEditingController _commentController;
-
-  @override
-  void initState() {
-    super.initState();
-    _commentController = TextEditingController(text: widget.order.get('text'));
-  }
-
-  @override
-  void dispose() {
-    _commentController.dispose();
-    super.dispose();
-  }
-
-  void _updateComment() async {
-    await widget.order.reference.update({
-      'text': _commentController.text,
-    });
-    Navigator.pop(context);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.black),
-        backgroundColor: Colors.white,
-        centerTitle: false,
-        title: const Text(
-          'Edit Comment',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 22,
-            height: 1.5,
-          ),
-        ),
-        textTheme: Theme.of(context).textTheme.copyWith(
-              headline6: TextStyle(color: Colors.black),
-            ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Your Current Comment:',
-              style: TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 16.0),
-            Container(
-              padding: EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12.0),
-                color: Colors.grey[200],
-              ),
-              child: Text(
-                '${widget.order.get('text')}',
-                style: TextStyle(fontSize: 18.0),
-              ),
-            ),
-            SizedBox(height: 24.0),
-            Text(
-              'Edit Comment:',
-              style: TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 16.0),
-            TextFormField(
-              controller: _commentController,
-              maxLines: null,
-              style: TextStyle(fontSize: 18.0),
-              decoration: InputDecoration(
-                hintText: 'Enter your edited comment here',
-                border: OutlineInputBorder(
-                  borderSide: BorderSide.none,
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                filled: true,
-                fillColor: Colors.grey[200],
-                contentPadding: EdgeInsets.all(16.0),
-              ),
-            ),
-            SizedBox(height: 24.0),
-            ElevatedButton(
-              onPressed: _updateComment,
-              child: Text(
-                'Save Changes',
-                style: TextStyle(
-                  fontSize: 18.0,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 32.0,
-                  vertical: 16.0,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                primary: Theme.of(context).shadowColor,
-                elevation: 5.0,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -657,4 +890,31 @@ class ProfileDetails extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => Size.fromHeight(height * 1.1);
+}
+
+class ProfilePageButton extends StatelessWidget {
+  const ProfilePageButton({
+    super.key,
+    required this.text,
+    required this.icon,
+  });
+
+  final String text;
+  final Icon icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        icon,
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: const TextStyle(fontSize: 18),
+        ),
+        const Expanded(child: SizedBox()),
+        const Icon(Icons.arrow_forward, size: 20),
+      ],
+    );
+  }
 }

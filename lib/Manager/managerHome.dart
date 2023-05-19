@@ -16,9 +16,9 @@ class _ManagerHomeState extends State<ManagerHome> {
   int _selectedIndex = 1;
   final _pageOptions = [
     //bottom bar sekmeleri
-    ManagerPanel(),
+    const ManagerPanel(),
     Home(userId: FirebaseAuth.instance.currentUser!.uid,),
-    Stats(),
+    const Stats(),
   ];
 
   void _onItemTapped(int index) {
@@ -63,7 +63,7 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MyAppBar(),
+      appBar: const MyAppBar(),
       body:  Center(
         child:
         StreamBuilder<QuerySnapshot>(
@@ -126,8 +126,8 @@ class Home extends StatelessWidget {
                             final formattedDate =
                                 "${dateTime.day.toString().padLeft(2, '0')}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.year.toString()} ${dateTime.hour.toString().padLeft(2, '0')}.${dateTime.minute.toString().padLeft(2, '0')}";
                             return Container(
-                              margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                              padding: EdgeInsets.all(16.0),
+                              margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                              padding: const EdgeInsets.all(16.0),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12.0),
                                 color: Colors.white,
@@ -136,7 +136,7 @@ class Home extends StatelessWidget {
                                     color: Colors.grey.withOpacity(0.3),
                                     spreadRadius: 2,
                                     blurRadius: 5,
-                                    offset: Offset(0, 3),
+                                    offset: const Offset(0, 3),
                                   ),
                                 ],
                               ),
@@ -149,45 +149,45 @@ class Home extends StatelessWidget {
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          '$itemName',
-                                          style: TextStyle(
+                                          itemName,
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 20.0,
                                           ),
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                      SizedBox(width: 8.0),
+                                      const SizedBox(width: 8.0),
                                       Icon(
                                         Icons.star,
                                         color: Colors.amber[700],
                                       ),
-                                      SizedBox(width: 4.0),
+                                      const SizedBox(width: 4.0),
                                       Text(
                                         '$rating',
-                                        style: TextStyle(fontSize: 18.0),
+                                        style: const TextStyle(fontSize: 18.0),
                                       ),
                                     ],
                                   ),
-                                  SizedBox(height: 12.0),
+                                  const SizedBox(height: 12.0),
                                   Text(
                                     '$comment',
-                                    style: TextStyle(fontSize: 18.0),
+                                    style: const TextStyle(fontSize: 18.0),
                                   ),
-                                  SizedBox(height: 12.0),
+                                  const SizedBox(height: 12.0),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        '$formattedDate',
+                                        formattedDate,
                                         style: TextStyle(
                                           fontSize: 14.0,
                                           color: Colors.grey[600],
                                         ),
                                       ),
                                       Text(
-                                        '$restaurantName',
-                                        style: TextStyle(
+                                        restaurantName,
+                                        style: const TextStyle(
                                           fontSize: 16.0,
                                           fontWeight: FontWeight.bold,
                                         ),

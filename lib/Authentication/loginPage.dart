@@ -132,9 +132,6 @@ class _LoginPageState extends State<LoginPage> {
     sharedPreferences.setBool(
         'isManager', isManager); //isManager'ı kaydetmek için
 
-    print(isManager);
-    print(sharedPreferences.getBool('isManager'));
-
     //ilk kayıttan sonra kullanıcı tipine göre uygulamaya yönlendirme
     if (isManager == true) {
       Navigator.pushReplacement(

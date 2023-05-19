@@ -309,10 +309,10 @@ class ItemsGrid extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _ItemsGridState createState() => _ItemsGridState();
+  ItemsGridState createState() => ItemsGridState();
 }
 
-class _ItemsGridState extends State<ItemsGrid> {
+class ItemsGridState extends State<ItemsGrid> {
   @override
   Widget build(BuildContext context) {
     return GridView.count(

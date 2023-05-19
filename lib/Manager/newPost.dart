@@ -12,10 +12,10 @@ class CreateNewPost extends StatefulWidget {
   final String restaurantID;
 
   @override
-  _CreateNewPostState createState() => _CreateNewPostState();
+  CreateNewPostState createState() => CreateNewPostState();
 }
 
-class _CreateNewPostState extends State<CreateNewPost> {
+class CreateNewPostState extends State<CreateNewPost> {
   final captionController = TextEditingController();
   final picker = ImagePicker();
   File? _imageFile;

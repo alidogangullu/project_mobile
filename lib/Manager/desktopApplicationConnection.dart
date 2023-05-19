@@ -9,10 +9,10 @@ class DesktopAppConnect extends StatefulWidget {
   final String restaurantId;
 
   @override
-  _DesktopAppConnectState createState() => _DesktopAppConnectState();
+  DesktopAppConnectState createState() => DesktopAppConnectState();
 }
 
-class _DesktopAppConnectState extends State<DesktopAppConnect> {
+class DesktopAppConnectState extends State<DesktopAppConnect> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
   bool _isAccountAvailable = false;
