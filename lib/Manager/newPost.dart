@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'dart:typed_data';
-
 import 'package:project_mobile/customWidgets.dart';
 
 class CreateNewPost extends StatefulWidget {
@@ -92,7 +91,7 @@ class _CreateNewPostState extends State<CreateNewPost> {
                   child: const Text("Take Picture"),
                   onPressed: () async {
                     final pickedFile =
-                        await picker.getImage(source: ImageSource.camera);
+                        await picker.pickImage(source: ImageSource.camera);
 
                     if (pickedFile != null) {
                       setState(() {
@@ -105,7 +104,7 @@ class _CreateNewPostState extends State<CreateNewPost> {
                   child: const Text("Select from Gallery"),
                   onPressed: () async {
                     final pickedFile =
-                        await picker.getImage(source: ImageSource.gallery);
+                        await picker.pickImage(source: ImageSource.gallery);
 
                     if (pickedFile != null) {
                       setState(() {
@@ -141,6 +140,12 @@ class _CreateNewPostState extends State<CreateNewPost> {
                   'caption': captionController.text,
                   'imageUrl': imageUrl,
                   'timestamp': DateTime.now(),
+                });
+
+                await FirebaseFirestore.instance
+                    .doc('Restaurants/${widget.restaurantID}')
+                    .update({
+                  'postCount': FieldValue.increment(1),
                 });
 
                 captionController.clear();

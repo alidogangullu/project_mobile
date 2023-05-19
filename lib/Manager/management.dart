@@ -102,8 +102,8 @@ class _ManagerPanelState extends State<ManagerPanel> {
                                     restaurantAddress: doc['address'],
                                     restaurantID: doc.id,
                                     restaurantName: doc['name'],
-                                    restaurantFollowersCount: 0,
-                                    restaurantPostsCount: 0,
+                                    restaurantFollowersCount: doc['followerCount'],
+                                    restaurantPostsCount: doc['postCount'],
                                     restaurantImageUrl: doc['image_url'],
                                   )
                                 ),
@@ -482,6 +482,8 @@ class _AddRestaurantState extends State<AddRestaurant> {
                       "rating": 0.0,
                       "address": address,
                       "location": [latitude, longitude],
+                      "followerCount": 0,
+                      "postCount" : 0,
                     });
                     //exit
                     restaurantNameController.clear();

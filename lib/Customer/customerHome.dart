@@ -70,13 +70,25 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final searchButtonController = TextEditingController();
+  final searchFocusNode = FocusNode();
   bool _searchMode = false;
   List<DocumentSnapshot> searchResults = [];
+
+  @override
+  void dispose() {
+    searchButtonController.dispose();
+    searchFocusNode.dispose();
+    super.dispose();
+  }
 
   void _toggleSearchMode() {
     setState(() {
       _searchMode = !_searchMode;
-      if (!_searchMode) {
+      if (_searchMode) {
+        searchFocusNode
+            .requestFocus();
+      } else {
+        searchFocusNode.unfocus();
         searchButtonController.clear();
         searchResults.clear();
       }
@@ -88,7 +100,8 @@ class _HomeState extends State<Home> {
       final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('Restaurants')
           .where("name", isGreaterThanOrEqualTo: searchText.toUpperCase())
-          .where("name", isLessThanOrEqualTo: "${searchText.toLowerCase()}\uf8ff")
+          .where("name",
+              isLessThanOrEqualTo: "${searchText.toLowerCase()}\uf8ff")
           .get();
       setState(() {
         searchResults = querySnapshot.docs;
@@ -123,7 +136,7 @@ class _HomeState extends State<Home> {
           if (!_searchMode)
             textInputField(
               context,
-              "Search food, restaurant or something",
+              "Search restaurant",
               searchButtonController,
               false,
               iconData: Icons.search,
@@ -136,7 +149,7 @@ class _HomeState extends State<Home> {
                 Expanded(
                   child: textInputField(
                     context,
-                    "Search food, restaurant or something",
+                    "Search restaurant",
                     searchButtonController,
                     false,
                     iconData: Icons.arrow_back,
@@ -144,6 +157,7 @@ class _HomeState extends State<Home> {
                       _searchRestaurants(value);
                     },
                     iconOnTap: _toggleSearchMode,
+                    focusNode: searchFocusNode, // Pass the searchFocusNode
                   ),
                 ),
               ],
@@ -168,8 +182,8 @@ class _HomeState extends State<Home> {
                             builder: (context) => RestaurantProfile(
                               restaurantID: doc.id,
                               restaurantName: doc['name'],
-                              restaurantFollowersCount: 0,
-                              restaurantPostsCount: 0,
+                              restaurantFollowersCount: doc['followerCount'],
+                              restaurantPostsCount: doc['postCount'],
                               restaurantImageUrl: doc['image_url'],
                               restaurantAddress: doc['address'],
                             ),
@@ -186,8 +200,7 @@ class _HomeState extends State<Home> {
                                 aspectRatio: 2,
                                 child: Image.network(
                                   doc["image_url"],
-                                  fit: BoxFit
-                                      .fitWidth,
+                                  fit: BoxFit.fitWidth,
                                 ),
                               ),
                               Padding(
@@ -198,8 +211,8 @@ class _HomeState extends State<Home> {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                    15, 0, 15, 15),
+                                padding:
+                                    const EdgeInsets.fromLTRB(15, 0, 15, 15),
                                 child: Row(
                                   children: [
                                     const Icon(
@@ -210,15 +223,14 @@ class _HomeState extends State<Home> {
                                     Text(
                                       doc["rating"].toString(),
                                       style: const TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.grey),
+                                          fontSize: 16, color: Colors.grey),
                                     ),
                                   ],
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                    15, 0, 15, 15),
+                                padding:
+                                    const EdgeInsets.fromLTRB(15, 0, 15, 15),
                                 child: Text(
                                   doc['address'],
                                   style: const TextStyle(fontSize: 16),
@@ -250,11 +262,18 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('users').doc(LoginPage.userID).get(),
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .doc(LoginPage.userID)
+          .get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.hasError) {
-            return AppBar(title: const Text('Error', style: TextStyle(color: Colors.black)),backgroundColor: Colors.white,elevation: 0,);
+            return AppBar(
+              title: const Text('Error', style: TextStyle(color: Colors.black)),
+              backgroundColor: Colors.white,
+              elevation: 0,
+            );
           } else {
             final managerName = snapshot.data!.get('name');
             return AppBar(
@@ -287,7 +306,14 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
             );
           }
         } else {
-          return AppBar(title: const Text('Loading...', style: TextStyle(color: Colors.black),),backgroundColor: Colors.white,elevation: 0,);
+          return AppBar(
+            title: const Text(
+              'Loading...',
+              style: TextStyle(color: Colors.black),
+            ),
+            backgroundColor: Colors.white,
+            elevation: 0,
+          );
         }
       },
     );

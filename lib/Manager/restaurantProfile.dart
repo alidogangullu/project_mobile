@@ -158,7 +158,7 @@ class RestaurantProfile extends StatelessWidget {
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
-                  .collection('Restaurants/$restaurantID/Posts')
+                  .collection('Restaurants/$restaurantID/Posts').orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.hasError) {
@@ -260,6 +260,13 @@ class PostsScreen extends StatelessWidget {
           .collection('Restaurants/$restaurantID/Posts')
           .doc(postId)
           .delete();
+
+      await FirebaseFirestore.instance
+          .doc('Restaurants/$restaurantID')
+          .update({
+        'postCount': FieldValue.increment(-1),
+      });
+
     }
 
     return Scaffold(

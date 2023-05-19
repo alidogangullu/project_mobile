@@ -23,9 +23,9 @@ class RestaurantProfile extends StatelessWidget {
   final int restaurantPostsCount;
 
   void launchMap(String address) async {
-    final url = 'https://www.google.com/maps/search/?api=1&query=$address';
-    if (await canLaunch(url)) {
-      await launch(url);
+    Uri url = Uri.parse('https://www.google.com/maps/search/?api=1&query=$address');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
       throw 'Could not launch $url';
     }
@@ -128,7 +128,7 @@ class RestaurantProfile extends StatelessWidget {
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
-                  .collection('Restaurants/$restaurantID/Posts')
+                  .collection('Restaurants/$restaurantID/Posts').orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.hasError) {
