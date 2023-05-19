@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:project_mobile/Customer/recentOrders.dart';
 import 'package:project_mobile/Customer/profile.dart';
 import 'package:project_mobile/Customer/qrScanner.dart';
@@ -172,6 +171,7 @@ class _HomeState extends State<Home> {
                               restaurantFollowersCount: 0,
                               restaurantPostsCount: 0,
                               restaurantImageUrl: doc['image_url'],
+                              restaurantAddress: doc['address'],
                             ),
                           ),
                         );

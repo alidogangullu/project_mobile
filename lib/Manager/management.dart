@@ -99,6 +99,7 @@ class _ManagerPanelState extends State<ManagerPanel> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => RestaurantProfile(
+                                    restaurantAddress: doc['address'],
                                     restaurantID: doc.id,
                                     restaurantName: doc['name'],
                                     restaurantFollowersCount: 0,

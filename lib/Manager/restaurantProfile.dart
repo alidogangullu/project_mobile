@@ -16,11 +16,13 @@ class RestaurantProfile extends StatelessWidget {
     required this.restaurantImageUrl,
     required this.restaurantFollowersCount,
     required this.restaurantPostsCount,
+    required this.restaurantAddress
   }) : super(key: key);
 
   final String restaurantID;
   final String restaurantName;
   final String restaurantImageUrl;
+  final String restaurantAddress;
   final int restaurantFollowersCount;
   final int restaurantPostsCount;
 
@@ -89,7 +91,7 @@ class RestaurantProfile extends StatelessWidget {
       body: Column(
         children: <Widget>[
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(15.0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
@@ -97,7 +99,7 @@ class RestaurantProfile extends StatelessWidget {
                   radius: 50,
                   backgroundImage: NetworkImage(restaurantImageUrl),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 15),
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -116,6 +118,8 @@ class RestaurantProfile extends StatelessWidget {
               ],
             ),
           ),
+          Text(restaurantAddress),
+          const SizedBox(height: 15,),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[

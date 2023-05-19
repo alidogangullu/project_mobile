@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:project_mobile/Customer/restaurantMenu.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RestaurantProfile extends StatelessWidget {
   const RestaurantProfile({
@@ -11,13 +12,51 @@ class RestaurantProfile extends StatelessWidget {
     required this.restaurantImageUrl,
     required this.restaurantFollowersCount,
     required this.restaurantPostsCount,
+    required this.restaurantAddress,
   }) : super(key: key);
 
   final String restaurantID;
   final String restaurantName;
   final String restaurantImageUrl;
+  final String restaurantAddress;
   final int restaurantFollowersCount;
   final int restaurantPostsCount;
+
+  void launchMap(String address) async {
+    final url = 'https://www.google.com/maps/search/?api=1&query=$address';
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  void _showMapAlert(BuildContext context, String address) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Open in Map'),
+          content: Text('Do you want to open map for this address: $address?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                launchMap(address);
+                Navigator.of(context).pop();
+              },
+              child: const Text('Open in Map'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +72,7 @@ class RestaurantProfile extends StatelessWidget {
       body: Column(
         children: <Widget>[
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(15.0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
@@ -41,7 +80,7 @@ class RestaurantProfile extends StatelessWidget {
                   radius: 50,
                   backgroundImage: NetworkImage(restaurantImageUrl),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 15),
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -60,6 +99,11 @@ class RestaurantProfile extends StatelessWidget {
               ],
             ),
           ),
+          TextButton(child: Text(restaurantAddress), onPressed:() {
+            //not work on emulator but work on real devices
+            _showMapAlert(context, restaurantAddress);
+          },),
+          const SizedBox(height: 5),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
