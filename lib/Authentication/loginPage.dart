@@ -124,6 +124,7 @@ class _LoginPageState extends State<LoginPage> {
       'phone': user.phoneNumber,
       'name': nameController.text,
       'surname': surnameController.text,
+      'followedRestaurants': FieldValue.arrayUnion([])
     });
     LoginPage.userID = user.uid;
 
@@ -134,8 +135,8 @@ class _LoginPageState extends State<LoginPage> {
 
     //ilk kayıttan sonra kullanıcı tipine göre uygulamaya yönlendirme
     if (isManager == true) {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => const ManagerHome()));
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => const ManagerHome()));
     } else if (isManager == false) {
       Navigator.pushReplacement(context,
           MaterialPageRoute(builder: (context) => const CustomerHome()));
@@ -400,7 +401,8 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    textInputField(context, "Surname", surnameController, false),
+                    textInputField(
+                        context, "Surname", surnameController, false),
                     Padding(
                       padding: const EdgeInsets.all(15),
                       child: SizedBox(
