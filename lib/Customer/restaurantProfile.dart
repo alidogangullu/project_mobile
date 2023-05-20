@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:project_mobile/Customer/restaurantMenu.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class RestaurantProfile extends StatelessWidget {
   const RestaurantProfile({
@@ -30,6 +33,28 @@ class RestaurantProfile extends StatelessWidget {
       throw 'Could not launch $url';
     }
   }
+  void followRestaurant() async {
+    try {
+      // Get the current user ID
+      String userID = FirebaseAuth.instance.currentUser!.uid;
+
+      // Update the followedRestaurants array in Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userID)
+          .update({
+        'followedRestaurants': FieldValue.arrayUnion([restaurantID])
+      });
+
+      // Show a success message or perform any additional actions
+      // after successfully updating the array
+      print('Restaurant followed successfully!');
+    } catch (error) {
+      // Handle any errors that occur during the update process
+      print('Error following restaurant: $error');
+    }
+  }
+
 
   void _showMapAlert(BuildContext context, String address) {
     showDialog(
@@ -108,7 +133,9 @@ class RestaurantProfile extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  followRestaurant();
+                },
                 child: const Text('Follow Restaurant'),
               ),
               ElevatedButton(
@@ -204,6 +231,7 @@ class RestaurantProfile extends StatelessWidget {
     );
   }
 }
+
 
 class PostsScreen extends StatelessWidget {
   final List<DocumentSnapshot> posts;
