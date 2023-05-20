@@ -120,7 +120,7 @@ class _ManagerPanelState extends State<ManagerPanel> {
                                       child: Image.network(
                                         doc["image_url"],
                                         fit: BoxFit
-                                            .fitWidth,
+                                            .cover,
                                       ),
                                     ),
                                     Padding(

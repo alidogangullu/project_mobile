@@ -223,6 +223,10 @@ Widget createItemsGrid(
               ),
               builder: (BuildContext context) {
                 var selectedItem = document.reference;
+                double seconds = double.parse(document['estimatedTime'].toString());
+                int minutes = (seconds ~/ 60).toInt();
+                double remainingSeconds = seconds % 60;
+                String formattedSeconds = remainingSeconds.toStringAsFixed(0);
                 return Wrap(
                   children: [
                     ClipRRect(
@@ -234,7 +238,7 @@ Widget createItemsGrid(
                         aspectRatio: 1.5,
                         child: Image.network(
                           document["image_url"],
-                          fit: BoxFit.fitWidth,
+                          fit: BoxFit.cover,
                         ),
                       ),
                     ),
@@ -279,22 +283,33 @@ Widget createItemsGrid(
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          const Text(
-                            'Price: ',
-                            style: TextStyle(fontSize: 20),
-                          ),
-                          SizedBox(
-                            width: 100,
-                            child: TextFormField(
-                              controller: priceController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                hintText: initialPrice,
-                                border: const OutlineInputBorder(),
+                          Row(
+                            children: [
+                              const Text(
+                                'Price: ',
+                                style: TextStyle(fontSize: 20),
                               ),
-                            ),
+                              SizedBox(
+                                width: 100,
+                                child: TextFormField(
+                                  controller: priceController,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                    hintText: initialPrice,
+                                    border: const OutlineInputBorder(),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+                          if(document['orderCount']>5)
+                            Text(
+                              "$minutes min $formattedSeconds sec service time",
+                              style: const TextStyle(fontSize: 15),
+                            ),
                         ],
                       ),
                     ),
@@ -337,7 +352,7 @@ Widget createItemsGrid(
                     aspectRatio: 1.3,
                     child: Image.network(
                       document["image_url"],
-                      fit: BoxFit.fitWidth,
+                      fit: BoxFit.cover,
                     ),
                   ),
                   Padding(

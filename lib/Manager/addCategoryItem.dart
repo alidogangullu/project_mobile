@@ -188,7 +188,9 @@ class _AddCategoryItemsState extends State<AddCategoryItems> {
                   "content": contentController.text,
                   "image_url": imageUrl,
                   "rating": 0,
-                  "ratingCount" : 0
+                  "ratingCount" : 0,
+                  "estimatedTime" : 0,
+                  "orderCount" : 0,
                 });
 
                 nameController.clear();

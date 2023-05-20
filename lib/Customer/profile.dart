@@ -645,7 +645,7 @@ class CommentsPageState extends State<CommentsPage> {
                                                                           .network(
                                                                         imageUrl,
                                                                         fit: BoxFit
-                                                                            .contain,
+                                                                            .cover,
                                                                       ),
                                                                     ),
                                                                   ),

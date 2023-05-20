@@ -419,7 +419,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                               width: 75,
                               child: Image.network(
                                 imageUrl,
-                                fit: BoxFit.contain,
+                                fit: BoxFit.cover,
                               ),
                             ),
                           ),

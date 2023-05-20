@@ -200,7 +200,7 @@ class HomeState extends State<Home> {
                                 aspectRatio: 2,
                                 child: Image.network(
                                   doc["image_url"],
-                                  fit: BoxFit.fitWidth,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
                               Padding(
