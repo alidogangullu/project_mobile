@@ -7,6 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import '../Authentication/loginPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'FollowedRestaurantsPage.dart';
+
 class Profile extends StatefulWidget {
   const Profile({Key? key, required this.userId}) : super(key: key);
   final String userId;
@@ -181,6 +183,19 @@ class ProfileState extends State<Profile> {
                     icon: Icon(Icons.rate_review),
                     text: 'Comments',
                   ),
+                ),
+                const SizedBox(height: 20),
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FollowedRestaurantsPage(),
+                        ));
+                  },
+                  child: const ProfilePageButton(
+                      text: 'Followed Restaurants',
+                      icon: Icon(Icons.restaurant)),
                 ),
                 const SizedBox(height: 20),
                 InkWell(
