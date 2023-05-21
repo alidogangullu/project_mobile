@@ -8,6 +8,8 @@ import 'package:project_mobile/Customer/restaurantMenu.dart';
 import 'package:project_mobile/Customer/restaurantProfile.dart';
 import 'package:project_mobile/customWidgets.dart';
 import '../Authentication/loginPage.dart';
+import 'FollowedRestaurantsPage.dart';
+
 
 class CustomerHome extends StatefulWidget {
   const CustomerHome({Key? key}) : super(key: key);
@@ -271,10 +273,20 @@ class HomeState extends State<Home> {
                             Row(
                               children: [
                                 SizedBox(width: 10),
-                                CircleAvatar(
-                                  radius:20,
-                                  backgroundImage: NetworkImage(restaurantImageUrl), // Display restaurant profile picture.
+                                InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => FollowedRestaurantsPage(),
+                                        ));
+                                  },
+                                  child: CircleAvatar(
+                                    radius:20,
+                                    backgroundImage: NetworkImage(restaurantImageUrl), // Display restaurant profile picture.
+                                  ),
                                 ),
+
                                 SizedBox(width: 10),
                                 Text(
                                   restaurantName,
