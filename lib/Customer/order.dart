@@ -481,7 +481,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
             //split "-" because of -admin
             String userId = userID.split("-").first;
 
-            if (!userId.contains("web")) {
+            if (!userId.contains("web") && !userId.contains("waiter")) {
               //registered userid add to completed orders then delete order
               await usersRef
                   .doc(userId)

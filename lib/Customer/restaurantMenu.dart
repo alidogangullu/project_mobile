@@ -573,6 +573,7 @@ class ItemsGridState extends State<ItemsGrid> {
                                   .collection('comments')
                                   .where('itemRef',
                                       isEqualTo: document.reference)
+                                  .orderBy('timestamp', descending: true)
                                   .get(),
                               builder: (BuildContext context,
                                   AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -667,7 +668,8 @@ class ItemsGridState extends State<ItemsGrid> {
                                                                     imageUrl)
                                                                 : const NetworkImage(
                                                                     'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png')),
-                                                        const SizedBox(width: 8),
+                                                        const SizedBox(
+                                                            width: 8),
                                                         Text(
                                                           name,
                                                           style:
