@@ -156,7 +156,7 @@ class HomeState extends State<Home> {
         .doc(userId)
         .get();
 
-    List<dynamic> followedRestaurants = snapshot?['followedRestaurants'];
+    List<dynamic> followedRestaurants = snapshot['followedRestaurants'];
     return followedRestaurants.cast<String>();
   }
   Future<List<Map<String, dynamic>>> fetchFollowedRestaurantPosts(String userId) async {
@@ -179,8 +179,8 @@ class HomeState extends State<Home> {
 
       List<Map<String, dynamic>> restaurantPosts = postsSnapshot.docs.map((doc) {
         Map<String, dynamic> postData = (doc.data() as Map<String, dynamic>);
-        postData['restaurantImageUrl'] = restaurantSnapshot!['image_url'];
-        postData['restaurantName'] = restaurantSnapshot!['name'];
+        postData['restaurantImageUrl'] = restaurantSnapshot['image_url'];
+        postData['restaurantName'] = restaurantSnapshot['name'];
         return postData;
       }).toList();
 
@@ -248,13 +248,11 @@ class HomeState extends State<Home> {
                 future: _postsFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
-                      child: CircularProgressIndicator(), // Display a loading indicator while fetching data.
-                    );// Display a loading indicator while fetching data.
-                  } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}'); // Handle error case.
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
                   } else if (!snapshot.hasData ) {
-                    return Text('No posts found'); // Handle no posts case.
+                    return const Text('No posts found');
                   } else {
                     List<Map<String, dynamic>>? posts = snapshot.data;
 

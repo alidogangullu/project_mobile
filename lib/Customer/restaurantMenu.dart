@@ -40,8 +40,8 @@ class _MenuScreenState extends State<MenuScreen> {
       }
 
       bool isAdmin = users.isEmpty ||
-          users.contains(
-              "${LoginPage.userID}-admin") || onlyWaiter; // First accessed user is admin
+          users.contains("${LoginPage.userID}-admin") ||
+          onlyWaiter; // First accessed user is admin
 
       if (isAdmin) {
         String userId = '${LoginPage.userID}${isAdmin ? '-admin' : ''}';
@@ -336,192 +336,396 @@ class ItemsGridState extends State<ItemsGrid> {
               builder: (BuildContext context) {
                 int selectedQuantity = 1;
 
-                double seconds = double.parse(document['estimatedTime'].toString());
+                double seconds =
+                    double.parse(document['estimatedTime'].toString());
                 int minutes = (seconds ~/ 60).toInt();
                 double remainingSeconds = seconds % 60;
                 String formattedSeconds = remainingSeconds.toStringAsFixed(0);
 
-                return StatefulBuilder(
-                  builder: (BuildContext context, setState) {
-                    return Wrap(
-                      children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(20),
-                            topRight: Radius.circular(20),
-                          ),
-                          child: AspectRatio(
-                            aspectRatio: 1.5,
-                            child: Image.network(
-                              document["image_url"],
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(20, 20, 15, 10),
-                                  child: Text(
-                                    document['name'],
-                                    style: const TextStyle(
-                                      fontSize: 24,
+                return DraggableScrollableSheet(
+                    expand: false,
+                    initialChildSize: 0.6,
+                    minChildSize: 0.6,
+                    maxChildSize: 1,
+                    builder: (BuildContext context, myscrollController) {
+                      return Column(
+                        children: [
+                          SingleChildScrollView(
+                            controller: myscrollController,
+                            child: StatefulBuilder(
+                              builder: (BuildContext context, setState) {
+                                return Column(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(20),
+                                        topRight: Radius.circular(20),
+                                      ),
+                                      child: AspectRatio(
+                                        aspectRatio: 1.5,
+                                        child: Image.network(
+                                          document["image_url"],
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
                                     ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(20, 0, 15, 15),
-                                  child: Row(
-                                    children: [
-                                      Row(
-                                        children: List.generate(5, (index) {
-                                          if (index < document["rating"]) {
-                                            return const Icon(
-                                              Icons.star,
-                                              color: Colors.amber,
-                                            );
-                                          } else {
-                                            return const Icon(
-                                              Icons.star_border,
-                                              color: Colors.amber,
-                                            );
-                                          }
-                                        }),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.fromLTRB(
+                                                      20, 20, 15, 10),
+                                              child: Text(
+                                                document['name'],
+                                                style: const TextStyle(
+                                                  fontSize: 24,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.fromLTRB(
+                                                      20, 0, 15, 15),
+                                              child: Row(
+                                                children: [
+                                                  Row(
+                                                    children: List.generate(5,
+                                                        (index) {
+                                                      if (index <
+                                                          document["rating"]) {
+                                                        return const Icon(
+                                                          Icons.star,
+                                                          color: Colors.amber,
+                                                        );
+                                                      } else {
+                                                        return const Icon(
+                                                          Icons.star_border,
+                                                          color: Colors.amber,
+                                                        );
+                                                      }
+                                                    }),
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    document["rating"]
+                                                        .toString(),
+                                                    style: const TextStyle(
+                                                        fontSize: 16,
+                                                        color: Colors.grey),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        widget.justBrowsing
+                                            ? const SizedBox()
+                                            : Row(
+                                                children: [
+                                                  IconButton(
+                                                    onPressed: () {
+                                                      if (selectedQuantity !=
+                                                          1) {
+                                                        setState(() {
+                                                          selectedQuantity--;
+                                                        });
+                                                      }
+                                                    },
+                                                    icon: const Icon(
+                                                        Icons.remove),
+                                                  ),
+                                                  Text(selectedQuantity
+                                                      .toString()),
+                                                  IconButton(
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        selectedQuantity++;
+                                                      });
+                                                    },
+                                                    icon: const Icon(Icons.add),
+                                                  ),
+                                                ],
+                                              ),
+                                      ],
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          20, 0, 15, 15),
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            '${document['content']}',
+                                            style:
+                                                const TextStyle(fontSize: 16),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        document["rating"].toString(),
-                                        style: const TextStyle(
-                                            fontSize: 16, color: Colors.grey),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          20, 0, 15, 15),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            '${document['price']} \$',
+                                            style:
+                                                const TextStyle(fontSize: 20),
+                                          ),
+                                          if (document['orderCount'] > 5)
+                                            Text(
+                                              "$minutes min $formattedSeconds sec service time",
+                                              style:
+                                                  const TextStyle(fontSize: 15),
+                                            ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                                    ),
+                                    widget.justBrowsing
+                                        ? const SizedBox()
+                                        : menuButton("Add to Order List",
+                                            () async {
+                                            final usersSnapshot =
+                                                await FirebaseFirestore.instance
+                                                    .collection(
+                                                        "Restaurants/${widget.id}/Tables")
+                                                    .doc(widget.tableNo)
+                                                    .get();
+                                            final List<dynamic> users =
+                                                usersSnapshot.data()!['users'];
+                                            if (users.contains(
+                                                    LoginPage.userID) ||
+                                                users.contains(
+                                                    "${LoginPage.userID}-admin")) {
+                                              final querySnapshot =
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .collection(
+                                                          "Restaurants/${widget.id}/Tables")
+                                                      .doc(widget.tableNo)
+                                                      .collection("Orders")
+                                                      .where("itemRef",
+                                                          isEqualTo: document
+                                                              .reference)
+                                                      .get();
+                                              if (querySnapshot.size > 0) {
+                                                // Item already exists in order, update its quantity
+                                                final orderDoc =
+                                                    querySnapshot.docs.first;
+                                                final quantity = orderDoc[
+                                                        "quantity_notSubmitted_notServiced"] +
+                                                    selectedQuantity;
+                                                orderDoc.reference.update({
+                                                  "quantity_notSubmitted_notServiced":
+                                                      quantity
+                                                });
+                                              } else {
+                                                // Item doesn't exist in order, add it with quantity 1
+                                                FirebaseFirestore.instance
+                                                    .collection(
+                                                        "Restaurants/${widget.id}/Tables")
+                                                    .doc(widget.tableNo)
+                                                    .collection("Orders")
+                                                    .doc()
+                                                    .set({
+                                                  "itemRef": document.reference,
+                                                  "quantity_notSubmitted_notServiced":
+                                                      selectedQuantity,
+                                                  "quantity_Submitted_notServiced":
+                                                      0,
+                                                  "quantity_Submitted_Serviced":
+                                                      0,
+                                                  "orderedTime": 0,
+                                                });
+                                              }
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(SnackBar(
+                                                content: Text(
+                                                    "${document['name']} added to order list, now you can confirm your order!"),
+                                              ));
+                                            } else {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                      "You are not authorized to add items to the order list."),
+                                                ),
+                                              );
+                                            }
+                                            Navigator.of(context).pop();
+                                          }),
+                                  ],
+                                );
+                              },
                             ),
-                            widget.justBrowsing
-                                ? const SizedBox()
-                                : Row(
-                              children: [
-                                IconButton(
-                                  onPressed: () {
-                                    if (selectedQuantity != 1) {
-                                      setState(() {
-                                        selectedQuantity--;
-                                      });
-                                    }
-                                  },
-                                  icon: const Icon(Icons.remove),
-                                ),
-                                Text(selectedQuantity.toString()),
-                                IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      selectedQuantity++;
-                                    });
-                                  },
-                                  icon: const Icon(Icons.add),
-                                ),
-                              ],
+                          ),
+                          Expanded(
+                            child: FutureBuilder<QuerySnapshot>(
+                              future: FirebaseFirestore.instance
+                                  .collection('comments')
+                                  .where('itemRef',
+                                      isEqualTo: document.reference)
+                                  .get(),
+                              builder: (BuildContext context,
+                                  AsyncSnapshot<QuerySnapshot> snapshot) {
+                                if (snapshot.hasError) {
+                                  return Text('Something went wrong');
+                                }
+
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Text("Loading");
+                                }
+
+                                return ListView(
+                                  shrinkWrap:
+                                      true, // uses minimum space of the parent
+                                  children: snapshot.data!.docs
+                                      .map((DocumentSnapshot commentDoc) {
+                                    final timestamp = commentDoc["timestamp"];
+                                    final dateTime =
+                                        timestamp.toDate().toLocal();
+                                    final formattedDate =
+                                        "${dateTime.day.toString().padLeft(2, '0')}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.year.toString()} ${dateTime.hour.toString().padLeft(2, '0')}.${dateTime.minute.toString().padLeft(2, '0')}";
+                                    return Container(
+                                      margin: const EdgeInsets.symmetric(
+                                          vertical: 8.0, horizontal: 16.0),
+                                      padding: const EdgeInsets.all(16.0),
+                                      decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
+                                        color: Colors.white,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.3),
+                                            spreadRadius: 2,
+                                            blurRadius: 5,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: [
+                                              Expanded(
+                                                child: FutureBuilder<
+                                                    DocumentSnapshot>(
+                                                  future: FirebaseFirestore
+                                                      .instance
+                                                      .collection('users')
+                                                      .doc(commentDoc['userId'])
+                                                      .get(),
+                                                  builder: (BuildContext
+                                                          context,
+                                                      AsyncSnapshot<
+                                                              DocumentSnapshot>
+                                                          snapshot) {
+                                                    if (snapshot.hasError) {
+                                                      return const Text('');
+                                                    }
+
+                                                    if (!snapshot.hasData ||
+                                                        snapshot.data?.data() ==
+                                                            null) {
+                                                      return const Text(
+                                                          'Deleted User');
+                                                    }
+
+                                                    final userData = snapshot
+                                                            .data!
+                                                            .data()!
+                                                        as Map<String, dynamic>;
+
+                                                    final imageUrl = userData[
+                                                            'profileImageUrl'] ??
+                                                        '';
+                                                    final name =
+                                                        userData['name'] ?? '';
+
+                                                    return Row(
+                                                      children: [
+                                                        CircleAvatar(
+                                                            radius: 20,
+                                                            backgroundImage: imageUrl !=
+                                                                    ""
+                                                                ? NetworkImage(
+                                                                    imageUrl)
+                                                                : const NetworkImage(
+                                                                    'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png')),
+                                                        const SizedBox(width: 8),
+                                                        Text(
+                                                          name,
+                                                          style:
+                                                              const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            fontSize: 20.0,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8.0),
+                                              Icon(
+                                                Icons.star,
+                                                color: Colors.amber[700],
+                                              ),
+                                              const SizedBox(width: 4.0),
+                                              Text(
+                                                commentDoc['rating'].toString(),
+                                                style: const TextStyle(
+                                                    fontSize: 18.0),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 12.0),
+                                          Text(
+                                            '${commentDoc['text']}',
+                                            style:
+                                                const TextStyle(fontSize: 18.0),
+                                          ),
+                                          const SizedBox(height: 12.0),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              Text(
+                                                formattedDate,
+                                                style: TextStyle(
+                                                  fontSize: 14.0,
+                                                  color: Colors.grey[600],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                );
+                              },
                             ),
-                          ],
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
-                          child: Row(
-                            children: [
-                              Text(
-                                '${document['content']}',
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                            ],
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 15, 15),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${document['price']} \$',
-                                style: const TextStyle(fontSize: 20),
-                              ),
-                              if(document['orderCount']>5)
-                              Text(
-                                "$minutes min $formattedSeconds sec service time",
-                                style: const TextStyle(fontSize: 15),
-                              ),
-                            ],
-                          ),
-                        ),
-                        widget.justBrowsing
-                            ? const SizedBox()
-                            : menuButton("Add to Order List", () async {
-                          final usersSnapshot = await FirebaseFirestore.instance
-                              .collection("Restaurants/${widget.id}/Tables")
-                              .doc(widget.tableNo)
-                              .get();
-                          final List<dynamic> users =
-                              usersSnapshot.data()!['users'];
-                          if (users.contains(LoginPage.userID) ||
-                              users.contains("${LoginPage.userID}-admin")) {
-                            final querySnapshot = await FirebaseFirestore
-                                .instance
-                                .collection("Restaurants/${widget.id}/Tables")
-                                .doc(widget.tableNo)
-                                .collection("Orders")
-                                .where("itemRef", isEqualTo: document.reference)
-                                .get();
-                            if (querySnapshot.size > 0) {
-                              // Item already exists in order, update its quantity
-                              final orderDoc = querySnapshot.docs.first;
-                              final quantity = orderDoc[
-                                      "quantity_notSubmitted_notServiced"] +
-                                  selectedQuantity;
-                              orderDoc.reference.update({
-                                "quantity_notSubmitted_notServiced": quantity
-                              });
-                            } else {
-                              // Item doesn't exist in order, add it with quantity 1
-                              FirebaseFirestore.instance
-                                  .collection("Restaurants/${widget.id}/Tables")
-                                  .doc(widget.tableNo)
-                                  .collection("Orders")
-                                  .doc()
-                                  .set({
-                                "itemRef": document.reference,
-                                "quantity_notSubmitted_notServiced":
-                                    selectedQuantity,
-                                "quantity_Submitted_notServiced": 0,
-                                "quantity_Submitted_Serviced": 0,
-                                "orderedTime": 0,
-                              });
-                            }
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(
-                                  "${document['name']} added to order list, now you can confirm your order!"),
-                            ));
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    "You are not authorized to add items to the order list."),
-                              ),
-                            );
-                          }
-                          Navigator.of(context).pop();
-                        }),
-                      ],
-                    );
-                  },
-                );
+                        ],
+                      );
+                    });
               },
             );
           },
@@ -685,9 +889,7 @@ class RestaurantNameText extends StatelessWidget {
 class MenuBrowseScreen extends StatefulWidget {
   final String id;
 
-
-  const MenuBrowseScreen(
-      {super.key, required this.id});
+  const MenuBrowseScreen({super.key, required this.id});
 
   @override
   State<MenuBrowseScreen> createState() => _MenuBrowseScreenState();

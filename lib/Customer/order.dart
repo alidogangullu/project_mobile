@@ -523,7 +523,11 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
             }
 
             //reset table users after transferring order data
-            await widget.tableRef.update({'users': []});
+            await widget.tableRef.update({
+              'users': [],
+              'newNotification': false,
+              'notifications' : [],
+            });
 
             Navigator.pushReplacement(
               context,
