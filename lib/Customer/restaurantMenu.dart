@@ -809,9 +809,6 @@ class ShoppingCartButton extends StatelessWidget {
           .snapshots()
           .map<List<dynamic>>((snapshot) => snapshot.data()!['users']),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
-        }
         final users = snapshot.data ?? [];
         final isAdmin = users.contains("$userID-admin");
         final currentUserIsAuthorized = users.contains(userID) || isAdmin;
@@ -880,7 +877,7 @@ class RestaurantNameText extends StatelessWidget {
         } else if (snapshot.hasError) {
           return Text("Error: ${snapshot.error}");
         }
-        return const Center(child: CircularProgressIndicator());
+        return const Text("Loading...");
       },
     );
   }
