@@ -71,6 +71,10 @@ class _RestaurantProfileState extends State<RestaurantProfile> {
     } catch (error) {
       print('Error following restaurant: $error');
     }
+    const snackBar = SnackBar(
+      content: Text('The Restaurant followed successfully'),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   Future<void> unfollowRestaurant() async {
@@ -93,6 +97,10 @@ class _RestaurantProfileState extends State<RestaurantProfile> {
     } catch (error) {
       print('Error unfollowing restaurant: $error');
     }
+    const snackBar = SnackBar(
+      content: Text('You have unfollowed the restaurant.'),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   void launchMap(String address) async {
