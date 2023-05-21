@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:project_mobile/Customer/recentOrders.dart';
 import 'package:project_mobile/Customer/profile.dart';
-import 'package:project_mobile/Customer/qrScanner.dart';
 import 'package:project_mobile/Customer/restaurantMenu.dart';
 import 'package:project_mobile/Customer/restaurantProfile.dart';
 import 'package:project_mobile/customWidgets.dart';
@@ -74,10 +74,46 @@ class HomeState extends State<Home> {
   bool _searchMode = false;
   List<DocumentSnapshot> searchResults = [];
 
+  ScrollController _scrollController = ScrollController();
+  bool _showSearchAndQR = true;
+
+  Future<List<Map<String, dynamic>>>? _postsFuture;
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    _postsFuture = fetchFollowedRestaurantPosts(LoginPage.userID);
+
+    // Add a listener to the scroll controller
+    _scrollController.addListener(() {
+      if (_scrollController.position.userScrollDirection ==
+          ScrollDirection.reverse) {
+        if (_showSearchAndQR == true) {
+          setState(() {
+            _showSearchAndQR = false;
+          });
+        }
+      } else {
+        if (_scrollController.position.userScrollDirection ==
+            ScrollDirection.forward) {
+          if (_showSearchAndQR == false) {
+            setState(() {
+              _showSearchAndQR = true;
+            });
+          }
+        }
+      }
+    });
+  }
+
+
   @override
   void dispose() {
     searchButtonController.dispose();
     searchFocusNode.dispose();
+    _scrollController.dispose(); // Dispose the controller
     super.dispose();
   }
 
@@ -157,7 +193,8 @@ class HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: _showSearchAndQR // Conditionally render the floating action button
+          ? FloatingActionButton(
         onPressed: () {
           Navigator.pushReplacement(
             context,
@@ -170,11 +207,11 @@ class HomeState extends State<Home> {
           );
         },
         child: const Icon(Icons.qr_code_scanner),
-      ),
+      ) : null,
       appBar: const MyAppBar(),
       body: Column(
         children: [
-          if (!_searchMode)
+          if (_showSearchAndQR &&!_searchMode)
             textInputField(
               context,
               "Search restaurant",
@@ -206,10 +243,12 @@ class HomeState extends State<Home> {
           if (!_searchMode)
             Expanded(
               child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: fetchFollowedRestaurantPosts(LoginPage.userID),
+                future: _postsFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator(); // Display a loading indicator while fetching data.
+                    return Center(
+                      child: CircularProgressIndicator(), // Display a loading indicator while fetching data.
+                    );// Display a loading indicator while fetching data.
                   } else if (snapshot.hasError) {
                     return Text('Error: ${snapshot.error}'); // Handle error case.
                   } else if (!snapshot.hasData ) {
@@ -218,6 +257,7 @@ class HomeState extends State<Home> {
                     List<Map<String, dynamic>>? posts = snapshot.data;
 
                     return ListView.builder(
+                      controller: _scrollController,
                       itemCount: posts?.length,
                       itemBuilder: (context, index) {
                         Map<String, dynamic> post = posts![index];
@@ -230,6 +270,7 @@ class HomeState extends State<Home> {
                           children: [
                             Row(
                               children: [
+                                SizedBox(width: 10),
                                 CircleAvatar(
                                   radius:20,
                                   backgroundImage: NetworkImage(restaurantImageUrl), // Display restaurant profile picture.
