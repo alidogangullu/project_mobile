@@ -7,7 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 
-class RestaurantProfile extends StatelessWidget {
+class RestaurantProfile extends StatefulWidget {
   const RestaurantProfile({
     Key? key,
     required this.restaurantID,
@@ -25,6 +25,84 @@ class RestaurantProfile extends StatelessWidget {
   final int restaurantFollowersCount;
   final int restaurantPostsCount;
 
+  @override
+  _RestaurantProfileState createState() => _RestaurantProfileState();
+}
+
+class _RestaurantProfileState extends State<RestaurantProfile> {
+  bool isFollowing = false;
+
+
+  @override
+  void initState() {
+    super.initState();
+    checkFollowingStatus();
+  }
+
+  void checkFollowingStatus() async {
+    String userID = FirebaseAuth.instance.currentUser!.uid;
+    DocumentSnapshot snapshot = await FirebaseFirestore.instance.collection('users').doc(userID).get();
+
+    if (snapshot.exists) {
+      List<dynamic>? followedRestaurants = snapshot?['followedRestaurants'] as List<dynamic>?;
+      setState(() {
+        isFollowing = followedRestaurants != null && followedRestaurants.contains(widget.restaurantID);
+      });
+    }
+  }
+
+  Future<void> followRestaurant() async {
+    try {
+      String userID = FirebaseAuth.instance.currentUser!.uid;
+
+      await FirebaseFirestore.instance.collection('users').doc(userID).update({
+        'followedRestaurants': FieldValue.arrayUnion([widget.restaurantID])
+      });
+
+      await FirebaseFirestore.instance.doc('Restaurants/${widget.restaurantID}').update({
+        'followerCount': FieldValue.increment(1),
+      });
+
+      print('Restaurant followed successfully!');
+
+      setState(() {
+        isFollowing = true;
+      });
+    } catch (error) {
+      print('Error following restaurant: $error');
+    }
+    const snackBar = SnackBar(
+      content: Text('The Restaurant followed successfully'),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  Future<void> unfollowRestaurant() async {
+    try {
+      String userID = FirebaseAuth.instance.currentUser!.uid;
+
+      await FirebaseFirestore.instance.collection('users').doc(userID).update({
+        'followedRestaurants': FieldValue.arrayRemove([widget.restaurantID])
+      });
+
+      await FirebaseFirestore.instance.doc('Restaurants/${widget.restaurantID}').update({
+        'followerCount': FieldValue.increment(-1),
+      });
+
+      print('Restaurant unfollowed successfully!');
+
+      setState(() {
+        isFollowing = false;
+      });
+    } catch (error) {
+      print('Error unfollowing restaurant: $error');
+    }
+    const snackBar = SnackBar(
+      content: Text('You have unfollowed the restaurant.'),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
   void launchMap(String address) async {
     Uri url = Uri.parse('https://www.google.com/maps/search/?api=1&query=$address');
     if (await canLaunchUrl(url)) {
@@ -33,29 +111,6 @@ class RestaurantProfile extends StatelessWidget {
       throw 'Could not launch $url';
     }
   }
-  void followRestaurant() async {
-    try {
-      // Get the current user ID
-      String userID = FirebaseAuth.instance.currentUser!.uid;
-
-      // Update the followedRestaurants array in Firestore
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userID)
-          .update({
-        'followedRestaurants': FieldValue.arrayUnion([restaurantID])
-      });
-
-      // Show a success message or perform any additional actions
-      // after successfully updating the array
-      print('Restaurant followed successfully!');
-    } catch (error) {
-      // Handle any errors that occur during the update process
-      print('Error following restaurant: $error');
-    }
-  }
-
-
   void _showMapAlert(BuildContext context, String address) {
     showDialog(
       context: context,
@@ -85,12 +140,13 @@ class RestaurantProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         title: Text(
-          restaurantName,
+          widget.restaurantName,
           style: const TextStyle(color: Colors.black),
         ),
       ),
@@ -103,7 +159,7 @@ class RestaurantProfile extends StatelessWidget {
               children: <Widget>[
                 CircleAvatar(
                   radius: 50,
-                  backgroundImage: NetworkImage(restaurantImageUrl),
+                  backgroundImage: NetworkImage(widget.restaurantImageUrl),
                 ),
                 const SizedBox(width: 15),
                 Expanded(
@@ -113,9 +169,17 @@ class RestaurantProfile extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: <Widget>[
-                          buildStatColumn('Posts', restaurantPostsCount),
-                          buildStatColumn(
-                              'Followers', restaurantFollowersCount),
+                          buildStatColumn('Posts', widget.restaurantPostsCount),
+                          StreamBuilder<DocumentSnapshot>(
+                            stream: FirebaseFirestore.instance.collection('Restaurants').doc(widget.restaurantID).snapshots(),
+                            builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+                              if (!snapshot.hasData) {
+                                return buildStatColumn('Followers', 0);
+                              } else {
+                                return buildStatColumn('Followers', snapshot.data!['followerCount']);
+                              }
+                            },
+                          ),
                         ],
                       ),
                     ],
@@ -124,9 +188,9 @@ class RestaurantProfile extends StatelessWidget {
               ],
             ),
           ),
-          TextButton(child: Text(restaurantAddress), onPressed:() {
+          TextButton(child: Text(widget.restaurantAddress), onPressed:() {
             //not work on emulator but work on real devices
-            _showMapAlert(context, restaurantAddress);
+            _showMapAlert(context, widget.restaurantAddress);
           },),
           const SizedBox(height: 5),
           Row(
@@ -134,16 +198,20 @@ class RestaurantProfile extends StatelessWidget {
             children: <Widget>[
               ElevatedButton(
                 onPressed: () {
-                  followRestaurant();
+                  isFollowing ? unfollowRestaurant() : followRestaurant();
                 },
-                child: const Text('Follow Restaurant'),
+                child: Text(
+                    isFollowing ? 'Unfollow Restaurant' : 'Follow Restaurant',
+                ),
+
               ),
+
               ElevatedButton(
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => MenuBrowseScreen(id: restaurantID),
+                      builder: (context) => MenuBrowseScreen(id: widget.restaurantID),
                     ),
                   );
                 },
@@ -155,7 +223,7 @@ class RestaurantProfile extends StatelessWidget {
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
-                  .collection('Restaurants/$restaurantID/Posts').orderBy('timestamp', descending: true)
+                  .collection('Restaurants/${widget.restaurantID}/Posts').orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.hasError) {
@@ -186,13 +254,16 @@ class RestaurantProfile extends StatelessWidget {
                           ),
                         );
                       },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            fit: BoxFit.cover,
-                            image: NetworkImage(snapshot.data!.docs[index]['imageUrl']),
+                      child:Padding(
+                        padding: const EdgeInsets.only(left: 5.0), // adjust the padding as needed
+                          child: Container(
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                fit: BoxFit.cover,
+                                image: NetworkImage(snapshot.data!.docs[index]['imageUrl']),
+                              ),
+                            ),
                           ),
-                        ),
                       ),
                     );
                   },
@@ -236,7 +307,6 @@ class RestaurantProfile extends StatelessWidget {
 class PostsScreen extends StatelessWidget {
   final List<DocumentSnapshot> posts;
   final int initialPostIndex;
-
   const PostsScreen({
     Key? key,
     required this.posts,
@@ -247,6 +317,7 @@ class PostsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     PageController pageController = PageController(
       initialPage: initialPostIndex,
+
     );
 
     return Scaffold(
