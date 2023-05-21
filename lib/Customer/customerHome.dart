@@ -112,6 +112,47 @@ class HomeState extends State<Home> {
       });
     }
   }
+  Future<List<String>> getFollowedRestaurantIds(String userId) async {
+    DocumentSnapshot snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .get();
+
+    List<dynamic> followedRestaurants = snapshot?['followedRestaurants'];
+    return followedRestaurants.cast<String>();
+  }
+  Future<List<Map<String, dynamic>>> fetchFollowedRestaurantPosts(String userId) async {
+    List<String> followedRestaurantIds = await getFollowedRestaurantIds(userId);
+
+    List<Map<String, dynamic>> posts = [];
+
+    for (String restaurantId in followedRestaurantIds) {
+      DocumentSnapshot restaurantSnapshot = await FirebaseFirestore.instance
+          .collection('Restaurants')
+          .doc(restaurantId)
+          .get();
+
+      QuerySnapshot postsSnapshot = await FirebaseFirestore.instance
+          .collection('Restaurants')
+          .doc(restaurantId)
+          .collection('Posts')
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      List<Map<String, dynamic>> restaurantPosts = postsSnapshot.docs.map((doc) {
+        Map<String, dynamic> postData = (doc.data() as Map<String, dynamic>);
+        postData['restaurantImageUrl'] = restaurantSnapshot!['image_url'];
+        postData['restaurantName'] = restaurantSnapshot!['name'];
+        return postData;
+      }).toList();
+
+      posts.addAll(restaurantPosts);
+    }
+
+    posts.sort((a, b) => b['timestamp'].compareTo(a['timestamp'])); // Sort posts by timestamp
+
+    return posts;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +205,58 @@ class HomeState extends State<Home> {
             ),
           if (!_searchMode)
             Expanded(
-              child: Text("this is timeline"),
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: fetchFollowedRestaurantPosts(LoginPage.userID),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator(); // Display a loading indicator while fetching data.
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}'); // Handle error case.
+                  } else if (!snapshot.hasData ) {
+                    return Text('No posts found'); // Handle no posts case.
+                  } else {
+                    List<Map<String, dynamic>>? posts = snapshot.data;
+
+                    return ListView.builder(
+                      itemCount: posts?.length,
+                      itemBuilder: (context, index) {
+                        Map<String, dynamic> post = posts![index];
+                        String imageUrl = post['imageUrl'];
+                        String caption = post['caption'];
+                        String restaurantImageUrl = post['restaurantImageUrl'];
+                        String restaurantName = post['restaurantName'];
+
+                        return Column(
+                          children: [
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius:20,
+                                  backgroundImage: NetworkImage(restaurantImageUrl), // Display restaurant profile picture.
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  restaurantName,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 10),
+                            Image.network(imageUrl,
+                                height: 400,
+                                //width: 350,
+                                ), // Display post image.
+                            Text(caption),
+                            Divider(), // Add a divider between posts.
+                          ],
+                        );
+                      },
+                    );
+                  }
+                },
+              ),
             ),
           if (_searchMode)
             Expanded(
