@@ -25,10 +25,10 @@ class RestaurantProfile extends StatefulWidget {
   final int restaurantPostsCount;
 
   @override
-  _RestaurantProfileState createState() => _RestaurantProfileState();
+  RestaurantProfileState createState() => RestaurantProfileState();
 }
 
-class _RestaurantProfileState extends State<RestaurantProfile> {
+class RestaurantProfileState extends State<RestaurantProfile> {
   bool isFollowing = false;
 
 

@@ -267,9 +267,9 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
     );
   }
 
-  FutureBuilder<QuerySnapshot> confirmedOrdersTab() {
-    return FutureBuilder<QuerySnapshot>(
-      future: widget.ordersRef.get(),
+  StreamBuilder<QuerySnapshot> confirmedOrdersTab() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: widget.ordersRef.snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -326,8 +326,8 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                             "$price\$ x$quantity",
                           ),
                           leading: order['quantity_Submitted_notServiced'] > 0
-                              ? const Icon(Icons.timer_outlined)
-                              : null,
+                              ? const Icon(Icons.timer_outlined,color: Colors.orangeAccent,)
+                              : const Icon(Icons.check,color: Colors.green,),
                         ),
                       );
                     },
