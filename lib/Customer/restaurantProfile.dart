@@ -43,7 +43,7 @@ class RestaurantProfileState extends State<RestaurantProfile> {
     DocumentSnapshot snapshot = await FirebaseFirestore.instance.collection('users').doc(userID).get();
 
     if (snapshot.exists) {
-      List<dynamic>? followedRestaurants = snapshot?['followedRestaurants'] as List<dynamic>?;
+      List<dynamic>? followedRestaurants = snapshot['followedRestaurants'] as List<dynamic>?;
       setState(() {
         isFollowing = followedRestaurants != null && followedRestaurants.contains(widget.restaurantID);
       });
@@ -200,7 +200,7 @@ class RestaurantProfileState extends State<RestaurantProfile> {
                   isFollowing ? unfollowRestaurant() : followRestaurant();
                 },
                 child: Text(
-                    isFollowing ? 'Unfollow Restaurant' : 'Follow Restaurant',
+                  isFollowing ? 'Unfollow Restaurant' : 'Follow Restaurant',
                 ),
 
               ),
@@ -249,20 +249,23 @@ class RestaurantProfileState extends State<RestaurantProfile> {
                             builder: (context) => PostsScreen(
                               posts: snapshot.data!.docs,
                               initialPostIndex: index,
+                              restaurantID: widget.restaurantID,
+                              restaurantName: widget.restaurantName,
+                              restaurantImageUrl: widget.restaurantImageUrl,
                             ),
                           ),
                         );
                       },
                       child:Padding(
                         padding: const EdgeInsets.only(left: 5.0), // adjust the padding as needed
-                          child: Container(
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                fit: BoxFit.cover,
-                                image: NetworkImage(snapshot.data!.docs[index]['imageUrl']),
-                              ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              fit: BoxFit.cover,
+                              image: NetworkImage(snapshot.data!.docs[index]['imageUrl']),
                             ),
                           ),
+                        ),
                       ),
                     );
                   },
@@ -306,10 +309,16 @@ class RestaurantProfileState extends State<RestaurantProfile> {
 class PostsScreen extends StatelessWidget {
   final List<DocumentSnapshot> posts;
   final int initialPostIndex;
+  final String restaurantID;
+  final String restaurantName;
+  final String restaurantImageUrl;
   const PostsScreen({
     Key? key,
     required this.posts,
     required this.initialPostIndex,
+    required this.restaurantID,
+    required this.restaurantName,
+    required this.restaurantImageUrl,
   }) : super(key: key);
 
   @override
@@ -336,37 +345,70 @@ class PostsScreen extends StatelessWidget {
           DocumentSnapshot post = posts[index];
 
           DateTime timestamp = (post['timestamp'] as Timestamp).toDate();
-          String formattedTimestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(timestamp);
+          String formattedDate = DateFormat('yyyy-MM-dd').format(timestamp);
+          String formattedTime = DateFormat('HH:mm:ss').format(timestamp);
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Image.network(post['imageUrl']),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
-                child: Container(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    post['caption'],
-                    style: const TextStyle(
-                      fontSize: 17,
+          return InkWell(
+            onTap: () {
+              pageController.nextPage(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeIn,
+              );
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ListTile(
+                  leading: InkWell(
+                    onTap: () => Navigator.pop(context),
+                    child: CircleAvatar(
+                      backgroundImage: NetworkImage(restaurantImageUrl),
+                      radius: 25,
+                    ),
+                  ),
+                  title: InkWell(
+                    onTap: () => Navigator.pop(context),
+                    child: Text(
+                      restaurantName,
+                      style: TextStyle(fontSize: 20),
                     ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
-                child: Container(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    formattedTimestamp,
-                    style: const TextStyle(
-                      fontSize: 13,
+                Image.network(post['imageUrl']),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
+                  child: Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      post['caption'],
+                      style: const TextStyle(
+                        fontSize: 17,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        formattedDate,
+                        style: const TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                      Text(
+                        formattedTime,
+                        style: const TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),

@@ -9,6 +9,7 @@ import 'package:project_mobile/Customer/restaurantProfile.dart';
 import 'package:project_mobile/customWidgets.dart';
 import '../Authentication/loginPage.dart';
 import 'FollowedRestaurantsPage.dart';
+import 'package:intl/intl.dart';
 
 
 class CustomerHome extends StatefulWidget {
@@ -138,8 +139,7 @@ class HomeState extends State<Home> {
       final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('Restaurants')
           .where("name", isGreaterThanOrEqualTo: searchText.toUpperCase())
-          .where("name",
-              isLessThanOrEqualTo: "${searchText.toLowerCase()}\uf8ff")
+          .where("name", isLessThanOrEqualTo: "${searchText.toLowerCase()}\uf8ff")
           .get();
       setState(() {
         searchResults = querySnapshot.docs;
@@ -265,8 +265,12 @@ class HomeState extends State<Home> {
                         String caption = post['caption'];
                         String restaurantImageUrl = post['restaurantImageUrl'];
                         String restaurantName = post['restaurantName'];
+                        Timestamp timestamp = post['timestamp'];
+                        String formattedDate = DateFormat('yyyy-MM-dd').format(timestamp.toDate());
+                        String formattedTime = DateFormat('HH:mm:ss').format(timestamp.toDate());
 
                         return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start, // Align all elements to the start, i.e., left.
                           children: [
                             Row(
                               children: [
@@ -274,10 +278,11 @@ class HomeState extends State<Home> {
                                 InkWell(
                                   onTap: () {
                                     Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => FollowedRestaurantsPage(),
-                                        ));
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => FollowedRestaurantsPage(),
+                                      ),
+                                    );
                                   },
                                   child: CircleAvatar(
                                     radius:20,
@@ -286,20 +291,61 @@ class HomeState extends State<Home> {
                                 ),
 
                                 SizedBox(width: 10),
-                                Text(
-                                  restaurantName,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => FollowedRestaurantsPage(),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    restaurantName,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18, // Increase the font size to make it bigger.
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                             SizedBox(height: 10),
-                            Image.network(imageUrl,
-                                height: 400,
-                                //width: 350,
-                                ), // Display post image.
-                            Text(caption),
+                            Image.network(
+                              imageUrl,
+                              width: MediaQuery.of(context).size.width, // Full width of the screen
+                              fit: BoxFit.cover, // Cover the entire width of the screen, may crop the image
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10.0,horizontal: 15), // Add more space around the caption text
+                              child: Text(
+                                caption,
+                                textAlign: TextAlign.left, // Align the text to the left
+                                style: const TextStyle(
+                                  fontSize: 20, // Increase the font size of the caption text
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    formattedDate,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  Text(
+                                    formattedTime,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                             Divider(), // Add a divider between posts.
                           ],
                         );
