@@ -274,55 +274,55 @@ class HomeState extends State<Home> {
                           children: [
                             Row(
                               children: [
-                                SizedBox(width: 10),
+                                const SizedBox(width: 10),
                                 InkWell(
                                   onTap: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => FollowedRestaurantsPage(),
+                                        builder: (context) => const FollowedRestaurantsPage(),
                                       ),
                                     );
                                   },
                                   child: CircleAvatar(
                                     radius:20,
-                                    backgroundImage: NetworkImage(restaurantImageUrl), // Display restaurant profile picture.
+                                    backgroundImage: NetworkImage(restaurantImageUrl),
                                   ),
                                 ),
 
-                                SizedBox(width: 10),
+                                const SizedBox(width: 10),
                                 InkWell(
                                   onTap: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => FollowedRestaurantsPage(),
+                                        builder: (context) => const FollowedRestaurantsPage(),
                                       ),
                                     );
                                   },
                                   child: Text(
                                     restaurantName,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 18, // Increase the font size to make it bigger.
+                                      fontSize: 18,
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                            SizedBox(height: 10),
+                            const SizedBox(height: 10),
                             Image.network(
                               imageUrl,
-                              width: MediaQuery.of(context).size.width, // Full width of the screen
-                              fit: BoxFit.cover, // Cover the entire width of the screen, may crop the image
+                              width: MediaQuery.of(context).size.width,
+                              fit: BoxFit.cover,
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 10.0,horizontal: 15), // Add more space around the caption text
+                              padding: const EdgeInsets.symmetric(vertical: 10.0,horizontal: 15),
                               child: Text(
                                 caption,
-                                textAlign: TextAlign.left, // Align the text to the left
+                                textAlign: TextAlign.left,
                                 style: const TextStyle(
-                                  fontSize: 20, // Increase the font size of the caption text
+                                  fontSize: 20,
                                 ),
                               ),
                             ),
@@ -346,7 +346,7 @@ class HomeState extends State<Home> {
                                 ],
                               ),
                             ),
-                            Divider(), // Add a divider between posts.
+                            Divider(),
                           ],
                         );
                       },
