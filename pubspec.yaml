@@ -60,7 +60,8 @@ dependencies:
   http: ^0.13.6
   url_launcher: ^6.1.11
   android_flutter_wifi: ^0.1.2
-  
+  permission_handler: ^9.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
