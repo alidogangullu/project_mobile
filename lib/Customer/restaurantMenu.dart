@@ -4,7 +4,6 @@ import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:project_mobile/Customer/customerHome.dart';
 import 'package:project_mobile/Customer/order.dart';
 import '../customWidgets.dart';
-import 'package:android_flutter_wifi/android_flutter_wifi.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key, required this.id, required this.tableNo});
@@ -19,40 +18,10 @@ class MenuScreen extends StatefulWidget {
 class _MenuScreenState extends State<MenuScreen> {
   List<dynamic> users = [];
 
-  void showWifiAlertDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Wifi Connection Required'),
-          content: const Text(
-              'Please connect to "prometheus" wifi to access the menu.'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+ 
 
   Future<void> listenUnauthorizedUsers() async {
-    List<WifiNetwork> wifiList = await AndroidFlutterWifi.getWifiScanResult();
-
-    // Check if "prometheus" is available
-    bool restaurantWifiAvailable =
-        wifiList.any((wifiNetwork) => wifiNetwork.ssid == 'prometheus');
-
-    if (!restaurantWifiAvailable) {
-      // Use the function to show the alert dialog
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) => showWifiAlertDialog());
-      return; // Do not proceed further
-    }
+   
     await FirebaseFirestore.instance
         .collection("Restaurants/${widget.id}/Tables")
         .doc(widget.tableNo)

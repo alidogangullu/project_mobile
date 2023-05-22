@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:project_mobile/Customer/restaurantMenu.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:safe_device/safe_device.dart';
+import 'package:android_flutter_wifi/android_flutter_wifi.dart';
 
 class QRScanner extends StatefulWidget {
   const QRScanner({Key? key}) : super(key: key);
@@ -14,6 +15,26 @@ class QRScanner extends StatefulWidget {
 }
 
 class QRScannerState extends State<QRScanner> {
+  void showWifiAlertDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('You device must be see wifi'),
+          content: const Text('Please open device wifi to access the menu.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   final MobileScannerController qrScannerController = MobileScannerController();
   bool scanned = false;
   double desiredLatitude = 0;
@@ -24,6 +45,18 @@ class QRScannerState extends State<QRScanner> {
   LocationData? _locationData;
 
   Future<void> checkLocationEnabled() async {
+    List<WifiNetwork> wifiList = await AndroidFlutterWifi.getWifiScanResult();
+
+    // Check if "prometheus" is available
+    bool restaurantWifiAvailable =
+        wifiList.any((wifiNetwork) => wifiNetwork.ssid == 'prometheus');
+
+    if (!restaurantWifiAvailable) {
+      // Use the function to show the alert dialog
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => showWifiAlertDialog());
+      return; // Do not proceed further
+    }
     bool serviceEnabled = await _location.serviceEnabled();
     if (!serviceEnabled) {
       serviceEnabled = await _location.requestService();
@@ -31,6 +64,7 @@ class QRScannerState extends State<QRScanner> {
         return;
       }
     }
+
     setState(() {
       _locationEnabled = true;
     });
@@ -49,7 +83,8 @@ class QRScannerState extends State<QRScanner> {
     return _locationData;
   }
 
-  static bool isDesiredLocation(LocationData? locationData, double desiredLatitude, double desiredLongitude) {
+  static bool isDesiredLocation(LocationData? locationData,
+      double desiredLatitude, double desiredLongitude) {
     double maxDistanceMeters = 10; //Erisilebilir mesafe
 
     if (locationData == null) {
@@ -64,7 +99,6 @@ class QRScannerState extends State<QRScanner> {
     );
     return distanceInMeters <= maxDistanceMeters;
   }
-
 
   Future<void> _fetchLocationData(String restaurantId) async {
     DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
@@ -111,36 +145,37 @@ class QRScannerState extends State<QRScanner> {
                 }
 
                 bool isSafeDevice = await SafeDevice.isSafeDevice;
-                if(isSafeDevice){
+                if (isSafeDevice) {
+                  //okunan ilk uygun formatlı değere sahip qr koddan parametrelerin alınması
+                  String? url = capture.barcodes.first.rawValue;
+                  Uri uri = Uri.parse(url!);
+                  String restaurantId = uri.queryParameters['id']!;
+                  String tableNo = uri.queryParameters['tableNo']!;
 
-                //okunan ilk uygun formatlı değere sahip qr koddan parametrelerin alınması
-                String? url = capture.barcodes.first.rawValue;
-                Uri uri = Uri.parse(url!);
-                String restaurantId = uri.queryParameters['id']!;
-                String tableNo = uri.queryParameters['tableNo']!;
+                  _fetchLocationData(restaurantId);
 
-                _fetchLocationData(restaurantId);
-
-                //parametreleri kullanarak yönlendirme ve security check
-                if (isLocationEnabled() && isDesiredLocation(getLocationData(), desiredLatitude, desiredLongitude)) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MenuScreen(
-                        id: restaurantId,
-                        tableNo: tableNo,
+                  //parametreleri kullanarak yönlendirme ve security check
+                  if (isLocationEnabled() &&
+                      isDesiredLocation(getLocationData(), desiredLatitude,
+                          desiredLongitude)) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MenuScreen(
+                          id: restaurantId,
+                          tableNo: tableNo,
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            "You have to be at the restaurant to access the menu!"),
+                      ),
+                    );
+                  }
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                          "You have to be at the restaurant to access the menu!"),
-                    ),
-                  );
-                }
-              } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(
