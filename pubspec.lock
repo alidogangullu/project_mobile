@@ -9,6 +9,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
+  android_flutter_wifi:
+    dependency: "direct main"
+    description:
+      name: android_flutter_wifi
+      sha256: "80283812a2d8bfd5449732df1a8328cd1d1c5d7aaf426e220b85a7e9dceece89"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.2"
   archive:
     dependency: transitive
     description:
