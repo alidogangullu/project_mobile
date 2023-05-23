@@ -347,7 +347,7 @@ class ItemsGridState extends State<ItemsGrid> {
 
                 return DraggableScrollableSheet(
                     expand: false,
-                    initialChildSize: 0.68,
+                    initialChildSize: 0.74,
                     minChildSize: 0.4,
                     maxChildSize: 1,
                     builder: (BuildContext context, myscrollController) {
