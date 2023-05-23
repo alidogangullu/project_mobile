@@ -20,7 +20,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=2.18.2 <3.0.0'
+  sdk: '>=2.18.2 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -38,12 +38,13 @@ dependencies:
   firebase_core: ^2.1.0
   firebase_auth: ^4.1.2
   cloud_firestore: ^4.0.2
+  intl: ^0.18.1
   intl_phone_number_input: ^0.7.1
   pinput: ^2.2.31
   qr_flutter: ^4.0.0
   shared_preferences: ^2.0.18
   mobile_scanner: ^3.1.1
-  slide_to_act: ^2.0.1
+  slide_action: ^0.0.2
   location: ^4.2.0
   geolocator: ^7.6.2
   flutter_rating_bar: ^4.0.1
