@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:project_mobile/Customer/customerHome.dart';
-import 'package:slide_to_act/slide_to_act.dart';
+import 'package:slide_action/slide_action.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({Key? key, required this.ordersRef, required this.tableRef, required this.restaurantPath, required this.table})
@@ -256,12 +257,50 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
         Padding(
           padding: const EdgeInsets.all(20),
           child: SlideAction(
+            stretchThumb: true,
+            trackBuilder:
+                (context, currentState) {
+                  return Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(100),
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).primaryColor,
+                      blurRadius: 1,
+                    ),
+                  ],
+                ),
+                child: const Center(
+                  child: Text('Slide to confirm order'),
+                ),
+              );
+                                },
+            thumbBuilder:
+                (context, currentState) {
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 400),
+                    margin: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: currentState.isPerformingAction ? const CupertinoActivityIndicator(color: Colors.white,) : const Icon(Icons.chevron_right, color: Colors.white)
+                  
+                  );
+                },
+            action: confirmOrders,
+          ), 
+          //Text('Slidingg')
+          /* 
+          SlideAction(
             onSubmit: () {
               confirmOrders();
             },
             text: "Slide to confirm order",
             textStyle: const TextStyle(fontSize: 18, color: Colors.white),
-          ),
+          ), 
+          */
         ),
       ],
     );
