@@ -152,7 +152,9 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
 
     void deleteAllItems(var order, var orderID) async {
       if (await checkAuthorizedUser()) {
-        await widget.ordersRef.doc(orderID).delete();
+        await widget.ordersRef.doc(orderID).update({
+        'quantity_notSubmitted_notServiced': 0,
+        });
         setState(() {});
       }
     }
