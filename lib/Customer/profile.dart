@@ -621,6 +621,9 @@ class CommentsPageState extends State<CommentsPage> {
                                                             AsyncSnapshot<
                                                                     DocumentSnapshot>
                                                                 snapshot) {
+                                                          if (snapshot.connectionState == ConnectionState.waiting) {
+                                                            return const Center(child: CircularProgressIndicator());
+                                                          }
                                                           if (snapshot
                                                                   .hasError ||
                                                               !snapshot.data!

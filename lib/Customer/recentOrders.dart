@@ -205,6 +205,9 @@ class _RecentOrdersScreenState extends State<RecentOrdersScreen> {
                                   builder: (BuildContext context,
                                       AsyncSnapshot<DocumentSnapshot>
                                           snapshot) {
+                                    if (snapshot.connectionState == ConnectionState.waiting) {
+                                      return const SizedBox();
+                                    }
                                     if (snapshot.hasError || !snapshot.data!.exists) {
                                       return const Text('- Deleted Item');
                                     }
@@ -365,14 +368,13 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           ),
         ),
       ),
-      body: StreamBuilder<DocumentSnapshot>(
-        stream: widget.orderRef.snapshots(),
+      body: FutureBuilder<DocumentSnapshot>(
+        future: widget.orderRef.get(),
         builder:
             (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
           if (!snapshot.hasData || snapshot.hasError) {
             return const Center(child: CircularProgressIndicator());
           }
-
           final orderData = snapshot.data!;
           final items = orderData.get('items') as List<dynamic>;
 
@@ -399,6 +401,9 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                 future: itemRef.get(),
                 builder: (BuildContext context,
                     AsyncSnapshot<DocumentSnapshot> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
                   if (snapshot.hasError || !snapshot.data!.exists || !snapshot.hasData) {
                     return const SizedBox();
                   }
