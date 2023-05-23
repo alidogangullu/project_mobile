@@ -62,8 +62,6 @@ class RestaurantProfileState extends State<RestaurantProfile> {
         'followerCount': FieldValue.increment(1),
       });
 
-      print('Restaurant followed successfully!');
-
       setState(() {
         isFollowing = true;
       });
@@ -256,14 +254,11 @@ class RestaurantProfileState extends State<RestaurantProfile> {
                           ),
                         );
                       },
-                      child:Padding(
-                        padding: const EdgeInsets.only(left: 5.0), // adjust the padding as needed
-                        child: Container(
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              fit: BoxFit.cover,
-                              image: NetworkImage(snapshot.data!.docs[index]['imageUrl']),
-                            ),
+                      child:Container(
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            fit: BoxFit.cover,
+                            image: NetworkImage(snapshot.data!.docs[index]['imageUrl']),
                           ),
                         ),
                       ),

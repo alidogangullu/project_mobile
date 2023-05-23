@@ -586,7 +586,11 @@ class ItemsGridState extends State<ItemsGrid> {
 
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
-                                  return const CircularProgressIndicator();
+                                  return const Center(child: CircularProgressIndicator());
+                                }
+
+                                if(snapshot.data!.size==0){
+                                  return const Center(child: Text('There is no comment.'));
                                 }
 
                                 return ListView(

@@ -77,7 +77,7 @@ class HomeState extends State<Home> {
   bool _searchMode = false;
   List<DocumentSnapshot> searchResults = [];
 
-  ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
   bool _showSearchAndQR = true;
 
   Future<List<Map<String, dynamic>>>? _postsFuture;
@@ -181,6 +181,10 @@ class HomeState extends State<Home> {
         Map<String, dynamic> postData = (doc.data() as Map<String, dynamic>);
         postData['restaurantImageUrl'] = restaurantSnapshot['image_url'];
         postData['restaurantName'] = restaurantSnapshot['name'];
+        postData['restaurantFollowersCount'] = restaurantSnapshot['followerCount'];
+        postData['restaurantPostsCount'] = restaurantSnapshot['postCount'];
+        postData['restaurantAddress'] = restaurantSnapshot['address'];
+        postData['restaurantID'] = restaurantSnapshot.id;
         return postData;
       }).toList();
 
@@ -265,6 +269,10 @@ class HomeState extends State<Home> {
                         String caption = post['caption'];
                         String restaurantImageUrl = post['restaurantImageUrl'];
                         String restaurantName = post['restaurantName'];
+                        int restaurantFollowersCount = post['restaurantFollowersCount'];
+                        int restaurantPostsCount = post['restaurantPostsCount'];
+                        String restaurantAddress = post['restaurantAddress'];
+                        String restaurantID = post['restaurantID'];
                         Timestamp timestamp = post['timestamp'];
                         String formattedDate = DateFormat('yyyy-MM-dd').format(timestamp.toDate());
                         String formattedTime = DateFormat('HH:mm:ss').format(timestamp.toDate());
@@ -280,7 +288,13 @@ class HomeState extends State<Home> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => const FollowedRestaurantsPage(),
+                                        builder: (context) => RestaurantProfile(
+                                            restaurantID: restaurantID,
+                                            restaurantName: restaurantName,
+                                            restaurantImageUrl: restaurantImageUrl,
+                                            restaurantFollowersCount: restaurantFollowersCount,
+                                            restaurantPostsCount: restaurantPostsCount,
+                                            restaurantAddress: restaurantAddress),
                                       ),
                                     );
                                   },
@@ -346,7 +360,7 @@ class HomeState extends State<Home> {
                                 ],
                               ),
                             ),
-                            Divider(),
+                            const Divider(),
                           ],
                         );
                       },
