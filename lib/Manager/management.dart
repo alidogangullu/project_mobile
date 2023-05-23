@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:android_flutter_wifi/android_flutter_wifi.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -228,6 +229,22 @@ class _AddRestaurantState extends State<AddRestaurant> {
     }
   }
 
+  String? dropdownValue;
+  List<String?> ssidList = [];
+  Future<void> initPlatformState() async {
+    List<WifiNetwork> wifiList = await AndroidFlutterWifi.getWifiScanResult();
+    setState(() {
+      ssidList = wifiList.map((wifi) => wifi.ssid).toList();
+    });
+  }
+
+  @override
+  void initState() {
+    initPlatformState();
+    super.initState();
+  }
+
+
   bool get canAddRestaurant {
     return restaurantNameController.text.isNotEmpty &&
         address != "null" &&
@@ -266,6 +283,37 @@ class _AddRestaurantState extends State<AddRestaurant> {
           ),
           textInputField(
               context, 'Restaurant Name', restaurantNameController, false),
+          Padding(
+            padding: const EdgeInsets.only(left: 15, bottom: 10),
+            child: Container(
+              alignment: Alignment.centerLeft,
+              child: const Text(
+                'Restaurant Wi-Fi',
+                style: TextStyle(
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ),
+          DropdownButton<String>(
+            value: dropdownValue,
+            icon: const Icon(Icons.arrow_downward),
+            iconSize: 24,
+            elevation: 16,
+            onChanged: (String? newValue) {
+              setState(() {
+                dropdownValue = newValue;
+              });
+            },
+            items: ssidList.asMap().entries.map<DropdownMenuItem<String>>((entry) {
+              var index = entry.key;
+              var value = entry.value;
+              return DropdownMenuItem<String>(
+                value: '$index-$value',
+                child: Text(value!),
+              );
+            }).toList(),
+          ),
           Padding(
             padding: const EdgeInsets.only(left: 15, bottom: 10),
             child: Container(

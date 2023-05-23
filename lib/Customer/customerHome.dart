@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:project_mobile/Customer/qrScanner.dart';
 import 'package:project_mobile/Customer/recentOrders.dart';
 import 'package:project_mobile/Customer/profile.dart';
 import 'package:project_mobile/Customer/restaurantMenu.dart';
@@ -202,15 +203,8 @@ class HomeState extends State<Home> {
       floatingActionButton: _showSearchAndQR // Conditionally render the floating action button
           ? FloatingActionButton(
         onPressed: () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const MenuScreen(
-                id: "GixzDeIROMDRAn2mAnMG",
-                tableNo: "1",
-              ),
-            ),
-          );
+          //Navigator.push(context, MaterialPageRoute(builder: (context) => const QRScanner()));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MenuScreen(id: "GixzDeIROMDRAn2mAnMG", tableNo: "1")));
         },
         child: const Icon(Icons.qr_code_scanner),
       ) : null,

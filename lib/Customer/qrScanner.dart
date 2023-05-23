@@ -45,18 +45,6 @@ class QRScannerState extends State<QRScanner> {
   LocationData? _locationData;
 
   Future<void> checkLocationEnabled() async {
-    List<WifiNetwork> wifiList = await AndroidFlutterWifi.getWifiScanResult();
-
-    // Check if "prometheus" is available
-    bool restaurantWifiAvailable =
-        wifiList.any((wifiNetwork) => wifiNetwork.ssid == 'prometheus');
-
-    if (!restaurantWifiAvailable) {
-      // Use the function to show the alert dialog
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) => showWifiAlertDialog());
-      return; // Do not proceed further
-    }
     bool serviceEnabled = await _location.serviceEnabled();
     if (!serviceEnabled) {
       serviceEnabled = await _location.requestService();
@@ -64,15 +52,21 @@ class QRScannerState extends State<QRScanner> {
         return;
       }
     }
+    _locationEnabled = true;
 
-    setState(() {
-      _locationEnabled = true;
-    });
     _location.onLocationChanged.listen((LocationData? locationData) {
-      setState(() {
         _locationData = locationData;
-      });
     });
+  }
+
+  Future<bool> checkWifi() async {
+    List<WifiNetwork> wifiList = await AndroidFlutterWifi.getWifiScanResult();
+
+    // Check if wifi is available
+    bool restaurantWifiAvailable =
+    wifiList.any((wifiNetwork) => wifiNetwork.ssid == 'GULLU');
+
+    return restaurantWifiAvailable;
   }
 
   bool isLocationEnabled() {
@@ -85,7 +79,7 @@ class QRScannerState extends State<QRScanner> {
 
   static bool isDesiredLocation(LocationData? locationData,
       double desiredLatitude, double desiredLongitude) {
-    double maxDistanceMeters = 10; //Erisilebilir mesafe
+    double maxDistanceMeters = 999999999999; //Erisilebilir mesafe
 
     if (locationData == null) {
       return false;
@@ -118,7 +112,7 @@ class QRScannerState extends State<QRScanner> {
   }
 
   @override
-  void initState() {
+ void initState() {
     super.initState();
     checkLocationEnabled();
   }
@@ -126,7 +120,14 @@ class QRScannerState extends State<QRScanner> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan QR')),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
+        title: const Text(
+          "QR Scanner",
+          style: TextStyle(color: Colors.black),
+        ),
+      ),
       body: Builder(
         builder: (context) {
           return MobileScanner(
@@ -145,7 +146,9 @@ class QRScannerState extends State<QRScanner> {
                 }
 
                 bool isSafeDevice = await SafeDevice.isSafeDevice;
-                if (isSafeDevice) {
+                bool nearbyWiFi = await checkWifi();
+
+                if (isSafeDevice && nearbyWiFi) {
                   //okunan ilk uygun formatlı değere sahip qr koddan parametrelerin alınması
                   String? url = capture.barcodes.first.rawValue;
                   Uri uri = Uri.parse(url!);
@@ -171,7 +174,7 @@ class QRScannerState extends State<QRScanner> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(
-                            "You have to be at the restaurant to access the menu!"),
+                            "You have to be at the restaurant and you have to activate WiFi to access the menu!"),
                       ),
                     );
                   }
