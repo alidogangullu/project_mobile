@@ -382,55 +382,58 @@ class RestaurantPostsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        ListTile(
-          leading: InkWell(
-            onTap: () => Navigator.pop(context),
-            child: CircleAvatar(
-              backgroundImage: NetworkImage(restaurantImageUrl),
-              radius: 25,
-            ),
-          ),
-          title: InkWell(
-            onTap: () => Navigator.pop(context),
-            child: Text(
-              restaurantName,
-              style: const TextStyle(fontSize: 20),
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Expanded(child: Image.network(post['imageUrl'])),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
-          child: Container(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              post['caption'],
-              style: const TextStyle(fontSize: 17),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                formattedDate,
-                style: const TextStyle(fontSize: 13),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          ListTile(
+            leading: InkWell(
+              onTap: () => Navigator.pop(context),
+              child: CircleAvatar(
+                backgroundImage: NetworkImage(restaurantImageUrl),
+                radius: 25,
               ),
-              Text(
-                formattedTime,
-                style: const TextStyle(fontSize: 13),
+            ),
+            title: InkWell(
+              onTap: () => Navigator.pop(context),
+              child: Text(
+                restaurantName,
+                style: const TextStyle(fontSize: 20),
               ),
-            ],
+            ),
           ),
-        ),
-        const SizedBox(height: 10),
-      ],
+          Expanded(child: Image.network(post['imageUrl'])),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+            child: Container(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                post['caption'],
+                style: const TextStyle(fontSize: 17),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  formattedDate,
+                  style: const TextStyle(fontSize: 13),
+                ),
+                Text(
+                  formattedTime,
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+      ),
     );
   }
 }
