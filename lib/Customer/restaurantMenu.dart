@@ -347,8 +347,8 @@ class ItemsGridState extends State<ItemsGrid> {
 
                 return DraggableScrollableSheet(
                     expand: false,
-                    initialChildSize: 0.6,
-                    minChildSize: 0.6,
+                    initialChildSize: 0.68,
+                    minChildSize: 0.4,
                     maxChildSize: 1,
                     builder: (BuildContext context, myscrollController) {
                       return Column(
@@ -581,12 +581,12 @@ class ItemsGridState extends State<ItemsGrid> {
                               builder: (BuildContext context,
                                   AsyncSnapshot<QuerySnapshot> snapshot) {
                                 if (snapshot.hasError) {
-                                  return Text('Something went wrong');
+                                  return const Text('Something went wrong');
                                 }
 
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
-                                  return Text("Loading");
+                                  return const CircularProgressIndicator();
                                 }
 
                                 return ListView(
