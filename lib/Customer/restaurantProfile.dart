@@ -355,63 +355,87 @@ class PostsScreen extends StatelessWidget {
                 curve: Curves.easeIn,
               );
             },
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ListTile(
-                  leading: InkWell(
-                    onTap: () => Navigator.pop(context),
-                    child: CircleAvatar(
-                      backgroundImage: NetworkImage(restaurantImageUrl),
-                      radius: 25,
-                    ),
-                  ),
-                  title: InkWell(
-                    onTap: () => Navigator.pop(context),
-                    child: Text(
-                      restaurantName,
-                      style: TextStyle(fontSize: 20),
-                    ),
-                  ),
-                ),
-                Image.network(post['imageUrl']),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
-                  child: Container(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      post['caption'],
-                      style: const TextStyle(
-                        fontSize: 17,
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        formattedDate,
-                        style: const TextStyle(
-                          fontSize: 13,
-                        ),
-                      ),
-                      Text(
-                        formattedTime,
-                        style: const TextStyle(
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            child: RestaurantPostsWidget(
+              restaurantImageUrl: restaurantImageUrl,
+              restaurantName: restaurantName,
+              post: post,
+              formattedDate: formattedDate,
+              formattedTime: formattedTime,
             ),
           );
         },
       ),
+    );
+  }
+}
+
+class RestaurantPostsWidget extends StatelessWidget {
+  const RestaurantPostsWidget({
+    super.key,
+    required this.restaurantImageUrl,
+    required this.restaurantName,
+    required this.post,
+    required this.formattedDate,
+    required this.formattedTime,
+  });
+
+  final String restaurantImageUrl;
+  final String restaurantName;
+  final DocumentSnapshot<Object?> post;
+  final String formattedDate;
+  final String formattedTime;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        ListTile(
+          leading: InkWell(
+            onTap: () => Navigator.pop(context),
+            child: CircleAvatar(
+              backgroundImage: NetworkImage(restaurantImageUrl),
+              radius: 25,
+            ),
+          ),
+          title: InkWell(
+            onTap: () => Navigator.pop(context),
+            child: Text(
+              restaurantName,
+              style: const TextStyle(fontSize: 20),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Expanded(child: Image.network(post['imageUrl'])),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
+          child: Container(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              post['caption'],
+              style: const TextStyle(fontSize: 17),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                formattedDate,
+                style: const TextStyle(fontSize: 13),
+              ),
+              Text(
+                formattedTime,
+                style: const TextStyle(fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+      ],
     );
   }
 }
