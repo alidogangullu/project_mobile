@@ -932,7 +932,7 @@ class _MenuBrowseScreenState extends State<MenuBrowseScreen> {
         iconTheme: const IconThemeData(color: Colors.black),
         leading: IconButton(
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CustomerHome()));
           },
           icon: const Icon(Icons.arrow_back),
         ),

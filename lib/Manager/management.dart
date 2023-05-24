@@ -61,7 +61,7 @@ class _ManagerPanelState extends State<ManagerPanel> {
               iconData: Icons.search, onChanged: _onSearchQueryChanged),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+              padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
               child: StreamBuilder(
                 stream: FirebaseFirestore.instance
                     .collection("Restaurants")
@@ -99,15 +99,16 @@ class _ManagerPanelState extends State<ManagerPanel> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => RestaurantProfile(
-                                    restaurantAddress: doc['address'],
-                                    restaurantID: doc.id,
-                                    restaurantName: doc['name'],
-                                    restaurantFollowersCount: doc['followerCount'],
-                                    restaurantPostsCount: doc['postCount'],
-                                    restaurantImageUrl: doc['image_url'],
-                                  )
-                                ),
+                                    builder: (context) => RestaurantProfile(
+                                          restaurantAddress: doc['address'],
+                                          restaurantID: doc.id,
+                                          restaurantName: doc['name'],
+                                          restaurantFollowersCount:
+                                              doc['followerCount'],
+                                          restaurantPostsCount:
+                                              doc['postCount'],
+                                          restaurantImageUrl: doc['image_url'],
+                                        )),
                               );
                             },
                             child: ClipRRect(
@@ -120,8 +121,7 @@ class _ManagerPanelState extends State<ManagerPanel> {
                                       aspectRatio: 2,
                                       child: Image.network(
                                         doc["image_url"],
-                                        fit: BoxFit
-                                            .cover,
+                                        fit: BoxFit.cover,
                                       ),
                                     ),
                                     Padding(
@@ -184,7 +184,6 @@ class AddRestaurant extends StatefulWidget {
 }
 
 class _AddRestaurantState extends State<AddRestaurant> {
-
   final restaurantNameController = TextEditingController();
   List<TextEditingController> managerPhoneControllers = [
     TextEditingController()
@@ -209,7 +208,8 @@ class _AddRestaurantState extends State<AddRestaurant> {
     Uint8List? imageBytes = await compressFile(imageFile);
 
     FirebaseStorage storage = FirebaseStorage.instance;
-    Reference ref = storage.ref().child("Image-${DateTime.now().millisecondsSinceEpoch}");
+    Reference ref =
+        storage.ref().child("Image-${DateTime.now().millisecondsSinceEpoch}");
 
     TaskSnapshot snapshot = await ref.putData(imageBytes!);
     return snapshot.ref.getDownloadURL();
@@ -234,6 +234,7 @@ class _AddRestaurantState extends State<AddRestaurant> {
   Future<void> initPlatformState() async {
     List<WifiNetwork> wifiList = await AndroidFlutterWifi.getWifiScanResult();
     setState(() {
+      ssidList.add("");
       ssidList = wifiList.map((wifi) => wifi.ssid).toList();
     });
   }
@@ -244,7 +245,6 @@ class _AddRestaurantState extends State<AddRestaurant> {
     super.initState();
   }
 
-
   bool get canAddRestaurant {
     return restaurantNameController.text.isNotEmpty &&
         address != "null" &&
@@ -252,6 +252,7 @@ class _AddRestaurantState extends State<AddRestaurant> {
   }
 
   bool loading = false;
+  bool showInformation = false;
 
   @override
   Widget build(BuildContext context) {
@@ -284,36 +285,86 @@ class _AddRestaurantState extends State<AddRestaurant> {
           textInputField(
               context, 'Restaurant Name', restaurantNameController, false),
           Padding(
-            padding: const EdgeInsets.only(left: 15, bottom: 10),
-            child: Container(
-              alignment: Alignment.centerLeft,
-              child: const Text(
-                'Restaurant Wi-Fi',
-                style: TextStyle(
-                  fontSize: 18,
+            padding: const EdgeInsets.only(left: 15, bottom: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  alignment: Alignment.centerLeft,
+                  child: const Text(
+                    'Restaurant Wi-Fi',
+                    style: TextStyle(
+                      fontSize: 18,
+                    ),
+                  ),
                 ),
+                IconButton(
+                  icon: const Icon(Icons.info),
+                  onPressed: () {
+                    setState(() {
+                      showInformation = !showInformation;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 15, right: 15, bottom: 20),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.grey,
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(6.0),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
+                    child: DropdownButton<String>(
+                      value: dropdownValue,
+                      underline: const SizedBox(),
+                      isExpanded: true,
+                      iconEnabledColor: Theme.of(context).primaryColor,
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          dropdownValue = newValue;
+                          showInformation = false;
+                        });
+                      },
+                      items: ssidList
+                          .asMap()
+                          .entries
+                          .map<DropdownMenuItem<String>>((entry) {
+                        var index = entry.key;
+                        var value = entry.value;
+                        return DropdownMenuItem<String>(
+                          value: '$index-$value',
+                          child: Text(value!),
+                        );
+                      }).toList(),
+                      icon: const Icon(Icons.arrow_downward),
+                    ),
+                  ),
+                  if (showInformation)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      child: Text(
+                        'This dropdown allows you to select the Wi-Fi network for the restaurant. '
+                        'Providing this information is optional but recommended for security reasons, '
+                        'you can select a blank if you do not want.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
-          DropdownButton<String>(
-            value: dropdownValue,
-            icon: const Icon(Icons.arrow_downward),
-            iconSize: 24,
-            elevation: 16,
-            onChanged: (String? newValue) {
-              setState(() {
-                dropdownValue = newValue;
-              });
-            },
-            items: ssidList.asMap().entries.map<DropdownMenuItem<String>>((entry) {
-              var index = entry.key;
-              var value = entry.value;
-              return DropdownMenuItem<String>(
-                value: '$index-$value',
-                child: Text(value!),
-              );
-            }).toList(),
-          ),
+
           Padding(
             padding: const EdgeInsets.only(left: 15, bottom: 10),
             child: Container(
@@ -330,28 +381,29 @@ class _AddRestaurantState extends State<AddRestaurant> {
           Padding(
             padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
             child: Container(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: () async {
-                    LocationResult result = await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => PlacePicker(
-                          "AIzaSyALegH2yH-If8_Gkshob13fKzdHjQ4oxuc",
-                        ),
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () async {
+                  LocationResult result = await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => PlacePicker(
+                        "AIzaSyALegH2yH-If8_Gkshob13fKzdHjQ4oxuc",
                       ),
-                    );
-                    setState(() {
-                      address = result.formattedAddress!;
-                    });
-                    latitude = result.latLng!.latitude;
-                    longitude = result.latLng!.longitude;
-                  },
-                  child: Text(
-                    address != "null"
-                        ? address
-                        : 'Select restaurant on Google Maps',
-                  ),
-                ),),
+                    ),
+                  );
+                  setState(() {
+                    address = result.formattedAddress!;
+                  });
+                  latitude = result.latLng!.latitude;
+                  longitude = result.latLng!.longitude;
+                },
+                child: Text(
+                  address != "null"
+                      ? address
+                      : 'Select restaurant on Google Maps',
+                ),
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.only(left: 15, bottom: 10),
@@ -367,13 +419,14 @@ class _AddRestaurantState extends State<AddRestaurant> {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
-            child:Container(
+            child: Container(
               alignment: Alignment.centerLeft,
               child: Row(
                 children: [
                   TextButton(
                     onPressed: () async {
-                      final pickedFile = await picker.pickImage(source: ImageSource.camera);
+                      final pickedFile =
+                          await picker.pickImage(source: ImageSource.camera);
                       if (pickedFile != null) {
                         _imageFile = File(pickedFile.path);
                         if (_imageFile != null) {
@@ -385,7 +438,8 @@ class _AddRestaurantState extends State<AddRestaurant> {
                   ),
                   TextButton(
                     onPressed: () async {
-                      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+                      final pickedFile =
+                          await picker.pickImage(source: ImageSource.gallery);
                       if (pickedFile != null) {
                         _imageFile = File(pickedFile.path);
                         if (_imageFile != null) {
@@ -397,10 +451,10 @@ class _AddRestaurantState extends State<AddRestaurant> {
                   ),
                   _imageFile != null
                       ? Image.file(
-                    _imageFile!,
-                    width: 100,
-                    height: 100,
-                  )
+                          _imageFile!,
+                          width: 100,
+                          height: 100,
+                        )
                       : Container(),
                 ],
               ),
@@ -492,72 +546,77 @@ class _AddRestaurantState extends State<AddRestaurant> {
               },
             ),
           ),
-          loading ? const Center(child: CircularProgressIndicator()) :
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: SizedBox(
-              width: double.infinity,
-              height: 45,
-              child: ElevatedButton(
-                onPressed: () async {
-                  if(canAddRestaurant){
+          loading
+              ? const Center(child: CircularProgressIndicator())
+              : Padding(
+                  padding: const EdgeInsets.all(15),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 45,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (canAddRestaurant) {
+                          setState(() {
+                            loading = true;
+                          });
 
-                    setState(() {
-                      loading = true;
-                    });
+                          List<String> userIds = [];
+                          for (var phoneController in managerPhoneControllers) {
+                            String phone = phoneController.text;
+                            if (phone.isNotEmpty) {
+                              String? userId =
+                                  await getUserIdFromPhoneNumber(phone);
+                              if (userId != null) {
+                                userIds.add(userId);
+                              }
+                            }
+                          }
+                          userIds.add(LoginPage.userID);
 
-                    List<String> userIds = [];
-                    for (var phoneController in managerPhoneControllers) {
-                      String phone = phoneController.text;
-                      if (phone.isNotEmpty) {
-                        String? userId = await getUserIdFromPhoneNumber(phone);
-                        if (userId != null) {
-                          userIds.add(userId);
+                          String? imageUrl =
+                              await uploadImageToFirebaseStorage(_imageFile!);
+
+                          await FirebaseFirestore.instance
+                              .collection("Restaurants")
+                              .doc()
+                              .set({
+                            "name": restaurantNameController.text,
+                            "image_url": imageUrl,
+                            "managers": FieldValue.arrayUnion(userIds),
+                            "rating": 0.0,
+                            "address": address,
+                            "location": [latitude, longitude],
+                            "followerCount": 0,
+                            "postCount": 0,
+                            if (dropdownValue == null) "restaurantWiFi": "",
+                            "restaurantWiFi": dropdownValue,
+                          });
+                          //exit
+                          restaurantNameController.clear();
+                          setState(() {
+                            managerPhoneControllers.clear();
+                            managerPhoneControllers
+                                .add(TextEditingController());
+                          });
+
+                          Navigator.pop(context);
+                        } else {
+                          const snackBar = SnackBar(
+                            content:
+                                Text('Please fill in all required fields.'),
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
                         }
-                      }
-                    }
-                    userIds.add(LoginPage.userID);
-
-                    String? imageUrl = await uploadImageToFirebaseStorage(_imageFile!);
-
-                    await FirebaseFirestore.instance
-                        .collection("Restaurants")
-                        .doc()
-                        .set({
-                      "name": restaurantNameController.text,
-                      "image_url": imageUrl,
-                      "managers": FieldValue.arrayUnion(userIds),
-                      "rating": 0.0,
-                      "address": address,
-                      "location": [latitude, longitude],
-                      "followerCount": 0,
-                      "postCount" : 0,
-                    });
-                    //exit
-                    restaurantNameController.clear();
-                    setState(() {
-                      managerPhoneControllers.clear();
-                      managerPhoneControllers.add(TextEditingController());
-                    });
-
-                    Navigator.pop(context);
-                  }
-                  else{
-                    const snackBar = SnackBar(
-                      content: Text('Please fill in all required fields.'),
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                  }
-                },
-                child: const Text(
-                  "Add Restaurant",
-                  style: TextStyle(
-                    fontSize: 16,
+                      },
+                      child: const Text(
+                        "Add Restaurant",
+                        style: TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ),
         ],
       ),
     );

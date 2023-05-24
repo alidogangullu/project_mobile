@@ -7,6 +7,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:safe_device/safe_device.dart';
 import 'package:android_flutter_wifi/android_flutter_wifi.dart';
 
+import 'customerHome.dart';
+
 class QRScanner extends StatefulWidget {
   const QRScanner({Key? key}) : super(key: key);
 
@@ -15,30 +17,12 @@ class QRScanner extends StatefulWidget {
 }
 
 class QRScannerState extends State<QRScanner> {
-  void showWifiAlertDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('You device must be see wifi'),
-          content: const Text('Please open device wifi to access the menu.'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   final MobileScannerController qrScannerController = MobileScannerController();
   bool scanned = false;
   double desiredLatitude = 0;
   double desiredLongitude = 0;
+  String restaurantWifi = "";
+  bool nearbyWiFi = false;
 
   final Location _location = Location();
   bool _locationEnabled = false;
@@ -55,7 +39,7 @@ class QRScannerState extends State<QRScanner> {
     _locationEnabled = true;
 
     _location.onLocationChanged.listen((LocationData? locationData) {
-        _locationData = locationData;
+      _locationData = locationData;
     });
   }
 
@@ -64,7 +48,7 @@ class QRScannerState extends State<QRScanner> {
 
     // Check if wifi is available
     bool restaurantWifiAvailable =
-    wifiList.any((wifiNetwork) => wifiNetwork.ssid == 'GULLU');
+        wifiList.any((wifiNetwork) => wifiNetwork.ssid == restaurantWifi);
 
     return restaurantWifiAvailable;
   }
@@ -94,7 +78,7 @@ class QRScannerState extends State<QRScanner> {
     return distanceInMeters <= maxDistanceMeters;
   }
 
-  Future<void> _fetchLocationData(String restaurantId) async {
+  Future<void> _fetchSecurityData(String restaurantId) async {
     DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
         .collection("Restaurants")
         .doc(restaurantId) // replace with your restaurantId variable
@@ -102,6 +86,14 @@ class QRScannerState extends State<QRScanner> {
     if (documentSnapshot.exists) {
       desiredLatitude = documentSnapshot["location"][0];
       desiredLongitude = documentSnapshot["location"][1];
+      restaurantWifi = documentSnapshot["restaurantWiFi"];
+
+      if (restaurantWifi == "") {
+        nearbyWiFi = true;
+      } else {
+        nearbyWiFi = await checkWifi();
+      }
+
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -112,7 +104,7 @@ class QRScannerState extends State<QRScanner> {
   }
 
   @override
- void initState() {
+  void initState() {
     super.initState();
     checkLocationEnabled();
   }
@@ -121,6 +113,12 @@ class QRScannerState extends State<QRScanner> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CustomerHome()));
+          },
+          icon: const Icon(Icons.arrow_back),
+        ),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         title: const Text(
@@ -146,35 +144,43 @@ class QRScannerState extends State<QRScanner> {
                 }
 
                 bool isSafeDevice = await SafeDevice.isSafeDevice;
-                bool nearbyWiFi = await checkWifi();
 
-                if (isSafeDevice && nearbyWiFi) {
+                if (isSafeDevice) {
                   //okunan ilk uygun formatlı değere sahip qr koddan parametrelerin alınması
                   String? url = capture.barcodes.first.rawValue;
                   Uri uri = Uri.parse(url!);
                   String restaurantId = uri.queryParameters['id']!;
                   String tableNo = uri.queryParameters['tableNo']!;
 
-                  _fetchLocationData(restaurantId);
+                  await _fetchSecurityData(restaurantId);
 
-                  //parametreleri kullanarak yönlendirme ve security check
-                  if (isLocationEnabled() &&
-                      isDesiredLocation(getLocationData(), desiredLatitude,
-                          desiredLongitude)) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MenuScreen(
-                          id: restaurantId,
-                          tableNo: tableNo,
+                  if (nearbyWiFi) {
+                    //parametreleri kullanarak yönlendirme ve security check
+                    if (isLocationEnabled() &&
+                        isDesiredLocation(getLocationData(), desiredLatitude,
+                            desiredLongitude)) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MenuScreen(
+                            id: restaurantId,
+                            tableNo: tableNo,
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              "You have to be at the restaurant to access the menu!"),
+                        ),
+                      );
+                    }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(
-                            "You have to be at the restaurant and you have to activate WiFi to access the menu!"),
+                            "Unable to verify your location. Please activate your WiFi to access the menu!"),
                       ),
                     );
                   }
