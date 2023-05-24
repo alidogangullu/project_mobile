@@ -76,7 +76,7 @@ class ProfileState extends State<Profile> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
         centerTitle: false,
         title: const Text(
           'Profile',

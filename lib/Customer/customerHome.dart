@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:project_mobile/Customer/searchPage.dart';
 import 'package:project_mobile/Customer/qrScanner.dart';
 import 'package:project_mobile/Customer/recentOrders.dart';
 import 'package:project_mobile/Customer/profile.dart';
@@ -25,7 +26,7 @@ class _CustomerHomeState extends State<CustomerHome> {
 
   final _pageOptions = [
     //bottom bar sekmeleri
-    Profile(userId: FirebaseAuth.instance.currentUser!.uid),
+    Search(),
     Home(userId: FirebaseAuth.instance.currentUser!.uid),
     RecentOrdersScreen(customerId: FirebaseAuth.instance.currentUser!.uid)
   ];
@@ -45,8 +46,8 @@ class _CustomerHomeState extends State<CustomerHome> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+            icon: Icon(Icons.search),
+            label: 'Search',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -458,61 +459,72 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance
-          .collection('users')
-          .doc(LoginPage.userID)
-          .get(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          if (snapshot.hasError) {
-            return AppBar(
-              title: const Text('Error', style: TextStyle(color: Colors.black)),
-              backgroundColor: Colors.white,
-              elevation: 0,
-            );
-          } else {
-            final managerName = snapshot.data!.get('name');
-            return AppBar(
-              backgroundColor: Colors.white,
-              elevation: 0,
-              centerTitle: false,
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Hi, $managerName',
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 24,
-                      height: 1.5,
+    return Row(
+      children: [
+        Expanded(
+          child: FutureBuilder<DocumentSnapshot>(
+            future: FirebaseFirestore.instance
+                .collection('users')
+                .doc(LoginPage.userID)
+                .get(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (snapshot.hasError) {
+                  return AppBar(
+                    title: const Text('Error', style: TextStyle(color: Colors.black)),
+                    backgroundColor: Colors.white,
+                    elevation: 0,
+                  );
+                } else {
+                  final managerName = snapshot.data!.get('name');
+                  return AppBar(
+                    backgroundColor: Colors.white,
+                    elevation: 0,
+                    centerTitle: false,
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Hi, $managerName',
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 24,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Get your favourite food here!',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
                     ),
+                    actions: [
+                      IconButton(onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => Profile(userId: FirebaseAuth.instance.currentUser!.uid)));
+                      }, icon: const Icon(Icons.person, color: Colors.black,))
+                    ],
+                  );
+                }
+              } else {
+                return AppBar(
+                  title: const Text(
+                    'Loading...',
+                    style: TextStyle(color: Colors.black),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Get your favourite food here!',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-        } else {
-          return AppBar(
-            title: const Text(
-              'Loading...',
-              style: TextStyle(color: Colors.black),
-            ),
-            backgroundColor: Colors.white,
-            elevation: 0,
-          );
-        }
-      },
+                  backgroundColor: Colors.white,
+                  elevation: 0,
+                );
+              }
+            },
+          ),
+        ),
+      ],
     );
   }
 
