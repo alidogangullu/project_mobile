@@ -22,13 +22,14 @@ class CustomerHome extends StatefulWidget {
 }
 
 class _CustomerHomeState extends State<CustomerHome> {
-  int _selectedIndex = 1;
+  int _selectedIndex = 0;
 
   final _pageOptions = [
     //bottom bar sekmeleri
-    Search(),
     Home(userId: FirebaseAuth.instance.currentUser!.uid),
-    RecentOrdersScreen(customerId: FirebaseAuth.instance.currentUser!.uid)
+    Search(),
+    RecentOrdersScreen(customerId: FirebaseAuth.instance.currentUser!.uid),
+    Profile(userId: FirebaseAuth.instance.currentUser!.uid)
   ];
 
   void _onItemTapped(int index) {
@@ -44,18 +45,23 @@ class _CustomerHomeState extends State<CustomerHome> {
         child: _pageOptions.elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Search',
-          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Search',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.redo),
             label: 'Recent',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
         currentIndex: _selectedIndex,
@@ -74,13 +80,8 @@ class Home extends StatefulWidget {
 }
 
 class HomeState extends State<Home> {
-  final searchButtonController = TextEditingController();
-  final searchFocusNode = FocusNode();
-  bool _searchMode = false;
-  List<DocumentSnapshot> searchResults = [];
-
   final ScrollController _scrollController = ScrollController();
-  bool _showSearchAndQR = true;
+  bool _showFloatingQR = true;
 
   Future<List<Map<String, dynamic>>>? _postsFuture;
 
@@ -91,21 +92,20 @@ class HomeState extends State<Home> {
 
     _postsFuture = fetchFollowedRestaurantPosts(LoginPage.userID);
 
-    // Add a listener to the scroll controller
     _scrollController.addListener(() {
       if (_scrollController.position.userScrollDirection ==
           ScrollDirection.reverse) {
-        if (_showSearchAndQR == true) {
+        if (_showFloatingQR == true) {
           setState(() {
-            _showSearchAndQR = false;
+            _showFloatingQR = false;
           });
         }
       } else {
         if (_scrollController.position.userScrollDirection ==
             ScrollDirection.forward) {
-          if (_showSearchAndQR == false) {
+          if (_showFloatingQR == false) {
             setState(() {
-              _showSearchAndQR = true;
+              _showFloatingQR = true;
             });
           }
         }
@@ -113,45 +113,6 @@ class HomeState extends State<Home> {
     });
   }
 
-
-  @override
-  void dispose() {
-    searchButtonController.dispose();
-    searchFocusNode.dispose();
-    _scrollController.dispose(); // Dispose the controller
-    super.dispose();
-  }
-
-  void _toggleSearchMode() {
-    setState(() {
-      _searchMode = !_searchMode;
-      if (_searchMode) {
-        searchFocusNode
-            .requestFocus();
-      } else {
-        searchFocusNode.unfocus();
-        searchButtonController.clear();
-        searchResults.clear();
-      }
-    });
-  }
-
-  Future<void> _searchRestaurants(String searchText) async {
-    if (searchText.length >= 3) {
-      final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('Restaurants')
-          .where("name", isGreaterThanOrEqualTo: searchText.toUpperCase())
-          .where("name", isLessThanOrEqualTo: "${searchText.toLowerCase()}\uf8ff")
-          .get();
-      setState(() {
-        searchResults = querySnapshot.docs;
-      });
-    } else {
-      setState(() {
-        searchResults = [];
-      });
-    }
-  }
   Future<List<String>> getFollowedRestaurantIds(String userId) async {
     DocumentSnapshot snapshot = await FirebaseFirestore.instance
         .collection('users')
@@ -201,7 +162,7 @@ class HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: _showSearchAndQR // Conditionally render the floating action button
+      floatingActionButton: _showFloatingQR // Conditionally render the floating action button
           ? FloatingActionButton(
         onPressed: () {
           //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const QRScanner()));
@@ -212,36 +173,6 @@ class HomeState extends State<Home> {
       appBar: const MyAppBar(),
       body: Column(
         children: [
-          if (_showSearchAndQR &&!_searchMode)
-            textInputField(
-              context,
-              "Search restaurant",
-              searchButtonController,
-              false,
-              iconData: Icons.search,
-              onTap: _toggleSearchMode,
-            ),
-          if (_searchMode)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: textInputField(
-                    context,
-                    "Search restaurant",
-                    searchButtonController,
-                    false,
-                    iconData: Icons.arrow_back,
-                    onChanged: (String value) {
-                      _searchRestaurants(value);
-                    },
-                    iconOnTap: _toggleSearchMode,
-                    focusNode: searchFocusNode, // Pass the searchFocusNode
-                  ),
-                ),
-              ],
-            ),
-          if (!_searchMode)
             Expanded(
               child: FutureBuilder<List<Map<String, dynamic>>>(
                 future: _postsFuture,
@@ -275,6 +206,7 @@ class HomeState extends State<Home> {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start, // Align all elements to the start, i.e., left.
                           children: [
+                            const SizedBox(height: 10),
                             Row(
                               children: [
                                 const SizedBox(width: 10),
@@ -364,85 +296,6 @@ class HomeState extends State<Home> {
                 },
               ),
             ),
-          if (_searchMode)
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: GridView.count(
-                  crossAxisCount: 1,
-                  childAspectRatio: 1.075,
-                  children: searchResults.map((doc) {
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RestaurantProfile(
-                              restaurantID: doc.id,
-                              restaurantName: doc['name'],
-                              restaurantFollowersCount: doc['followerCount'],
-                              restaurantPostsCount: doc['postCount'],
-                              restaurantImageUrl: doc['image_url'],
-                              restaurantAddress: doc['address'],
-                            ),
-                          ),
-                        );
-                      },
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: Card(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              AspectRatio(
-                                aspectRatio: 2,
-                                child: Image.network(
-                                  doc["image_url"],
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(15),
-                                child: Text(
-                                  doc["name"],
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(15, 0, 15, 15),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.star,
-                                      color: Colors.amber,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      doc["rating"].toString(),
-                                      style: const TextStyle(
-                                          fontSize: 16, color: Colors.grey),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(15, 0, 15, 15),
-                                child: Text(
-                                  doc['address'],
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -480,7 +333,6 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
                   return AppBar(
                     backgroundColor: Colors.white,
                     elevation: 0,
-                    centerTitle: false,
                     title: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
@@ -504,11 +356,6 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
                         ),
                       ],
                     ),
-                    actions: [
-                      IconButton(onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => Profile(userId: FirebaseAuth.instance.currentUser!.uid)));
-                      }, icon: const Icon(Icons.person, color: Colors.black,))
-                    ],
                   );
                 }
               } else {

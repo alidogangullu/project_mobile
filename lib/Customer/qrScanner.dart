@@ -159,7 +159,8 @@ class QRScannerState extends State<QRScanner> {
                     if (isLocationEnabled() &&
                         isDesiredLocation(getLocationData(), desiredLatitude,
                             desiredLongitude)) {
-                      Navigator.pushReplacement(
+                      Navigator.pop(context);
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => MenuScreen(

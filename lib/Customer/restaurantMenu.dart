@@ -930,12 +930,6 @@ class _MenuBrowseScreenState extends State<MenuBrowseScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CustomerHome()));
-          },
-          icon: const Icon(Icons.arrow_back),
-        ),
         title: RestaurantNameText(
           id: widget.id,
         ),
