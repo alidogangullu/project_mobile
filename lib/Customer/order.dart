@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:project_mobile/Customer/customerHome.dart';
+import 'package:project_mobile/customWidgets.dart';
 import 'package:slide_action/slide_action.dart';
 
 class OrdersPage extends StatefulWidget {
@@ -593,10 +594,10 @@ class PaymentSuccessScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.check_circle,
-              size: 100,
-              color: Colors.green,
+              size: 150,
+              color: Theme.of(context).primaryColor,
             ),
             const SizedBox(height: 20),
             const Text(
@@ -604,16 +605,12 @@ class PaymentSuccessScreen extends StatelessWidget {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // Navigate back to the home screen and clear stack
-                Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CustomerHome()),
-                    (route) => false);
-              },
-              child: const Text('Back to HomeScreen'),
-            ),
+            menuButton('Back to HomeScreen', () {
+              Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CustomerHome()),
+                      (route) => false);
+            })
           ],
         ),
       ),
