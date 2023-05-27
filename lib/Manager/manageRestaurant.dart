@@ -89,7 +89,7 @@ class _EditRestaurantMenuState extends State<EditRestaurantMenu> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => AddCategoryItems(
-                        collection: widget.collection, selected: selected),
+                        collection: widget.collection, selected: selected, restaurantID: widget.restaurantID),
                   ),
                 );
               }

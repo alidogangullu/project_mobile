@@ -10,11 +10,16 @@ import 'package:image_picker/image_picker.dart';
 import '../customWidgets.dart';
 
 class AddCategoryItems extends StatefulWidget {
-  const AddCategoryItems(
-      {Key? key, required this.collection, required this.selected})
-      : super(key: key);
+  const AddCategoryItems({
+    Key? key,
+    required this.collection,
+    required this.selected,
+    required this.restaurantID,
+  }) : super(key: key);
+
   final String collection;
   final String selected;
+  final String restaurantID;
 
   @override
   State<AddCategoryItems> createState() => _AddCategoryItemsState();
@@ -27,6 +32,11 @@ class _AddCategoryItemsState extends State<AddCategoryItems> {
 
   final picker = ImagePicker();
   File? _imageFile;
+
+  late String restaurantName;
+  late String restaurantImageUrl;
+
+  bool createPost = false; // Checkbox state
 
   Future<Uint8List?> compressFile(File file) async {
     var result = await FlutterImageCompress.compressWithFile(
@@ -55,6 +65,24 @@ class _AddCategoryItemsState extends State<AddCategoryItems> {
   }
 
   bool loading = false;
+
+  Future<void> fetchRestaurantInfo() async {
+    DocumentSnapshot restaurantSnapshot = await FirebaseFirestore.instance
+        .doc('Restaurants/${widget.restaurantID}')
+        .get();
+    if (restaurantSnapshot.exists) {
+      setState(() {
+        restaurantName = restaurantSnapshot['name'];
+        restaurantImageUrl = restaurantSnapshot['imageUrl'];
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    fetchRestaurantInfo();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -167,6 +195,15 @@ class _AddCategoryItemsState extends State<AddCategoryItems> {
                 ),
               ),
             ),
+            CheckboxListTile(
+              title: const Text('Share as post'),
+              value: createPost,
+              onChanged: (bool? value) {
+                setState(() {
+                  createPost = value ?? false;
+                });
+              },
+            ),
             loading
                 ? const Center(child: CircularProgressIndicator())
                 : menuButton("Add New Item", () async {
@@ -179,8 +216,7 @@ class _AddCategoryItemsState extends State<AddCategoryItems> {
                 await uploadImageToFirebaseStorage(_imageFile!);
 
                 final firestoreRef = FirebaseFirestore.instance
-                    .collection(
-                    "${widget.collection}/${widget.selected}/list");
+                    .collection("${widget.collection}/${widget.selected}/list");
 
                 await firestoreRef.doc(nameController.text).set({
                   "name": nameController.text,
@@ -188,14 +224,29 @@ class _AddCategoryItemsState extends State<AddCategoryItems> {
                   "content": contentController.text,
                   "image_url": imageUrl,
                   "rating": 0,
-                  "ratingCount" : 0,
-                  "estimatedTime" : 0,
-                  "orderCount" : 0,
+                  "ratingCount": 0,
+                  "estimatedTime": 0,
+                  "orderCount": 0,
                 });
+
+                if (createPost) {
+                  await FirebaseFirestore.instance
+                      .collection('Restaurants/${widget.restaurantID}/Posts')
+                      .add({
+                    'caption':
+                    ' WOW! ${nameController.text} is new at $restaurantName!',
+                    'imageUrl': imageUrl,
+                    'timestamp': DateTime.now(),
+                  });
+                }
 
                 nameController.clear();
                 priceController.clear();
                 contentController.clear();
+                setState(() {
+                  _imageFile = null;
+                  loading = false;
+                });
 
                 Navigator.pop(context);
               } else {
