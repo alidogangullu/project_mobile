@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'dart:typed_data';
 import 'package:project_mobile/customWidgets.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class CreateNewPost extends StatefulWidget {
   const CreateNewPost({Key? key, required this.restaurantID}) : super(key: key);
@@ -16,6 +17,14 @@ class CreateNewPost extends StatefulWidget {
 }
 
 class CreateNewPostState extends State<CreateNewPost> {
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _firebaseMessaging.requestPermission();
+  }
+
   final captionController = TextEditingController();
   final picker = ImagePicker();
   File? _imageFile;
@@ -38,12 +47,54 @@ class CreateNewPostState extends State<CreateNewPost> {
     Uint8List? imageBytes = await compressFile(imageFile);
 
     FirebaseStorage storage = FirebaseStorage.instance;
-    Reference ref =
-        storage.ref().child("Image-${DateTime.now().millisecondsSinceEpoch}");
+    Reference ref = storage.ref().child("Image-${DateTime.now().millisecondsSinceEpoch}");
 
     TaskSnapshot snapshot = await ref.putData(imageBytes!);
     return snapshot.ref.getDownloadURL();
   }
+
+
+Future<void> sendNotificationToFollowers(String restaurantID) async {
+  // Get the list of user tokens from Firestore
+  QuerySnapshot followersSnapshot = await FirebaseFirestore.instance
+      .collection('Users')
+      .where('followedRestaurants', arrayContains: restaurantID)
+      .get();
+
+  List<String> userTokens = followersSnapshot.docs
+      .map((doc) => doc['fcmToken'] as String)
+      .toList();
+
+  // Prepare the notification payload
+  final message = {
+    'notification': {
+      'title': 'New Post',
+      'body': 'A new post has been created for the restaurant!',
+    },
+    'data': {
+      // Additional data you want to send with the notification
+    },
+  };
+
+  List<Future> sendFutures = [];
+  for (String token in userTokens) {
+    RemoteMessage notification = RemoteMessage(
+  data: message['data'] as Map<String, dynamic>,
+  notification: RemoteNotification(
+    title: message['notification']?['title'],
+    body: message['notification']?['body'],
+  ),
+);
+
+    sendFutures.add(FirebaseMessaging.instance.sendMessage(
+));
+
+  }
+
+  // Send the notifications using FCM
+  await Future.wait(sendFutures);
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -90,8 +141,7 @@ class CreateNewPostState extends State<CreateNewPost> {
                 TextButton(
                   child: const Text("Take Picture"),
                   onPressed: () async {
-                    final pickedFile =
-                        await picker.pickImage(source: ImageSource.camera);
+                    final pickedFile = await picker.pickImage(source: ImageSource.camera);
 
                     if (pickedFile != null) {
                       setState(() {
@@ -103,8 +153,7 @@ class CreateNewPostState extends State<CreateNewPost> {
                 TextButton(
                   child: const Text("Select from Gallery"),
                   onPressed: () async {
-                    final pickedFile =
-                        await picker.pickImage(source: ImageSource.gallery);
+                    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
                     if (pickedFile != null) {
                       setState(() {
@@ -131,8 +180,7 @@ class CreateNewPostState extends State<CreateNewPost> {
                   loading = true;
                 });
 
-                String? imageUrl =
-                await uploadImageToFirebaseStorage(_imageFile!);
+                String? imageUrl = await uploadImageToFirebaseStorage(_imageFile!);
 
                 await FirebaseFirestore.instance
                     .collection('Restaurants/${widget.restaurantID}/Posts')
@@ -148,6 +196,9 @@ class CreateNewPostState extends State<CreateNewPost> {
                   'postCount': FieldValue.increment(1),
                 });
 
+                // Send notifications to the followers
+                await sendNotificationToFollowers(widget.restaurantID);
+
                 captionController.clear();
                 setState(() {
                   _imageFile = null;
@@ -158,14 +209,13 @@ class CreateNewPostState extends State<CreateNewPost> {
                 setState(() {
                   loading = false;
                 });
-
               } else {
                 const snackBar = SnackBar(
                   content: Text('Please fill in all required fields.'),
                 );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
               }
-            })
+            }),
         ],
       ),
     );
