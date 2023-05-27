@@ -18,7 +18,7 @@ class _ManagerHomeState extends State<ManagerHome> {
     //bottom bar sekmeleri
     const ManagerPanel(),
     Home(userId: FirebaseAuth.instance.currentUser!.uid,),
-    const Stats(),
+    Stats(),
   ];
 
   void _onItemTapped(int index) {
