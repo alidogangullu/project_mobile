@@ -35,7 +35,7 @@ class _MyAppState extends State<MyApp> {
     setState(() {});
   }
 
-  Widget navigateUserType() {
+  Widget navigateUserType() { 
     if (isManager == true) {
       return ManagerHome();
     } else if (isManager == false) {

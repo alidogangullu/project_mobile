@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:safe_device/safe_device.dart';
 import 'package:android_flutter_wifi/android_flutter_wifi.dart';
 
+import '../customWidgets.dart';
 import 'customerHome.dart';
 
 class QRScanner extends StatefulWidget {
@@ -93,13 +94,9 @@ class QRScannerState extends State<QRScanner> {
       } else {
         nearbyWiFi = await checkWifi();
       }
-
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Error: Could not retrieve location data!"),
-        ),
-      );
+          customSnackBar("Error: Could not retrieve location data!"));
     }
   }
 
@@ -115,7 +112,8 @@ class QRScannerState extends State<QRScanner> {
       appBar: AppBar(
         leading: IconButton(
           onPressed: () {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CustomerHome()));
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (context) => const CustomerHome()));
           },
           icon: const Icon(Icons.arrow_back),
         ),
@@ -170,28 +168,16 @@ class QRScannerState extends State<QRScanner> {
                         ),
                       );
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                              "You have to be at the restaurant to access the menu!"),
-                        ),
-                      );
+                      ScaffoldMessenger.of(context).showSnackBar(customSnackBar(
+                          "You have to be at the restaurant to access the menu!"));
                     }
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                            "Unable to verify your location. Please activate your WiFi to access the menu!"),
-                      ),
-                    );
+                    ScaffoldMessenger.of(context).showSnackBar(customSnackBar(
+                        "Unable to verify your location. Please activate your WiFi to access the menu!"));
                   }
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                          "You have to use real location and real device without unauthorized software modifications!"),
-                    ),
-                  );
+                  ScaffoldMessenger.of(context).showSnackBar(customSnackBar(
+                      "You have to use real location and real device without unauthorized software modifications!"));
                 }
               }
             },

@@ -131,7 +131,7 @@ class QRHomePage extends StatelessWidget {
                               children: [
                                 Expanded(
                                   flex: 1,
-                                  child: QrImageView(
+                                  child: QrImage(
                                       version: QrVersions.auto,
                                       data: qrCodeData),
                                 ),

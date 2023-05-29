@@ -250,10 +250,9 @@ class _AddCategoryItemsState extends State<AddCategoryItems> {
 
                 Navigator.pop(context);
               } else {
-                const snackBar = SnackBar(
-                  content: Text('Please fill in all required fields.'),
+                ScaffoldMessenger.of(context).showSnackBar(
+                    customSnackBar('Please fill in all required fields.')
                 );
-                ScaffoldMessenger.of(context).showSnackBar(snackBar);
               }
             }),
           ],

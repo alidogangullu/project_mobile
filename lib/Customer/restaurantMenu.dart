@@ -153,10 +153,9 @@ class _MenuScreenState extends State<MenuScreen> {
       'notifications':
           FieldValue.arrayUnion(["A waiter request has been sent."]),
     });
-    const snackBar = SnackBar(
-      content: Text('A waiter request has been sent.'),
-    );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+    ScaffoldMessenger.of(context).showSnackBar(customSnackBar('A waiter request has been sent.'));
+
   }
 
   @override
@@ -549,18 +548,12 @@ class ItemsGridState extends State<ItemsGrid> {
                                                   "orderedTime": 0,
                                                 });
                                               }
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(SnackBar(
-                                                content: Text(
-                                                    "${document['name']} added to order list, now you can confirm your order!"),
-                                              ));
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                  customSnackBar("${document['name']} added to order list, now you can confirm your order!")
+                                              );
                                             } else {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                const SnackBar(
-                                                  content: Text(
-                                                      "You are not authorized to add items to the order list."),
-                                                ),
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                  customSnackBar("You are not authorized to add items to the order list.")
                                               );
                                             }
                                             Navigator.of(context).pop();

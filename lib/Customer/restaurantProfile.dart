@@ -5,6 +5,8 @@ import 'package:project_mobile/Customer/restaurantMenu.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../customWidgets.dart';
+
 
 class RestaurantProfile extends StatefulWidget {
   const RestaurantProfile({
@@ -68,10 +70,9 @@ class RestaurantProfileState extends State<RestaurantProfile> {
     } catch (error) {
       print('Error following restaurant: $error');
     }
-    const snackBar = SnackBar(
-      content: Text('The Restaurant followed successfully'),
+    ScaffoldMessenger.of(context).showSnackBar(
+        customSnackBar('The Restaurant followed successfully')
     );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   Future<void> unfollowRestaurant() async {
@@ -94,10 +95,9 @@ class RestaurantProfileState extends State<RestaurantProfile> {
     } catch (error) {
       print('Error unfollowing restaurant: $error');
     }
-    const snackBar = SnackBar(
-      content: Text('You have unfollowed the restaurant.'),
+    ScaffoldMessenger.of(context).showSnackBar(
+        customSnackBar('You have unfollowed the restaurant.')
     );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   void launchMap(String address) async {

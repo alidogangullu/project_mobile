@@ -57,7 +57,7 @@ class CreateNewPostState extends State<CreateNewPost> {
 Future<void> sendNotificationToFollowers(String restaurantID) async {
   // Get the list of user tokens from Firestore
   QuerySnapshot followersSnapshot = await FirebaseFirestore.instance
-      .collection('Users')
+      .collection('users')
       .where('followedRestaurants', arrayContains: restaurantID)
       .get();
 
@@ -210,10 +210,9 @@ Future<void> sendNotificationToFollowers(String restaurantID) async {
                   loading = false;
                 });
               } else {
-                const snackBar = SnackBar(
-                  content: Text('Please fill in all required fields.'),
+                ScaffoldMessenger.of(context).showSnackBar(
+                    customSnackBar("'Please fill in all required fields.'")
                 );
-                ScaffoldMessenger.of(context).showSnackBar(snackBar);
               }
             }),
         ],

@@ -79,11 +79,9 @@ class _EditRestaurantMenuState extends State<EditRestaurantMenu> {
             label: 'Add Category Item',
             onPressed: () {
               if (selected.isEmpty) {
-                const snackBar = SnackBar(
-                  content: Text(
-                      'Please choose a category before adding a new item.'),
+                ScaffoldMessenger.of(context).showSnackBar(
+                    customSnackBar('Please choose a category before adding a new item.'),
                 );
-                ScaffoldMessenger.of(context).showSnackBar(snackBar);
               } else {
                 Navigator.push(
                   context,

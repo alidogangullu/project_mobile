@@ -69,3 +69,20 @@ Widget menuButton(String text, void Function() onPressed, {Icon? icon}) {
     ),
   );
 }
+
+SnackBar customSnackBar(String message) {
+  return SnackBar(
+    content: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Text(
+        message,
+        style: const TextStyle(fontSize: 16.0),
+      ),
+    ),
+    behavior: SnackBarBehavior.floating,
+    backgroundColor: const Color(0xFF49516F),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(6),
+    ),
+  );
+}

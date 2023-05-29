@@ -31,9 +31,8 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
         users.contains("${LoginPage.userID}-admin")) {
       return true;
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("You are not authorized to this action."),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(customSnackBar("You are not authorized to this action."));
+
       Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const CustomerHome()),
@@ -143,10 +142,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
           });
           setState(() {});
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-                "Last item! Use delete button to delete this item from order list."),
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(customSnackBar("Last item! Use delete button to delete this item from order list."));
         }
       }
     }

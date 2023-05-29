@@ -86,11 +86,11 @@ class DesktopAppConnectState extends State<DesktopAppConnect> {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: _waiterEmail);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password reset link sent successfully')),
+        customSnackBar('Password reset link sent successfully'),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
+        customSnackBar('Error: ${e.toString()}'),
       );
     } finally {
       setState(() {
