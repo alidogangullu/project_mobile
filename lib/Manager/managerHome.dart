@@ -17,8 +17,8 @@ class _ManagerHomeState extends State<ManagerHome> {
   final _pageOptions = [
     //bottom bar sekmeleri
     const ManagerPanel(),
-    Home(userId: FirebaseAuth.instance.currentUser!.uid,),
-    Stats(),
+    Home(userId: FirebaseAuth.instance.currentUser!.uid),
+    ChooseRestaurant(userId: FirebaseAuth.instance.currentUser!.uid)
   ];
 
   void _onItemTapped(int index) {
