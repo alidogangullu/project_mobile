@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -105,11 +106,15 @@ class ProfileState extends State<Profile> {
                           fit: BoxFit.cover,
                         )
                       : _profilePhotoUrl != null
-                          ? Image.network(
-                              _profilePhotoUrl!,
+                          ? CachedNetworkImage(
+                              imageUrl: _profilePhotoUrl!,
                               width: 75,
                               height: 75,
                               fit: BoxFit.cover,
+                              placeholder: (context, url) =>
+                                  const Center(child: CircularProgressIndicator()),
+                              errorWidget: (context, url, error) =>
+                                  const Icon(Icons.error),
                             )
                           : const SizedBox(),
                 ),
@@ -622,8 +627,13 @@ class CommentsPageState extends State<CommentsPage> {
                                                             AsyncSnapshot<
                                                                     DocumentSnapshot>
                                                                 snapshot) {
-                                                          if (snapshot.connectionState == ConnectionState.waiting) {
-                                                            return const Center(child: CircularProgressIndicator());
+                                                          if (snapshot
+                                                                  .connectionState ==
+                                                              ConnectionState
+                                                                  .waiting) {
+                                                            return const Center(
+                                                                child:
+                                                                    CircularProgressIndicator());
                                                           }
                                                           if (snapshot
                                                                   .hasError ||
@@ -658,15 +668,16 @@ class CommentsPageState extends State<CommentsPage> {
                                                                         BorderRadius
                                                                             .circular(6),
                                                                     child:
-                                                                        SizedBox(
+                                                                    CachedNetworkImage(
+                                                                      imageUrl: imageUrl,
                                                                       width: 75,
-                                                                      child: Image
-                                                                          .network(
-                                                                        imageUrl,
-                                                                        fit: BoxFit
-                                                                            .cover,
-                                                                      ),
-                                                                    ),
+                                                                      height: 75,
+                                                                      fit: BoxFit.cover,
+                                                                      placeholder: (context, url) =>
+                                                                      const Center(child: CircularProgressIndicator()),
+                                                                      errorWidget: (context, url, error) =>
+                                                                      const Icon(Icons.error),
+                                                                    )
                                                                   ),
                                                                   Column(
                                                                     crossAxisAlignment:

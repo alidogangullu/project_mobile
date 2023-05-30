@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
@@ -82,9 +83,11 @@ class FollowedRestaurantsPage extends StatelessWidget {
                             children: [
                               AspectRatio(
                                 aspectRatio: 2,
-                                child: Image.network(
-                                  doc["image_url"],
+                                child: CachedNetworkImage(
+                                  imageUrl: doc["image_url"],
                                   fit: BoxFit.cover,
+                                  placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                                  errorWidget: (context, url, error) => const Icon(Icons.error),
                                 ),
                               ),
                               Padding(

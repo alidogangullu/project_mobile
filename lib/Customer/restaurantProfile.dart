@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -33,11 +34,35 @@ class RestaurantProfile extends StatefulWidget {
 class RestaurantProfileState extends State<RestaurantProfile> {
   bool isFollowing = false;
 
+  var latitude;
+  var longitude;
 
   @override
   void initState() {
     super.initState();
     checkFollowingStatus();
+  }
+
+  Future<void> getLatLong() async {
+    DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
+        .collection("Restaurants")
+        .doc(widget.restaurantID)
+        .get();
+    if (documentSnapshot.exists) {
+    Map<String, dynamic> data = documentSnapshot.data() as Map<String, dynamic>;
+
+    if (data['position'] != null) {
+      Map<String, dynamic> positionMap = data['position'];
+
+      if (positionMap['geopoint'] != null) {
+        // Get the GeoPoint
+        GeoPoint geoPoint = positionMap['geopoint'];
+        // Print it out or do anything you want with it
+        latitude = geoPoint.latitude;
+        longitude = geoPoint.longitude;
+      }
+    }
+  }
   }
 
   void checkFollowingStatus() async {
@@ -100,14 +125,15 @@ class RestaurantProfileState extends State<RestaurantProfile> {
     );
   }
 
-  void launchMap(String address) async {
-    Uri url = Uri.parse('https://www.google.com/maps/search/?api=1&query=$address');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
+  void launchMap(double latitude, double longitude) async {
+    String googleUrl = 'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
+    if (await canLaunch(googleUrl)) {
+      await launch(googleUrl);
     } else {
-      throw 'Could not launch $url';
+      throw 'Could not launch $googleUrl';
     }
   }
+
   void _showMapAlert(BuildContext context, String address) {
     showDialog(
       context: context,
@@ -124,7 +150,8 @@ class RestaurantProfileState extends State<RestaurantProfile> {
             ),
             TextButton(
               onPressed: () {
-                launchMap(address);
+                getLatLong();
+                launchMap(latitude, longitude);
                 Navigator.of(context).pop();
               },
               child: const Text('Open in Map'),
@@ -156,7 +183,7 @@ class RestaurantProfileState extends State<RestaurantProfile> {
               children: <Widget>[
                 CircleAvatar(
                   radius: 50,
-                  backgroundImage: NetworkImage(widget.restaurantImageUrl),
+                  backgroundImage: CachedNetworkImageProvider(widget.restaurantImageUrl),
                 ),
                 const SizedBox(width: 15),
                 Expanded(
@@ -254,14 +281,15 @@ class RestaurantProfileState extends State<RestaurantProfile> {
                           ),
                         );
                       },
-                      child:Container(
+                      child: Container(
                         decoration: BoxDecoration(
                           image: DecorationImage(
                             fit: BoxFit.cover,
-                            image: NetworkImage(snapshot.data!.docs[index]['imageUrl']),
+                            image: CachedNetworkImageProvider(snapshot.data!.docs[index]['imageUrl']),
                           ),
                         ),
                       ),
+
                     );
                   },
                 );
@@ -392,7 +420,7 @@ class RestaurantPostsWidget extends StatelessWidget {
             leading: InkWell(
               onTap: () => Navigator.pop(context),
               child: CircleAvatar(
-                backgroundImage: NetworkImage(restaurantImageUrl),
+                backgroundImage: CachedNetworkImageProvider(restaurantImageUrl),
                 radius: 25,
               ),
             ),
@@ -404,7 +432,13 @@ class RestaurantPostsWidget extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(child: Image.network(post['imageUrl'])),
+          Expanded(
+            child: CachedNetworkImage(
+              imageUrl: post['imageUrl'],
+              placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
             child: Container(

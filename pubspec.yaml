@@ -66,6 +66,7 @@ dependencies:
   geoflutterfire2: ^2.3.15
   firebase_messaging: ^14.6.1
   open_street_map_search_and_pick: ^0.0.17
+  cached_network_image: ^3.2.3
  
 
 dev_dependencies:

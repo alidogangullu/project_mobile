@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -174,14 +175,16 @@ class _RecentOrdersScreenState extends State<RecentOrdersScreen> {
                     child: ListTile(
                       leading: ClipRRect(
                         borderRadius: BorderRadius.circular(6),
-                        child: SizedBox(
+                        child: CachedNetworkImage(
+                          imageUrl: restaurantImageUrl,
                           width: 85,
                           height: 85,
-                          child: Image.network(
-                            restaurantImageUrl,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) =>
+                          const Center(child: CircularProgressIndicator()),
+                          errorWidget: (context, url, error) =>
+                          const Icon(Icons.error),
+                        )
                       ),
                       title: Text(restaurantName),
                       subtitle: Column(
@@ -420,13 +423,16 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                           padding: const EdgeInsets.only(left: 8),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(6),
-                            child: SizedBox(
+                            child: CachedNetworkImage(
+                              imageUrl: imageUrl,
                               width: 75,
-                              child: Image.network(
-                                imageUrl,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
+                              height: 75,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) =>
+                              const Center(child: CircularProgressIndicator()),
+                              errorWidget: (context, url, error) =>
+                              const Icon(Icons.error),
+                            )
                           ),
                         ),
                         Expanded(

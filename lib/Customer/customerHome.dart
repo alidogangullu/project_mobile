@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -226,7 +227,7 @@ class HomeState extends State<Home> {
                                   },
                                   child: CircleAvatar(
                                     radius:20,
-                                    backgroundImage: NetworkImage(restaurantImageUrl),
+                                    backgroundImage: CachedNetworkImageProvider(restaurantImageUrl),
                                   ),
                                 ),
 
@@ -251,18 +252,25 @@ class HomeState extends State<Home> {
                               ],
                             ),
                             const SizedBox(height: 10),
-                            Image.network(
-                              imageUrl,
+                            CachedNetworkImage(
+                              imageUrl: imageUrl,
                               width: MediaQuery.of(context).size.width,
                               fit: BoxFit.cover,
+                              placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                              errorWidget: (context, url, error) => Column(
+                                children: <Widget>[
+                                  const Icon(Icons.error),
+                                  Text('Error loading image: $error'),
+                                ],
+                              ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 10.0,horizontal: 15),
+                              padding: const EdgeInsets.symmetric(vertical: 10.0,horizontal: 10),
                               child: Text(
                                 caption,
                                 textAlign: TextAlign.left,
                                 style: const TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 18,
                                 ),
                               ),
                             ),
