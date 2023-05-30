@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:project_mobile/Manager/newPost.dart';
@@ -97,7 +98,7 @@ class RestaurantProfile extends StatelessWidget {
               children: <Widget>[
                 CircleAvatar(
                   radius: 50,
-                  backgroundImage: NetworkImage(restaurantImageUrl),
+                  backgroundImage: CachedNetworkImageProvider(restaurantImageUrl),
                 ),
                 const SizedBox(width: 15),
                 Expanded(
@@ -194,7 +195,7 @@ class RestaurantProfile extends StatelessWidget {
                         decoration: BoxDecoration(
                           image: DecorationImage(
                             fit: BoxFit.cover,
-                            image: NetworkImage(snapshot.data!.docs[index]['imageUrl']),
+                            image: CachedNetworkImageProvider(snapshot.data!.docs[index]['imageUrl']),
                           ),
                         ),
                       ),
@@ -293,7 +294,11 @@ class PostsScreen extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Image.network(post['imageUrl']),
+                  CachedNetworkImage(
+                    imageUrl: post['imageUrl'],
+                    placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                    errorWidget: (context, url, error) => const Icon(Icons.error),
+                  ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
                     child: Container(

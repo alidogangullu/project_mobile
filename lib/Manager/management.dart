@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:android_flutter_wifi/android_flutter_wifi.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -119,9 +120,11 @@ class _ManagerPanelState extends State<ManagerPanel> {
                                   children: [
                                     AspectRatio(
                                       aspectRatio: 2,
-                                      child: Image.network(
-                                        doc["image_url"],
+                                      child: CachedNetworkImage(
+                                        imageUrl: doc["image_url"],
                                         fit: BoxFit.cover,
+                                        placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                                        errorWidget: (context, url, error) => const Icon(Icons.error),
                                       ),
                                     ),
                                     Padding(

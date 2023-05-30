@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_speed_dial/simple_speed_dial.dart';
@@ -234,9 +235,11 @@ Widget createItemsGrid(
                       ),
                       child: AspectRatio(
                         aspectRatio: 1.5,
-                        child: Image.network(
-                          document["image_url"],
+                        child: CachedNetworkImage(
+                          imageUrl: document["image_url"],
                           fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                          errorWidget: (context, url, error) => const Icon(Icons.error),
                         ),
                       ),
                     ),
@@ -348,9 +351,11 @@ Widget createItemsGrid(
                 children: [
                   AspectRatio(
                     aspectRatio: 1.3,
-                    child: Image.network(
-                      document["image_url"],
+                    child: CachedNetworkImage(
+                      imageUrl: document["image_url"],
                       fit: BoxFit.cover,
+                      placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, url, error) => const Icon(Icons.error),
                     ),
                   ),
                   Padding(
