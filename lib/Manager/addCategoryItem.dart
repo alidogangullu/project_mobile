@@ -240,6 +240,11 @@ class _AddCategoryItemsState extends State<AddCategoryItems> {
                     'imageUrl': imageUrl,
                     'timestamp': DateTime.now(),
                   });
+                  await FirebaseFirestore.instance
+                      .doc('Restaurants/${widget.restaurantID}')
+                      .update({
+                    'postCount': FieldValue.increment(1),
+                  });
                 }
 
                 nameController.clear();

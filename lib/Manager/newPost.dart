@@ -54,46 +54,6 @@ class CreateNewPostState extends State<CreateNewPost> {
   }
 
 
-Future<void> sendNotificationToFollowers(String restaurantID) async {
-  // Get the list of user tokens from Firestore
-  QuerySnapshot followersSnapshot = await FirebaseFirestore.instance
-      .collection('users')
-      .where('followedRestaurants', arrayContains: restaurantID)
-      .get();
-
-  List<String> userTokens = followersSnapshot.docs
-      .map((doc) => doc['fcmToken'] as String)
-      .toList();
-
-  // Prepare the notification payload
-  final message = {
-    'notification': {
-      'title': 'New Post',
-      'body': 'A new post has been created for the restaurant!',
-    },
-    'data': {
-      // Additional data you want to send with the notification
-    },
-  };
-
-  List<Future> sendFutures = [];
-  for (String token in userTokens) {
-    RemoteMessage notification = RemoteMessage(
-  data: message['data'] as Map<String, dynamic>,
-  notification: RemoteNotification(
-    title: message['notification']?['title'],
-    body: message['notification']?['body'],
-  ),
-);
-
-    sendFutures.add(FirebaseMessaging.instance.sendMessage(
-));
-
-  }
-
-  // Send the notifications using FCM
-  await Future.wait(sendFutures);
-}
 
 
   @override
@@ -197,7 +157,6 @@ Future<void> sendNotificationToFollowers(String restaurantID) async {
                 });
 
                 // Send notifications to the followers
-                await sendNotificationToFollowers(widget.restaurantID);
 
                 captionController.clear();
                 setState(() {
