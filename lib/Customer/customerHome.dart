@@ -8,9 +8,8 @@ import 'package:project_mobile/Customer/recentOrders.dart';
 import 'package:project_mobile/Customer/profile.dart';
 import 'package:project_mobile/Customer/restaurantMenu.dart';
 import 'package:project_mobile/Customer/restaurantProfile.dart';
-import 'package:project_mobile/customWidgets.dart';
 import '../Authentication/loginPage.dart';
-import 'FollowedRestaurantsPage.dart';
+import 'followedRestaurantsPage.dart';
 import 'package:intl/intl.dart';
 
 
@@ -166,7 +165,7 @@ class HomeState extends State<Home> {
           ? FloatingActionButton(
         onPressed: () {
           //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const QRScanner()));
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MenuScreen(id: "GixzDeIROMDRAn2mAnMG", tableNo: "1")));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MenuScreen(id: "tCGe0KgMzjUZzqoCM2rw", tableNo: "1")));
         },
         child: const Icon(Icons.qr_code_scanner),
       ) : null,

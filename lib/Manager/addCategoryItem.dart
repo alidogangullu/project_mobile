@@ -51,7 +51,9 @@ class _AddCategoryItemsState extends State<AddCategoryItems> {
 
     FirebaseStorage storage = FirebaseStorage.instance;
     Reference ref =
-    storage.ref().child("Image-${DateTime.now().millisecondsSinceEpoch}");
+    storage.ref().child("RestaurantMenus/${widget.restaurantID}"
+        "/${widget.selected.replaceAll(" ", "")}"
+        "/${nameController.text.replaceAll(" ", "")}");
 
     TaskSnapshot snapshot = await ref.putData(imageBytes!);
     return snapshot.ref.getDownloadURL();

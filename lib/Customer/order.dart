@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:project_mobile/Customer/customerHome.dart';
@@ -284,7 +283,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                       color: Theme.of(context).primaryColor,
                       borderRadius: BorderRadius.circular(100),
                     ),
-                    child: currentState.isPerformingAction ? const CupertinoActivityIndicator(color: Colors.white,) : const Icon(Icons.chevron_right, color: Colors.white)
+                    child: currentState.isPerformingAction ? const Center(child: CircularProgressIndicator(color: Colors.white,)) : const Icon(Icons.chevron_right, color: Colors.white)
                   
                   );
                 },

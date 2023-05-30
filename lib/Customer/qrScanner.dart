@@ -3,7 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:location/location.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:project_mobile/Customer/restaurantMenu.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' as fs;
 import 'package:safe_device/safe_device.dart';
 import 'package:android_flutter_wifi/android_flutter_wifi.dart';
 
@@ -20,8 +20,8 @@ class QRScanner extends StatefulWidget {
 class QRScannerState extends State<QRScanner> {
   final MobileScannerController qrScannerController = MobileScannerController();
   bool scanned = false;
-  double desiredLatitude = 0;
-  double desiredLongitude = 0;
+  double? desiredLatitude;
+  double? desiredLongitude;
   String restaurantWifi = "";
   bool nearbyWiFi = false;
 
@@ -80,13 +80,27 @@ class QRScannerState extends State<QRScanner> {
   }
 
   Future<void> _fetchSecurityData(String restaurantId) async {
-    DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
+    fs.DocumentSnapshot documentSnapshot = await fs.FirebaseFirestore.instance
         .collection("Restaurants")
         .doc(restaurantId) // replace with your restaurantId variable
         .get();
     if (documentSnapshot.exists) {
-      desiredLatitude = documentSnapshot["location"][0];
-      desiredLongitude = documentSnapshot["location"][1];
+      //location data
+      Map<String, dynamic> data = documentSnapshot.data() as Map<String, dynamic>;
+
+      if (data['position'] != null) {
+        Map<String, dynamic> positionMap = data['position'];
+
+        if (positionMap['geopoint'] != null) {
+          // Get the GeoPoint
+          fs.GeoPoint geoPoint = positionMap['geopoint'];
+          // Print it out or do anything you want with it
+          desiredLatitude = geoPoint.latitude;
+          desiredLongitude = geoPoint.longitude;
+        }
+      }
+
+      //wifi area data
       restaurantWifi = documentSnapshot["restaurantWiFi"];
 
       if (restaurantWifi == "") {
@@ -155,8 +169,8 @@ class QRScannerState extends State<QRScanner> {
                   if (nearbyWiFi) {
                     //parametreleri kullanarak yönlendirme ve security check
                     if (isLocationEnabled() &&
-                        isDesiredLocation(getLocationData(), desiredLatitude,
-                            desiredLongitude)) {
+                        isDesiredLocation(getLocationData(), desiredLatitude!,
+                            desiredLongitude!)) {
                       Navigator.pop(context);
                       Navigator.push(
                         context,

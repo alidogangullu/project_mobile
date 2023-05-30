@@ -47,7 +47,7 @@ class CreateNewPostState extends State<CreateNewPost> {
     Uint8List? imageBytes = await compressFile(imageFile);
 
     FirebaseStorage storage = FirebaseStorage.instance;
-    Reference ref = storage.ref().child("Image-${DateTime.now().millisecondsSinceEpoch}");
+    Reference ref = storage.ref().child("RestaurantPosts/${widget.restaurantID}/${DateTime.now().millisecondsSinceEpoch}");
 
     TaskSnapshot snapshot = await ref.putData(imageBytes!);
     return snapshot.ref.getDownloadURL();

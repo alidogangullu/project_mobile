@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../Authentication/loginPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'FollowedRestaurantsPage.dart';
+import 'followedRestaurantsPage.dart';
 
 class Profile extends StatefulWidget {
   const Profile({Key? key, required this.userId}) : super(key: key);
@@ -59,7 +59,7 @@ class ProfileState extends State<Profile> {
   Future<String> _uploadImage(File image) async {
     final storageReference = FirebaseStorage.instance
         .ref()
-        .child('profileImageUrl/${widget.userId}');
+        .child('CustomerProfileImages/${widget.userId}');
     final uploadTask = storageReference.putFile(image);
     final downloadURL = await (await uploadTask).ref.getDownloadURL();
     return downloadURL;

@@ -95,11 +95,11 @@ class QRHomePage extends StatelessWidget {
         children: [
           Expanded(
             flex: 7,
-            child: FutureBuilder(
-              future: FirebaseFirestore.instance
+            child: StreamBuilder(
+              stream: FirebaseFirestore.instance
                   .collection("Restaurants/$selectedRestaurantID/Tables")
                   .orderBy("number", descending: false)
-                  .get(),
+                  .snapshots(),
               builder: (BuildContext context,
                   AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {

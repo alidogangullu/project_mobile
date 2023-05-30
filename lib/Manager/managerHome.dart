@@ -79,6 +79,9 @@ class Home extends StatelessWidget {
                 child: CircularProgressIndicator(),
               );
             }
+            if(snapshot.data!.size==0){
+              return const Center(child: Text("Your customers' experiences and feedbacks will be displayed here.", textAlign: TextAlign.center,),);
+            }
             return ListView.builder(
               itemCount: snapshot.data!.docs.length,
               itemBuilder: (BuildContext context, int index) {
