@@ -13,7 +13,6 @@ import '../Authentication/loginPage.dart';
 import 'followedRestaurantsPage.dart';
 import 'package:intl/intl.dart';
 
-
 class CustomerHome extends StatefulWidget {
   const CustomerHome({Key? key}) : super(key: key);
 
@@ -27,7 +26,7 @@ class _CustomerHomeState extends State<CustomerHome> {
   final _pageOptions = [
     //bottom bar sekmeleri
     Home(userId: FirebaseAuth.instance.currentUser!.uid),
-    Search(),
+    const Search(),
     RecentOrdersScreen(customerId: FirebaseAuth.instance.currentUser!.uid),
     Profile(userId: FirebaseAuth.instance.currentUser!.uid)
   ];
@@ -85,7 +84,6 @@ class HomeState extends State<Home> {
 
   Future<List<Map<String, dynamic>>>? _postsFuture;
 
-
   @override
   void initState() {
     super.initState();
@@ -114,15 +112,15 @@ class HomeState extends State<Home> {
   }
 
   Future<List<String>> getFollowedRestaurantIds(String userId) async {
-    DocumentSnapshot snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .get();
+    DocumentSnapshot snapshot =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
 
     List<dynamic> followedRestaurants = snapshot['followedRestaurants'];
     return followedRestaurants.cast<String>();
   }
-  Future<List<Map<String, dynamic>>> fetchFollowedRestaurantPosts(String userId) async {
+
+  Future<List<Map<String, dynamic>>> fetchFollowedRestaurantPosts(
+      String userId) async {
     List<String> followedRestaurantIds = await getFollowedRestaurantIds(userId);
 
     List<Map<String, dynamic>> posts = [];
@@ -140,11 +138,13 @@ class HomeState extends State<Home> {
           .orderBy('timestamp', descending: true)
           .get();
 
-      List<Map<String, dynamic>> restaurantPosts = postsSnapshot.docs.map((doc) {
+      List<Map<String, dynamic>> restaurantPosts =
+          postsSnapshot.docs.map((doc) {
         Map<String, dynamic> postData = (doc.data() as Map<String, dynamic>);
         postData['restaurantImageUrl'] = restaurantSnapshot['image_url'];
         postData['restaurantName'] = restaurantSnapshot['name'];
-        postData['restaurantFollowersCount'] = restaurantSnapshot['followerCount'];
+        postData['restaurantFollowersCount'] =
+            restaurantSnapshot['followerCount'];
         postData['restaurantPostsCount'] = restaurantSnapshot['postCount'];
         postData['restaurantAddress'] = restaurantSnapshot['address'];
         postData['restaurantID'] = restaurantSnapshot.id;
@@ -154,7 +154,8 @@ class HomeState extends State<Home> {
       posts.addAll(restaurantPosts);
     }
 
-    posts.sort((a, b) => b['timestamp'].compareTo(a['timestamp'])); // Sort posts by timestamp
+    posts.sort((a, b) =>
+        b['timestamp'].compareTo(a['timestamp'])); // Sort posts by timestamp
 
     return posts;
   }
@@ -162,147 +163,163 @@ class HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: _showFloatingQR // Conditionally render the floating action button
-          ? FloatingActionButton(
-        onPressed: () {
-          //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const QRScanner()));
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MenuScreen(id: "tCGe0KgMzjUZzqoCM2rw", tableNo: "1")));
-        },
-        child: const Icon(Icons.qr_code_scanner),
-      ) : null,
+      floatingActionButton:
+          _showFloatingQR // Conditionally render the floating action button
+              ? FloatingActionButton(
+                  onPressed: () {
+                    //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const QRScanner()));
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const MenuScreen(
+                                id: "tCGe0KgMzjUZzqoCM2rw", tableNo: "1")));
+                  },
+                  child: const Icon(Icons.qr_code_scanner),
+                )
+              : null,
       appBar: const MyAppBar(),
       body: Column(
         children: [
-            Expanded(
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: _postsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  } else if (!snapshot.hasData ) {
-                    return const Text('No posts found');
-                  } else {
-                    List<Map<String, dynamic>>? posts = snapshot.data;
+          Expanded(
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: _postsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                } else if (!snapshot.hasData) {
+                  return const Text('No posts found');
+                } else {
+                  List<Map<String, dynamic>>? posts = snapshot.data;
 
-                    return ListView.builder(
-                      controller: _scrollController,
-                      itemCount: posts?.length,
-                      itemBuilder: (context, index) {
-                        Map<String, dynamic> post = posts![index];
-                        String imageUrl = post['imageUrl'];
-                        String caption = post['caption'];
-                        String restaurantImageUrl = post['restaurantImageUrl'];
-                        String restaurantName = post['restaurantName'];
-                        int restaurantFollowersCount = post['restaurantFollowersCount'];
-                        int restaurantPostsCount = post['restaurantPostsCount'];
-                        String restaurantAddress = post['restaurantAddress'];
-                        String restaurantID = post['restaurantID'];
-                        Timestamp timestamp = post['timestamp'];
-                        String formattedDate = DateFormat('yyyy-MM-dd').format(timestamp.toDate());
-                        String formattedTime = DateFormat('HH:mm:ss').format(timestamp.toDate());
+                  return ListView.builder(
+                    controller: _scrollController,
+                    itemCount: posts?.length,
+                    itemBuilder: (context, index) {
+                      Map<String, dynamic> post = posts![index];
+                      String imageUrl = post['imageUrl'];
+                      String caption = post['caption'];
+                      String restaurantImageUrl = post['restaurantImageUrl'];
+                      String restaurantName = post['restaurantName'];
+                      int restaurantFollowersCount =
+                          post['restaurantFollowersCount'];
+                      int restaurantPostsCount = post['restaurantPostsCount'];
+                      String restaurantAddress = post['restaurantAddress'];
+                      String restaurantID = post['restaurantID'];
+                      Timestamp timestamp = post['timestamp'];
+                      String formattedDate =
+                          DateFormat('yyyy-MM-dd').format(timestamp.toDate());
+                      String formattedTime =
+                          DateFormat('HH:mm:ss').format(timestamp.toDate());
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start, // Align all elements to the start, i.e., left.
-                          children: [
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                const SizedBox(width: 10),
-                                InkWell(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => RestaurantProfile(
-                                            restaurantID: restaurantID,
-                                            restaurantName: restaurantName,
-                                            restaurantImageUrl: restaurantImageUrl,
-                                            restaurantFollowersCount: restaurantFollowersCount,
-                                            restaurantPostsCount: restaurantPostsCount,
-                                            restaurantAddress: restaurantAddress),
-                                      ),
-                                    );
-                                  },
-                                  child: CircleAvatar(
-                                    radius:20,
-                                    backgroundImage: CachedNetworkImageProvider(restaurantImageUrl),
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment
+                            .start, // Align all elements to the start, i.e., left.
+                        children: [
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              const SizedBox(width: 10),
+                              InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => RestaurantProfile(
+                                          restaurantID: restaurantID,
+                                          restaurantName: restaurantName,
+                                          restaurantImageUrl:
+                                              restaurantImageUrl,
+                                          restaurantFollowersCount:
+                                              restaurantFollowersCount,
+                                          restaurantPostsCount:
+                                              restaurantPostsCount,
+                                          restaurantAddress: restaurantAddress),
+                                    ),
+                                  );
+                                },
+                                child: CircleAvatar(
+                                  radius: 20,
+                                  backgroundImage: CachedNetworkImageProvider(
+                                      restaurantImageUrl),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const FollowedRestaurantsPage(),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  restaurantName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
                                   ),
                                 ),
-
-                                const SizedBox(width: 10),
-                                InkWell(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const FollowedRestaurantsPage(),
-                                      ),
-                                    );
-                                  },
-                                  child: Text(
-                                    restaurantName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                    ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          CachedNetworkImage(
+                            imageUrl: imageUrl,
+                            width: MediaQuery.of(context).size.width,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => const Center(
+                                child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) => Column(
+                              children: <Widget>[
+                                const Icon(Icons.error),
+                                Text('Error loading image: $error'),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 10.0, horizontal: 10),
+                            child: Text(
+                              caption,
+                              textAlign: TextAlign.left,
+                              style: const TextStyle(
+                                fontSize: 18,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  formattedDate,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                Text(
+                                  formattedTime,
+                                  style: const TextStyle(
+                                    fontSize: 13,
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 10),
-                            CachedNetworkImage(
-                              imageUrl: imageUrl,
-                              width: MediaQuery.of(context).size.width,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                              errorWidget: (context, url, error) => Column(
-                                children: <Widget>[
-                                  const Icon(Icons.error),
-                                  Text('Error loading image: $error'),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 10.0,horizontal: 10),
-                              child: Text(
-                                caption,
-                                textAlign: TextAlign.left,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 15),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    formattedDate,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  Text(
-                                    formattedTime,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Divider(),
-                          ],
-                        );
-                      },
-                    );
-                  }
-                },
-              ),
+                          ),
+                          const Divider(),
+                        ],
+                      );
+                    },
+                  );
+                }
+              },
             ),
+          ),
         ],
       ),
     );
@@ -331,7 +348,8 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
               if (snapshot.connectionState == ConnectionState.done) {
                 if (snapshot.hasError) {
                   return AppBar(
-                    title: const Text('Error', style: TextStyle(color: Colors.black)),
+                    title: const Text('Error',
+                        style: TextStyle(color: Colors.black)),
                     backgroundColor: Colors.white,
                     elevation: 0,
                   );

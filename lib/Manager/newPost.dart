@@ -53,9 +53,6 @@ class CreateNewPostState extends State<CreateNewPost> {
     return snapshot.ref.getDownloadURL();
   }
 
-
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -155,8 +152,6 @@ class CreateNewPostState extends State<CreateNewPost> {
                     .update({
                   'postCount': FieldValue.increment(1),
                 });
-
-                // Send notifications to the followers
 
                 captionController.clear();
                 setState(() {
