@@ -621,6 +621,7 @@ class _AddRestaurantState extends State<AddRestaurant> {
                             "image_url": imageUrl,
                             "managers": FieldValue.arrayUnion(userIds),
                             "rating": 0.0,
+                            "ratingCount" : 0,
                             "address": address,
                             "followerCount": 0,
                             "postCount": 0,

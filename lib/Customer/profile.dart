@@ -7,7 +7,6 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:image_picker/image_picker.dart';
 import '../Authentication/loginPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'followedRestaurantsPage.dart';
 
 class Profile extends StatefulWidget {
@@ -165,7 +164,7 @@ class ProfileState extends State<Profile> {
               padding: EdgeInsets.fromLTRB(0, 30, 0, 20),
               child: Text(
                 "Account",
-                style: TextStyle(fontSize: 20),
+                style: TextStyle(fontSize: 21),
               ),
             ),
             Column(
@@ -202,14 +201,6 @@ class ProfileState extends State<Profile> {
                   child: const ProfilePageButton(
                       text: 'Followed Restaurants',
                       icon: Icon(Icons.restaurant)),
-                ),
-                const SizedBox(height: 20),
-                InkWell(
-                  onTap: () {},
-                  child: const ProfilePageButton(
-                    text: 'Notifications',
-                    icon: Icon(Icons.notifications),
-                  ),
                 ),
                 const SizedBox(height: 20),
                 InkWell(
@@ -393,13 +384,11 @@ class CommentsPageState extends State<CommentsPage> {
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12.0),
                                 color: Colors.white,
-                                boxShadow: [
+                                boxShadow: const [
                                   BoxShadow(
-                                    color: Colors.grey.withOpacity(0.3),
-                                    spreadRadius: 2,
-                                    blurRadius: 5,
-                                    offset: const Offset(0, 3),
-                                  ),
+                                      color: Color.fromRGBO(0, 0, 0, 0.12),
+                                      offset: Offset(0, 1),
+                                      blurRadius: 10)
                                 ],
                               ),
                               child: Column(
@@ -428,7 +417,7 @@ class CommentsPageState extends State<CommentsPage> {
                                             context: context,
                                             barrierDismissible: false,
                                             builder: (BuildContext context) {
-                                              //this codes (inside of the alert dialog) pasted here from recentOrders.dart and modified
+                                              //these codes (inside of the alert dialog) pasted here from recentOrders.dart and modified
                                               Future<void>
                                                   updateItemRatingAndCount(
                                                       DocumentReference itemRef,
@@ -513,6 +502,58 @@ class CommentsPageState extends State<CommentsPage> {
                                                 }
                                               }
 
+                                              Future<void> _updateRestaurantRatingAndCount(
+                                                  DocumentReference itemRef, double newRating) async {
+
+                                                String restaurantId = itemRef.toString().split("/")[1];
+                                                final restaurantSnapshot = await FirebaseFirestore.instance.collection("Restaurants").doc(restaurantId).get();
+                                                double currentAvgRating =
+                                                    double.parse(restaurantSnapshot['rating'].toString()) ?? 0.0;
+                                                int currentRatingCount = restaurantSnapshot['ratingCount'] ?? 0;
+
+                                                // Check if the user has previously rated
+                                                final previousFeedbackSnapshot = await FirebaseFirestore.instance
+                                                    .collection('comments')
+                                                    .where('userId', isEqualTo: LoginPage.userID)
+                                                    .where('itemRef', isEqualTo:  itemRef)
+                                                    .limit(1)
+                                                    .get();
+                                                bool hasPreviouslyRated = previousFeedbackSnapshot.size > 0;
+
+                                                if (hasPreviouslyRated) {
+                                                  // User has previously rated, update the average rating
+                                                  final previousFeedback = previousFeedbackSnapshot.docs[0];
+                                                  double userOldRating = previousFeedback.get('rating').toDouble();
+                                                  double updatedAvgRating =
+                                                      ((currentAvgRating * currentRatingCount) - userOldRating + newRating) /
+                                                          currentRatingCount;
+
+                                                  await FirebaseFirestore.instance.collection("Restaurants").doc(restaurantId).update({
+                                                    'rating': updatedAvgRating,
+                                                  });
+                                                } else {
+                                                  // User's first rating, set the average rating and increment rating count
+
+                                                  //restaurant's first rating
+                                                  if (currentRatingCount == 0) {
+                                                    currentRatingCount++;
+                                                    double updatedAvgRating = newRating / currentRatingCount;
+                                                    await FirebaseFirestore.instance.collection("Restaurants").doc(restaurantId).update({
+                                                      'rating': updatedAvgRating,
+                                                      'ratingCount': 1,
+                                                    });
+                                                  } else {
+                                                    double updatedAvgRating =
+                                                        (currentAvgRating * currentRatingCount + newRating) /
+                                                            (currentRatingCount + 1);
+                                                    await FirebaseFirestore.instance.collection("Restaurants").doc(restaurantId).update({
+                                                      'rating': updatedAvgRating,
+                                                      'ratingCount': currentRatingCount + 1,
+                                                    });
+                                                  }
+                                                }
+                                              }
+
                                               var commentController =
                                                   TextEditingController();
                                               var showCommentSection = false;
@@ -532,8 +573,9 @@ class CommentsPageState extends State<CommentsPage> {
                                                   TextButton(
                                                     child: const Text(
                                                       'Cancel',
-                                                      style: TextStyle(
-                                                          color: Colors.black),
+                                                        style: TextStyle(
+                                                          color: Color(0xFFC57B57),
+                                                        ),
                                                     ),
                                                     onPressed: () {
                                                       Navigator.of(context)
@@ -548,6 +590,8 @@ class CommentsPageState extends State<CommentsPage> {
                                                         await updateItemRatingAndCount(
                                                             itemRef,
                                                             itemRating);
+
+                                                        await _updateRestaurantRatingAndCount(itemRef,itemRating);
 
                                                         final commentText =
                                                             commentController
@@ -628,20 +672,14 @@ class CommentsPageState extends State<CommentsPage> {
                                                                     DocumentSnapshot>
                                                                 snapshot) {
                                                           if (snapshot
-                                                                  .connectionState ==
-                                                              ConnectionState
-                                                                  .waiting) {
-                                                            return const Center(
-                                                                child:
-                                                                    CircularProgressIndicator());
-                                                          }
-                                                          if (snapshot
                                                                   .hasError ||
-                                                              !snapshot.data!
-                                                                  .exists ||
                                                               !snapshot
                                                                   .hasData) {
                                                             return const SizedBox();
+                                                          }
+                                                          if(!snapshot.data!
+                                                              .exists){
+                                                            return const Text("deleted content");
                                                           }
                                                           final itemData =
                                                               snapshot.data!;

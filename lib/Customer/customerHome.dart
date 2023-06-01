@@ -10,7 +10,6 @@ import 'package:project_mobile/Customer/profile.dart';
 import 'package:project_mobile/Customer/restaurantMenu.dart';
 import 'package:project_mobile/Customer/restaurantProfile.dart';
 import '../Authentication/loginPage.dart';
-import 'followedRestaurantsPage.dart';
 import 'package:intl/intl.dart';
 
 class CustomerHome extends StatefulWidget {
@@ -246,22 +245,10 @@ class HomeState extends State<Home> {
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const FollowedRestaurantsPage(),
-                                    ),
-                                  );
-                                },
-                                child: Text(
-                                  restaurantName,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                  ),
+                              Text(
+                                restaurantName,
+                                style: const TextStyle(
+                                  fontSize: 18,
                                 ),
                               ),
                             ],

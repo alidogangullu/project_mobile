@@ -162,7 +162,10 @@ class _RecentOrdersScreenState extends State<RecentOrdersScreen> {
                 builder: (BuildContext context,
                     AsyncSnapshot<DocumentSnapshot> snapshot) {
                   if (!snapshot.hasData || snapshot.hasError) {
-                    return const SizedBox();
+                    return const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Center(child: Text("...")),
+                    );
                   }
                   final restaurantName = snapshot.data!.get('name') as String;
                   final restaurantImageUrl =
@@ -356,6 +359,58 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     }
   }
 
+  Future<void> _updateRestaurantRatingAndCount(
+      DocumentReference itemRef, double newRating) async {
+
+    String restaurantId = itemRef.toString().split("/")[1];
+    final restaurantSnapshot = await FirebaseFirestore.instance.collection("Restaurants").doc(restaurantId).get();
+    double currentAvgRating =
+        double.parse(restaurantSnapshot['rating'].toString()) ?? 0.0;
+    int currentRatingCount = restaurantSnapshot['ratingCount'] ?? 0;
+
+    // Check if the user has previously rated
+    final previousFeedbackSnapshot = await FirebaseFirestore.instance
+        .collection('comments')
+        .where('userId', isEqualTo: LoginPage.userID)
+        .where('itemRef', isEqualTo:  itemRef)
+        .limit(1)
+        .get();
+    bool hasPreviouslyRated = previousFeedbackSnapshot.size > 0;
+
+    if (hasPreviouslyRated) {
+      // User has previously rated, update the average rating
+      final previousFeedback = previousFeedbackSnapshot.docs[0];
+      double userOldRating = previousFeedback.get('rating').toDouble();
+      double updatedAvgRating =
+          ((currentAvgRating * currentRatingCount) - userOldRating + newRating) /
+              currentRatingCount;
+
+      await FirebaseFirestore.instance.collection("Restaurants").doc(restaurantId).update({
+        'rating': updatedAvgRating,
+      });
+    } else {
+      // User's first rating, set the average rating and increment rating count
+
+      //restaurant's first rating
+      if (currentRatingCount == 0) {
+        currentRatingCount++;
+        double updatedAvgRating = newRating / currentRatingCount;
+        await FirebaseFirestore.instance.collection("Restaurants").doc(restaurantId).update({
+          'rating': updatedAvgRating,
+          'ratingCount': 1,
+        });
+      } else {
+        double updatedAvgRating =
+            (currentAvgRating * currentRatingCount + newRating) /
+                (currentRatingCount + 1);
+        await FirebaseFirestore.instance.collection("Restaurants").doc(restaurantId).update({
+          'rating': updatedAvgRating,
+          'ratingCount': currentRatingCount + 1,
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -516,6 +571,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                               // Update the item rating and count
                                               await _updateItemRatingAndCount(
                                                   itemRef, itemRating);
+
+                                              await _updateRestaurantRatingAndCount(itemRef,itemRating);
 
                                               final commentText =
                                                   commentController.text.trim();

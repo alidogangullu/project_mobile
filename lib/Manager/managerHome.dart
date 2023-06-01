@@ -134,13 +134,11 @@ class Home extends StatelessWidget {
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12.0),
                                 color: Colors.white,
-                                boxShadow: [
+                                boxShadow: const [
                                   BoxShadow(
-                                    color: Colors.grey.withOpacity(0.3),
-                                    spreadRadius: 2,
-                                    blurRadius: 5,
-                                    offset: const Offset(0, 3),
-                                  ),
+                                      color: Color.fromRGBO(0, 0, 0, 0.12),
+                                      offset: Offset(0, 1),
+                                      blurRadius: 10)
                                 ],
                               ),
                               child: Column(
