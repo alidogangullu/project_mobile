@@ -6,7 +6,12 @@ import 'package:project_mobile/customWidgets.dart';
 import 'package:slide_action/slide_action.dart';
 
 class OrdersPage extends StatefulWidget {
-  const OrdersPage({Key? key, required this.ordersRef, required this.tableRef, required this.restaurantPath, required this.table})
+  const OrdersPage(
+      {Key? key,
+      required this.ordersRef,
+      required this.tableRef,
+      required this.restaurantPath,
+      required this.table})
       : super(key: key);
 
   final DocumentReference tableRef;
@@ -30,7 +35,8 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
         users.contains("${LoginPage.userID}-admin")) {
       return true;
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(customSnackBar("You are not authorized to this action."));
+      ScaffoldMessenger.of(context).showSnackBar(
+          customSnackBar("You are not authorized to this action."));
 
       Navigator.pushAndRemoveUntil(
           context,
@@ -71,7 +77,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
         if (submittedQuantity != null) {
           newQuantity = toSubmitQuantity + submittedQuantity;
 
-          if(order['orderedTime'] == 0) {
+          if (order['orderedTime'] == 0) {
             await widget.ordersRef.doc(order.id).update({
               "orderedTime": DateTime.now(),
             });
@@ -86,10 +92,9 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
         await widget.tableRef.update({
           'newNotification': true,
           'notifications': FieldValue.arrayUnion([
-            "New order: ${toSubmitQuantity}x ${order['itemRef']
-              .toString().split("/").last.split(")").first}"]),
+            "New order: ${toSubmitQuantity}x ${order['itemRef'].toString().split("/").last.split(")").first}"
+          ]),
         });
-
       }
 
       setState(() {
@@ -104,7 +109,10 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
       appBar: AppBar(
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        title: const Text("Orders", style: TextStyle(color: Colors.black),),
+        title: const Text(
+          "Orders",
+          style: TextStyle(color: Colors.black),
+        ),
         bottom: TabBar(
           controller: _tabController,
           labelColor: Theme.of(context).primaryColor,
@@ -141,7 +149,8 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
           });
           setState(() {});
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(customSnackBar("Last item! Use delete button to delete this item from order list."));
+          ScaffoldMessenger.of(context).showSnackBar(customSnackBar(
+              "Last item! Use delete button to delete this item from order list."));
         }
       }
     }
@@ -149,7 +158,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
     void deleteAllItems(var order, var orderID) async {
       if (await checkAuthorizedUser()) {
         await widget.ordersRef.doc(orderID).update({
-        'quantity_notSubmitted_notServiced': 0,
+          'quantity_notSubmitted_notServiced': 0,
         });
         setState(() {});
       }
@@ -256,9 +265,8 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
           padding: const EdgeInsets.all(20),
           child: SlideAction(
             stretchThumb: true,
-            trackBuilder:
-                (context, currentState) {
-                  return Container(
+            trackBuilder: (context, currentState) {
+              return Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(100),
                   color: Colors.white,
@@ -273,20 +281,22 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                   child: Text('Slide to confirm order'),
                 ),
               );
-                                },
-            thumbBuilder:
-                (context, currentState) {
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 400),
-                    margin: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: currentState.isPerformingAction ? const Center(child: CircularProgressIndicator(color: Colors.white,)) : const Icon(Icons.chevron_right, color: Colors.white)
-
-                  );
-                },
+            },
+            thumbBuilder: (context, currentState) {
+              return AnimatedContainer(
+                  duration: const Duration(milliseconds: 400),
+                  margin: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: currentState.isPerformingAction
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                          color: Colors.white,
+                        ))
+                      : const Icon(Icons.chevron_right, color: Colors.white));
+            },
             action: confirmOrders,
           ),
           //Text('Slidingg')
@@ -362,8 +372,14 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                             "$price\$ x$quantity",
                           ),
                           leading: order['quantity_Submitted_notServiced'] > 0
-                              ? const Icon(Icons.timer_outlined,color: Colors.orangeAccent,)
-                              : const Icon(Icons.check,color: Colors.green,),
+                              ? const Icon(
+                                  Icons.timer_outlined,
+                                  color: Colors.orangeAccent,
+                                )
+                              : const Icon(
+                                  Icons.check,
+                                  color: Colors.green,
+                                ),
                         ),
                       );
                     },
@@ -397,112 +413,123 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                               initialChildSize: 0.6,
                               minChildSize: 0.4,
                               maxChildSize: 1,
-                              builder: (BuildContext context, myscrollController) {
-                          return SingleChildScrollView(
-                            controller: myscrollController,
-                            child: StatefulBuilder(
-                            builder: (BuildContext context, StateSetter setState) {
-                              return Padding(
-                                padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Text(
-                                      'Summary',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      height: 200,
-                                      child: ListView.builder(
-                                        itemCount: submittedOrdersLength,
-                                        itemBuilder: (context, index) {
-                                          final order = submittedOrders[index];
-                                          return FutureBuilder<DocumentSnapshot>(
-                                            future: (order['itemRef']
-                                                    as DocumentReference)
-                                                .get(),
-                                            builder: (context, snapshot) {
-                                              if (!snapshot.hasData) {
-                                                return const Center(child: CircularProgressIndicator(),);
-                                              }
-                                              final name = snapshot.data!
-                                                  .get('name') as String;
-                                              final price =
-                                                  snapshot.data!.get('price');
-                                              final quantity = order[
-                                                      'quantity_Submitted_notServiced'] +
-                                                  order[
-                                                      'quantity_Submitted_Serviced'];
-                                              return ListTile(
-                                                title: Text(name),
-                                                subtitle: Text('x $quantity'),
-                                                trailing: Text(
-                                                    '${(price).toStringAsFixed(2)}\$'),
-                                              );
-                                            },
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    const Divider(),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          'Total',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
+                              builder:
+                                  (BuildContext context, myscrollController) {
+                                return SingleChildScrollView(
+                                  controller: myscrollController,
+                                  child: StatefulBuilder(builder:
+                                      (BuildContext context,
+                                          StateSetter setState) {
+                                    return Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          24, 24, 24, 8),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Text(
+                                            'Summary',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
-                                        ),
-                                        Text(
-                                          '${totalAmount.toStringAsFixed(2)}\$',
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
+                                          const SizedBox(height: 16),
+                                          SizedBox(
+                                            width: double.infinity,
+                                            height: 200,
+                                            child: ListView.builder(
+                                              itemCount: submittedOrdersLength,
+                                              itemBuilder: (context, index) {
+                                                final order =
+                                                    submittedOrders[index];
+                                                return FutureBuilder<
+                                                    DocumentSnapshot>(
+                                                  future: (order['itemRef']
+                                                          as DocumentReference)
+                                                      .get(),
+                                                  builder: (context, snapshot) {
+                                                    if (!snapshot.hasData) {
+                                                      return const Center(
+                                                        child:
+                                                            CircularProgressIndicator(),
+                                                      );
+                                                    }
+                                                    final name = snapshot.data!
+                                                        .get('name') as String;
+                                                    final price = snapshot.data!
+                                                        .get('price');
+                                                    final quantity = order[
+                                                            'quantity_Submitted_notServiced'] +
+                                                        order[
+                                                            'quantity_Submitted_Serviced'];
+                                                    return ListTile(
+                                                      title: Text(name),
+                                                      subtitle:
+                                                          Text('x $quantity'),
+                                                      trailing: Text(
+                                                          '${(price).toStringAsFixed(2)}\$'),
+                                                    );
+                                                  },
+                                                );
+                                              },
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        paymentOption('card', totalAmount,(){
-                                          setState(() {
-                                            option = "card";
-                                          });
-                                        }),
-                                        const SizedBox(width: 8),
-                                        paymentOption('paypal', totalAmount,(){
-                                          setState(() {
-                                            option = "paypal";
-                                          });
-                                        }),
-                                      ],
-                                    ),
-                                    if(option == "")
-                                      Text("Select any payment method!"),
-                                    if(option == "card")
-                                      Text("card"),
-                                    if(option == "paypal")
-                                      Text("paypal"),
-                                  ],
-                                ),
-                              );
-                            }
-                            ),
-                          );
-                        });
-                          },
+                                          const Divider(),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              const Text(
+                                                'Total',
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              Text(
+                                                '${totalAmount.toStringAsFixed(2)}\$',
+                                                style: const TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              paymentOption('card', totalAmount,
+                                                  () {
+                                                setState(() {
+                                                  option = "card";
+                                                });
+                                              }),
+                                              const SizedBox(width: 8),
+                                              paymentOption(
+                                                  'paypal', totalAmount, () {
+                                                setState(() {
+                                                  option = "paypal";
+                                                });
+                                              }),
+                                            ],
+                                          ),
+                                          if (option == "")
+                                            Text("Select any payment method!"),
+                                          if (option == "card") Text("card"),
+                                          if (option == "paypal")
+                                            Text("paypal"),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                );
+                              });
+                        },
                       );
                     }
                   },
@@ -524,6 +551,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
       // TODO: Implement payment functionality, now its just for testing.
 
       final usersRef = FirebaseFirestore.instance.collection('users');
+      final restaurantRef = widget.tableRef.parent.parent;
 
       // Get the list of user IDs from the table.
       final tableSnapshot = await widget.tableRef.get();
@@ -532,13 +560,11 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
       for (final userID in userIds) {
         // Get a reference to the orders collection for this table.
         final tableOrdersRef = widget.tableRef.collection('Orders');
-        final restaurantRef = widget.tableRef.parent.parent;
 
         // Loop through the orders for this table and transfer them to the user's orders collection.
         final tableOrdersSnapshot = await tableOrdersRef.get();
 
-        String completedOrderId =
-            LoginPage.userID + DateTime.now().toString();
+        String completedOrderId = LoginPage.userID + DateTime.now().toString();
 
         //split "-" because of -admin
         String userId = userID.split("-").first;
@@ -559,9 +585,9 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
           for (final orderSnapshot in tableOrdersSnapshot.docs) {
             final orderData = orderSnapshot.data();
             final submittedServiced =
-            orderData['quantity_Submitted_Serviced'] as int;
+                orderData['quantity_Submitted_Serviced'] as int;
             final submittedNotServiced =
-            orderData['quantity_Submitted_notServiced'] as int;
+                orderData['quantity_Submitted_notServiced'] as int;
             if (submittedServiced > 0 || submittedNotServiced > 0) {
               await usersRef
                   .doc(userId)
@@ -583,40 +609,41 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                 .delete(); // Delete from table orders
           }
         }
+      }
 
-        //reset table users after transferring order data
-        await widget.tableRef.update({
-          'users': [],
-          'newNotification': false,
-          'notifications' : [],
-        });
+      //reset table users after transferring order data
+      await widget.tableRef.update({
+        'users': [],
+        'newNotification': false,
+        'notifications': [],
+      });
 
-        // Get the current date for stats
-        final currentDate = DateTime.now();
-        final currentDay = currentDate.day.toString().padLeft(2, '0');
-        final currentMonth = currentDate.month.toString().padLeft(2, '0');
-        final currentYear = currentDate.year.toString();
+      // Get the current date for stats
+      final currentDate = DateTime.now();
+      final currentDay = currentDate.day.toString().padLeft(2, '0');
+      final currentMonth = currentDate.month.toString().padLeft(2, '0');
+      final currentYear = currentDate.year.toString();
 
-        // Add the total price of the order to the total sales for the current day.
-        await restaurantRef!.set({
-          'totalSales': {
-            currentYear: {
-              currentMonth: {
-                currentDay: FieldValue.increment(totalPrice),
-              },
+      // Add the total price of the order to the total sales for the current day.
+      await restaurantRef!.set({
+        'totalSales': {
+          currentYear: {
+            currentMonth: {
+              currentDay: FieldValue.increment(totalPrice),
             },
           },
-        }, SetOptions(merge: true));
-      }
+        },
+      }, SetOptions(merge: true));
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-            builder: (context) => const PaymentSuccessScreen()),
+        MaterialPageRoute(builder: (context) => const PaymentSuccessScreen()),
       );
     }
   }
-  Expanded paymentOption(String option, double totalPrice, void Function() pay) {
+
+  Expanded paymentOption(
+      String option, double totalPrice, void Function() pay) {
     return Expanded(
       child: ElevatedButton(
         onPressed: () {
@@ -654,7 +681,7 @@ class PaymentSuccessScreen extends StatelessWidget {
               Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (_) => const CustomerHome()),
-                      (route) => false);
+                  (route) => false);
             })
           ],
         ),

@@ -32,9 +32,9 @@ class _RecentOrdersScreenState extends State<RecentOrdersScreen> {
   SortBy _sortBy = SortBy.timeDescending;
 
   Future<List<OrderWithPrice>> _sortOrders(
-      List<QueryDocumentSnapshot> orders,
-      SortBy sortBy,
-      ) async {
+    List<QueryDocumentSnapshot> orders,
+    SortBy sortBy,
+  ) async {
     List<OrderWithPrice> sortedOrdersWithPrice = [];
 
     for (var order in orders) {
@@ -145,7 +145,7 @@ class _RecentOrdersScreenState extends State<RecentOrdersScreen> {
             .asyncMap((snapshot) => _sortOrders(snapshot.docs, _sortBy)),
         builder: (BuildContext context,
             AsyncSnapshot<List<OrderWithPrice>> snapshot) {
-          if (!snapshot.hasData || snapshot.hasError) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
           return ListView.builder(
@@ -174,18 +174,17 @@ class _RecentOrdersScreenState extends State<RecentOrdersScreen> {
                   return Card(
                     child: ListTile(
                       leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: CachedNetworkImage(
-                          imageUrl: restaurantImageUrl,
-                          width: 85,
-                          height: 85,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) =>
-                          const Center(child: CircularProgressIndicator()),
-                          errorWidget: (context, url, error) =>
-                          const Icon(Icons.error),
-                        )
-                      ),
+                          borderRadius: BorderRadius.circular(6),
+                          child: CachedNetworkImage(
+                            imageUrl: restaurantImageUrl,
+                            width: 85,
+                            height: 85,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => const Center(
+                                child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) =>
+                                const Icon(Icons.error),
+                          )),
                       title: Text(restaurantName),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,10 +207,12 @@ class _RecentOrdersScreenState extends State<RecentOrdersScreen> {
                                   builder: (BuildContext context,
                                       AsyncSnapshot<DocumentSnapshot>
                                           snapshot) {
-                                    if (snapshot.connectionState == ConnectionState.waiting) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
                                       return const SizedBox();
                                     }
-                                    if (snapshot.hasError || !snapshot.data!.exists) {
+                                    if (snapshot.hasError ||
+                                        !snapshot.data!.exists) {
                                       return const Text('- Deleted Item');
                                     }
                                     final itemName =
@@ -277,11 +278,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
   final Map<DocumentReference, bool> _showCommentSection = {};
   final Map<DocumentReference, bool> _feedbackChanged = {};
 
-  Future<void> _loadPreviousComment(
-      DocumentReference itemRef,
-      TextEditingController commentController,
-      double itemRating,
-      bool isChanged) async {
+  Future<void> _loadPreviousComment(DocumentReference itemRef,
+      TextEditingController commentController, double itemRating) async {
     final previousFeedbackSnapshot = await FirebaseFirestore.instance
         .collection('comments')
         .where('userId', isEqualTo: LoginPage.userID)
@@ -289,18 +287,22 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
         .limit(1)
         .get();
     if (previousFeedbackSnapshot.size > 0) {
-      // If the user has a previous comment, set the initial value of the comment text field to the previous comment text
       final previousFeedback = previousFeedbackSnapshot.docs[0];
       final previousCommentText = previousFeedback.get('text');
       final previousRating = previousFeedback.get('rating');
 
-      if (commentController.text.isEmpty && !isChanged) {
+      if(_feedbackChanged[itemRef] == true){
+
+      }
+      else {
         setState(() {
-          commentController.text = previousCommentText;
+          if (commentController.text.isEmpty) {
+            commentController.text = previousCommentText;
+          }
+
+          _itemRating[itemRef] = previousRating;
         });
       }
-
-      _itemRating[itemRef] = previousRating;
     }
   }
 
@@ -324,9 +326,9 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       // User has previously rated, update the average rating
       final previousFeedback = previousFeedbackSnapshot.docs[0];
       double userOldRating = previousFeedback.get('rating').toDouble();
-      double updatedAvgRating =
-          (currentAvgRating * currentRatingCount) - userOldRating + newRating /
-              currentRatingCount;
+      double updatedAvgRating = (currentAvgRating * currentRatingCount) -
+          userOldRating +
+          newRating / currentRatingCount;
 
       await itemRef.update({
         'rating': updatedAvgRating,
@@ -337,8 +339,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       //items first rating
       if (currentRatingCount == 0) {
         currentRatingCount++;
-        double updatedAvgRating =
-            newRating / currentRatingCount;
+        double updatedAvgRating = newRating / currentRatingCount;
         await itemRef.update({
           'rating': updatedAvgRating,
           'ratingCount': 1,
@@ -375,12 +376,14 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
         future: widget.orderRef.get(),
         builder:
             (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-          if (!snapshot.hasData || snapshot.hasError) {
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError || !snapshot.data!.exists) {
+            return const SizedBox();
           }
           final orderData = snapshot.data!;
           final items = orderData.get('items') as List<dynamic>;
-
           return ListView.builder(
             itemCount: items.length,
             itemBuilder: (BuildContext context, int index) {
@@ -393,24 +396,20 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
               final showCommentSection = _showCommentSection[itemRef] ?? false;
               _showCommentSection[itemRef] = showCommentSection;
 
-              final bool isChanged = _feedbackChanged[itemRef] ?? false;
-
               final double itemRating = _itemRating[itemRef] ?? 0;
 
-              _loadPreviousComment(
-                  itemRef, commentController, itemRating, isChanged);
+              _loadPreviousComment(itemRef, commentController, itemRating);
 
               return FutureBuilder<DocumentSnapshot>(
                 future: itemRef.get(),
                 builder: (BuildContext context,
                     AsyncSnapshot<DocumentSnapshot> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
+                  if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  if (snapshot.hasError || !snapshot.data!.exists || !snapshot.hasData) {
+                  if (snapshot.hasError || !snapshot.data!.exists) {
                     return const SizedBox();
                   }
-
                   final itemData = snapshot.data!;
                   final itemName = itemData.get('name') as String;
                   final itemPrice = itemData.get('price');
@@ -422,18 +421,17 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                         Padding(
                           padding: const EdgeInsets.only(left: 8),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: CachedNetworkImage(
-                              imageUrl: imageUrl,
-                              width: 75,
-                              height: 75,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) =>
-                              const Center(child: CircularProgressIndicator()),
-                              errorWidget: (context, url, error) =>
-                              const Icon(Icons.error),
-                            )
-                          ),
+                              borderRadius: BorderRadius.circular(6),
+                              child: CachedNetworkImage(
+                                imageUrl: imageUrl,
+                                width: 75,
+                                height: 75,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(
+                                    child: CircularProgressIndicator()),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.error),
+                              )),
                         ),
                         Expanded(
                           child: Column(
@@ -481,19 +479,13 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      if (commentController.text.isNotEmpty &&
-                                          !isChanged)
+                                      if (commentController.text.isNotEmpty)
                                         const Text(
                                           'You previously left this comment:',
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold),
                                         ),
                                       TextField(
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _feedbackChanged[itemRef] = true;
-                                          });
-                                        },
                                         controller: commentController,
                                         decoration: const InputDecoration(
                                             hintText: 'Type your comment here'),
@@ -503,7 +495,12 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                             MainAxisAlignment.spaceAround,
                                         children: [
                                           TextButton(
-                                            child: const Text('Cancel'),
+                                            child: const Text(
+                                              'Cancel',
+                                              style: TextStyle(
+                                                color: Color(0xFFC57B57),
+                                              ),
+                                            ),
                                             onPressed: () {
                                               setState(() {
                                                 _showCommentSection[itemRef] =
@@ -512,16 +509,10 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                             },
                                           ),
                                           TextButton(
-                                            child: Text(
+                                            child: const Text(
                                               'Save',
-                                              style: TextStyle(
-                                                color: isChanged
-                                                    ? Colors.green
-                                                    : Colors.blue,
-                                              ),
                                             ),
                                             onPressed: () async {
-
                                               // Update the item rating and count
                                               await _updateItemRatingAndCount(
                                                   itemRef, itemRating);
