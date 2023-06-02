@@ -3,14 +3,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:project_mobile/Customer/customerHome.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Manager/managerHome.dart';
+import 'bloc/payment/payment_bloc.dart';
 import 'firebase_options.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Stripe.publishableKey = "pk_test_51NDyAVBYVNCxrHdPJ2HgeONRg6K5501stWtRJj19FHgjG42tcIOsVWGVmDjatnDUNTP7fkU4YFrXk510rk7yIUHa00k1SXrRN6";
+  await Stripe.instance.applySettings();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -86,16 +91,19 @@ class _MyAppState extends State<MyApp> {
       statusBarIconBrightness: Brightness.dark,
     ));
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: myColor,
-      ),
+    return BlocProvider(
+      create: (context) => PaymentBloc(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: myColor,
+        ),
 
-      //login durumuna göre sayfaya yönlendirme
-      home: FirebaseAuth.instance.currentUser == null
-          ? const LoginPage()
-          : navigateUserType(),
+        //login durumuna göre sayfaya yönlendirme
+        home: FirebaseAuth.instance.currentUser == null
+            ? const LoginPage()
+            : navigateUserType(),
+      ),
     );
   }
 }

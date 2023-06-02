@@ -1,9 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_stripe/flutter_stripe.dart' as st;
 import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:project_mobile/Customer/customerHome.dart';
 import 'package:project_mobile/customWidgets.dart';
 import 'package:slide_action/slide_action.dart';
+
+import '../bloc/blocs.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage(
@@ -24,6 +28,7 @@ class OrdersPage extends StatefulWidget {
 
 class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
   late TabController _tabController;
+  st.CardFormEditController controller = st.CardFormEditController();
 
   Future<bool> checkAuthorizedUser() async {
     final usersSnapshot = await FirebaseFirestore.instance
@@ -61,6 +66,12 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
         _tabController.animateTo(1);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _tabController.dispose();
   }
 
   void confirmOrders() async {
@@ -315,7 +326,6 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
   }
 
   StreamBuilder<QuerySnapshot> confirmedOrdersTab() {
-    Map<String, dynamic>? paymentIntent;
 
     return StreamBuilder<QuerySnapshot>(
       stream: widget.ordersRef.snapshots(),
@@ -394,6 +404,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                 height: 60,
                 child: ElevatedButton(
                   onPressed: () async {
+                    String option = "";
                     if (await checkAuthorizedUser()) {
                       var submittedOrdersLength = submittedOrders.length;
                       // ignore: use_build_context_synchronously
@@ -407,7 +418,6 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                           ),
                         ),
                         builder: (BuildContext context) {
-                          String option = "";
                           return DraggableScrollableSheet(
                               expand: false,
                               initialChildSize: 0.6,
@@ -499,28 +509,73 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                             ],
                                           ),
                                           const SizedBox(height: 16),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceEvenly,
-                                            children: [
-                                              paymentOption('card', totalAmount,
-                                                  () {
-                                                setState(() {
-                                                  option = "card";
-                                                });
-                                              }),
-                                              const SizedBox(width: 8),
-                                              paymentOption(
-                                                  'paypal', totalAmount, () {
-                                                setState(() {
-                                                  option = "paypal";
-                                                });
-                                              }),
-                                            ],
-                                          ),
+                                          if (option == "")
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceEvenly,
+                                              children: [
+                                                paymentOption(
+                                                    'card', totalAmount, () {
+                                                  setState(() {
+                                                    option = "card";
+                                                  });
+                                                }),
+                                                const SizedBox(width: 8),
+                                                paymentOption(
+                                                    'paypal', totalAmount, () {
+                                                  setState(() {
+                                                    option = "paypal";
+                                                  });
+                                                }),
+                                              ],
+                                            ),
+                                          const SizedBox(height: 16),
                                           if (option == "")
                                             Text("Select any payment method!"),
-                                          if (option == "card") Text("card"),
+                                          if (option == "card")
+                                            BlocBuilder<PaymentBloc,
+                                                    PaymentState>(
+                                                builder: (BuildContext context,
+                                                    state) {
+                                              if (state.status ==
+                                                  PaymentStatus.initial) {
+                                                return Column(
+                                                  children: [
+                                                    st.CardFormField(
+                                                      controller: controller,
+                                                    ),
+                                                    menuButton("Pay", () {
+                                                      (controller.details.complete)
+                                                          ? context
+                                                          .read<PaymentBloc>()
+                                                          .add(
+                                                        PaymentCreateIntent(
+                                                          billingDetails:
+                                                          st.BillingDetails(
+                                                              phone: "5551234567"),
+                                                          amount: totalAmount.floorToDouble(),
+                                                        ),
+                                                      )
+                                                          : ScaffoldMessenger.of(
+                                                          context)
+                                                          .showSnackBar(customSnackBar(
+                                                          "The form is not complete."));
+                                                    }),
+                                                  ],
+                                                );
+                                              } else if (state.status ==
+                                                  PaymentStatus.loading) {
+                                                return const Center(
+                                                  child:
+                                                      CircularProgressIndicator(),
+                                                );
+                                              }
+                                              else if (state.status == PaymentStatus.failure){
+                                                const Text("error");
+                                              }
+                                              return const Text("Succes");
+                                            }),
+
                                           if (option == "paypal")
                                             Text("paypal"),
                                         ],
@@ -648,7 +703,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
       child: ElevatedButton(
         onPressed: () {
           pay();
-          resetTable(totalPrice);
+          //resetTable(totalPrice);
         },
         child: Text("Pay with $option"),
       ),

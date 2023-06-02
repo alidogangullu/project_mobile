@@ -432,7 +432,8 @@ class ItemsGridState extends State<ItemsGrid> {
                                                   "quantity_notSubmitted_notServiced":
                                                       quantity
                                                 });
-                                              } else {
+                                              }
+                                              else {
                                                 // Item doesn't exist in order, add it with quantity 1
                                                 FirebaseFirestore.instance
                                                     .collection(
