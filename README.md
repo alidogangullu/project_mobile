@@ -2,9 +2,9 @@
 
 ## Mobile App
 
-This repository contains the customer and manager interface of the mobile app for our restaurant management and social media project. The app allows customers to follow restaurants, search for restaurants, and scan QR codes on restaurant tables, and order&pay.
+The mobile app for our restaurant management and social media project includes the manager and customer interfaces in this repository. Customers may use the app to scan QR codes on restaurant tables, order food, follow their favorite restaurants, and search for nearby eateries.
 
-This repository contains the manager interface of the mobile app for our restaurant management and social media project. The app allows restaurant managers to add restaurants, design menus, see stats and share posts.
+The manager interface for our restaurant management and social media project is accessible through this repository. Restaurant managers may add locations, create menus, view statistics, and share updates using the app.
 
 ## Project Overview
 
