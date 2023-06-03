@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'desktopApplicationConnection.dart';
 import 'manageRestaurant.dart';
 
+
 class RestaurantProfile extends StatelessWidget {
   const RestaurantProfile({
     Key? key,
@@ -16,6 +17,7 @@ class RestaurantProfile extends StatelessWidget {
     required this.restaurantName,
     required this.restaurantImageUrl,
     required this.restaurantFollowersCount,
+
     required this.restaurantPostsCount,
     required this.restaurantAddress
   }) : super(key: key);
@@ -34,6 +36,7 @@ class RestaurantProfile extends StatelessWidget {
         openBackgroundColor: Colors.black,
         speedDialChildren: [
           SpeedDialChild(
+
             child: const Icon(Icons.manage_accounts),
             label: 'Edit Restaurant Managers',
             onPressed: () {
@@ -52,6 +55,7 @@ class RestaurantProfile extends StatelessWidget {
             child: const Icon(Icons.qr_code_2),
             label: 'Create QR Codes for Tables',
             onPressed: () {
+
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -78,6 +82,7 @@ class RestaurantProfile extends StatelessWidget {
             },
             closeSpeedDialOnPressed: true,
           ),
+
         ],
         child: const Icon(Icons.settings),
       ),
@@ -94,6 +99,7 @@ class RestaurantProfile extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(15.0),
             child: Row(
+
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 CircleAvatar(
@@ -118,14 +124,22 @@ class RestaurantProfile extends StatelessWidget {
                 ),
               ],
             ),
+
           ),
-          Text(restaurantAddress),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15.0),
+            child: Text(
+              restaurantAddress,
+              style: const TextStyle(fontSize: 16.0),
+            ),
+          ),
           const SizedBox(height: 15,),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
               ElevatedButton(
                 onPressed: () {
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -142,9 +156,10 @@ class RestaurantProfile extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => EditRestaurantMenu(
-                        collection:
-                        "Restaurants/$restaurantID/MenuCategory",
+                      builder: (context
+
+                          ) => EditRestaurantMenu(
+                        collection: "Restaurants/$restaurantID/MenuCategory",
                         restaurantName: restaurantName,
                         restaurantID: restaurantID,
                       ),
@@ -170,6 +185,7 @@ class RestaurantProfile extends StatelessWidget {
                   return const Center(child: CircularProgressIndicator());
                 }
                 return GridView.builder(
+                  padding: const EdgeInsets.all(5),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     childAspectRatio: 1.0,
@@ -267,9 +283,7 @@ class PostsScreen extends StatelessWidget {
           .doc(postId)
           .delete();
 
-      await FirebaseFirestore.instance
-          .doc('Restaurants/$restaurantID')
-          .update({
+      await FirebaseFirestore.instance.doc('Restaurants/$restaurantID').update({
         'postCount': FieldValue.increment(-1),
       });
     }
@@ -278,7 +292,7 @@ class PostsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        title: Text(
+        title: const Text(
           'Posts',
           style: TextStyle(
             color: Colors.black,
@@ -300,23 +314,33 @@ class PostsScreen extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: CachedNetworkImageProvider(restaurantImageUrl),
-                  radius: 23, // Decrease the radius of the circle avatar
-                ),
-                title: Text(
-                  restaurantName,
-                  style: TextStyle(
-                    fontSize: 17, // Decrease the font size of the restaurant name
-                    fontWeight: FontWeight.bold,
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: CachedNetworkImageProvider(restaurantImageUrl),
+                    radius: 23,
+                  ),
+                  title: Text(
+                    restaurantName,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-              CachedNetworkImage(
-                imageUrl: post['imageUrl'],
-                placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                errorWidget: (context, url, error) => const Icon(Icons.error),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: CachedNetworkImage(
+                  imageUrl: post['imageUrl'],
+                  placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
@@ -371,6 +395,7 @@ class PostsScreen extends StatelessWidget {
     );
   }
 }
+
 
 
 
