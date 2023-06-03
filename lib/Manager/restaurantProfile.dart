@@ -187,6 +187,8 @@ class RestaurantProfile extends StatelessWidget {
                               restaurantID: restaurantID,
                               posts: snapshot.data!.docs,
                               initialPostIndex: index,
+                              restaurantImageUrl: restaurantImageUrl,
+                              restaurantName: restaurantName,
                             ),
                           ),
                         );
@@ -241,17 +243,20 @@ class PostsScreen extends StatelessWidget {
   final List<DocumentSnapshot> posts;
   final int initialPostIndex;
   final String restaurantID;
+  final String restaurantImageUrl;
+  final String restaurantName;
 
   const PostsScreen({
     Key? key,
     required this.posts,
     required this.initialPostIndex,
     required this.restaurantID,
+    required this.restaurantImageUrl,
+    required this.restaurantName,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-
     PageController pageController = PageController(
       initialPage: initialPostIndex,
     );
@@ -267,16 +272,18 @@ class PostsScreen extends StatelessWidget {
           .update({
         'postCount': FieldValue.increment(-1),
       });
-
     }
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        title: const Text(
-          "Posts",
-          style: TextStyle(color: Colors.black),
+        title: Text(
+          'Posts',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+          ),
         ),
       ),
       body: PageView.builder(
@@ -287,54 +294,75 @@ class PostsScreen extends StatelessWidget {
           DocumentSnapshot post = posts[index];
 
           DateTime timestamp = (post['timestamp'] as Timestamp).toDate();
-          String formattedTimestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(timestamp);
+          String formattedTimestamp = DateFormat('yyyy-MM-dd').format(timestamp);
+          String formattedTime = DateFormat('HH:mm:ss').format(timestamp);
 
-          return Stack(
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: CachedNetworkImageProvider(restaurantImageUrl),
+                  radius: 23, // Decrease the radius of the circle avatar
+                ),
+                title: Text(
+                  restaurantName,
+                  style: TextStyle(
+                    fontSize: 17, // Decrease the font size of the restaurant name
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              CachedNetworkImage(
+                imageUrl: post['imageUrl'],
+                placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                errorWidget: (context, url, error) => const Icon(Icons.error),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
+                child: Container(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    post['caption'],
+                    style: const TextStyle(
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(15, 8, 15, 0),
+                child: Row(
+                  children: [
+                    Text(
+                      formattedTimestamp,
+                      style: const TextStyle(
+                        fontSize: 16,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      formattedTime,
+                      style: const TextStyle(
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  CachedNetworkImage(
-                    imageUrl: post['imageUrl'],
-                    placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                    errorWidget: (context, url, error) => const Icon(Icons.error),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
-                    child: Container(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        post['caption'],
-                        style: const TextStyle(
-                          fontSize: 17,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
-                    child: Container(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        formattedTimestamp,
-                        style: const TextStyle(
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    iconSize: 25,
+                    onPressed: () {
+                      deletePost(post.id);
+                      Navigator.pop(context);
+                    },
                   ),
                 ],
-              ),
-              Positioned(
-                bottom: 10,
-                right: 10,
-                child: IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    deletePost(post.id);
-                    Navigator.pop(context);
-                  },
-                ),
               ),
             ],
           );
@@ -343,4 +371,10 @@ class PostsScreen extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
 
