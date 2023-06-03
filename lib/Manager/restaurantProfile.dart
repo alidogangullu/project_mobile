@@ -17,7 +17,6 @@ class RestaurantProfile extends StatelessWidget {
     required this.restaurantName,
     required this.restaurantImageUrl,
     required this.restaurantFollowersCount,
-
     required this.restaurantPostsCount,
     required this.restaurantAddress
   }) : super(key: key);

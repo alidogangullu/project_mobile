@@ -55,9 +55,7 @@ class RestaurantProfileState extends State<RestaurantProfile> {
       Map<String, dynamic> positionMap = data['position'];
 
       if (positionMap['geopoint'] != null) {
-        // Get the GeoPoint
         GeoPoint geoPoint = positionMap['geopoint'];
-        // Print it out or do anything you want with it
         latitude = geoPoint.latitude;
         longitude = geoPoint.longitude;
       }
@@ -213,7 +211,6 @@ class RestaurantProfileState extends State<RestaurantProfile> {
             ),
           ),
           TextButton(child: Text(widget.restaurantAddress), onPressed:() {
-            //not work on emulator but work on real devices
             _showMapAlert(context, widget.restaurantAddress);
           },),
           const SizedBox(height: 5),
@@ -258,6 +255,7 @@ class RestaurantProfileState extends State<RestaurantProfile> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 return GridView.builder(
+                  padding: const EdgeInsets.all(5),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     childAspectRatio: 1.0,
@@ -440,12 +438,12 @@ class RestaurantPostsWidget extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+            padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
             child: Container(
               alignment: Alignment.centerLeft,
               child: Text(
                 post['caption'],
-                style: const TextStyle(fontSize: 17),
+                style: const TextStyle(fontSize: 20),
               ),
             ),
           ),
@@ -456,11 +454,11 @@ class RestaurantPostsWidget extends StatelessWidget {
               children: [
                 Text(
                   formattedDate,
-                  style: const TextStyle(fontSize: 13),
+                  style: const TextStyle(fontSize: 16),
                 ),
                 Text(
                   formattedTime,
-                  style: const TextStyle(fontSize: 13),
+                  style: const TextStyle(fontSize: 16),
                 ),
               ],
             ),
