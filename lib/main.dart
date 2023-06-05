@@ -11,10 +11,11 @@ import 'Manager/managerHome.dart';
 import 'bloc/payment/payment_bloc.dart';
 import 'firebase_options.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:project_mobile/.env';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Stripe.publishableKey = "pk_test_51NDyAVBYVNCxrHdPJ2HgeONRg6K5501stWtRJj19FHgjG42tcIOsVWGVmDjatnDUNTP7fkU4YFrXk510rk7yIUHa00k1SXrRN6";
+  Stripe.publishableKey = stripePublishableKey;
   await Stripe.instance.applySettings();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

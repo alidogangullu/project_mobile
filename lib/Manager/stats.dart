@@ -16,6 +16,7 @@ class ChooseRestaurant extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.black),
         backgroundColor: AppColors.white,
         title: const Text('Stats', style: TextStyle(color: Colors.black)),
+        elevation: 0,
       ),
       body: FutureBuilder<List<DocumentSnapshot>>(
         future: getRestaurantsForManager(userId),

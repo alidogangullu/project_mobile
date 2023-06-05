@@ -28,15 +28,16 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
       useStripeSdk: true,
       paymentMethodId: paymentMethod.id,
       currency: 'usd',
-      amount: event.amount,
+      amount: event.amount*100,
     );
 
     if (paymentIntentResults['error'] != null) {
       emit(state.copyWith(status: PaymentStatus.failure));
     }
 
-    if (paymentIntentResults['clientSecret'] != null
-        && paymentIntentResults['requiresAction'] == null) {
+    if (paymentIntentResults['status'] == "succeeded"
+    //&& paymentIntentResults['requiresAction'] == null
+    ) {
       emit(state.copyWith(status: PaymentStatus.success));
     }
 
@@ -45,6 +46,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
       final String clientSecret = paymentIntentResults['clientSecret'];
       add(PaymentConfirmIntent(clientSecret: clientSecret));
     }
+
   }
 
   void _onPaymentConfirmIntent(PaymentConfirmIntent event, Emitter<PaymentState> emit) async {

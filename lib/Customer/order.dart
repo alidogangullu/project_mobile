@@ -6,7 +6,6 @@ import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:project_mobile/Customer/customerHome.dart';
 import 'package:project_mobile/customWidgets.dart';
 import 'package:slide_action/slide_action.dart';
-
 import '../bloc/blocs.dart';
 
 class OrdersPage extends StatefulWidget {
@@ -70,8 +69,8 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    super.dispose();
     _tabController.dispose();
+    super.dispose();
   }
 
   void confirmOrders() async {
@@ -326,7 +325,6 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
   }
 
   StreamBuilder<QuerySnapshot> confirmedOrdersTab() {
-
     return StreamBuilder<QuerySnapshot>(
       stream: widget.ordersRef.snapshots(),
       builder: (context, snapshot) {
@@ -420,7 +418,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                         builder: (BuildContext context) {
                           return DraggableScrollableSheet(
                               expand: false,
-                              initialChildSize: 0.6,
+                              initialChildSize: 0.8,
                               minChildSize: 0.4,
                               maxChildSize: 1,
                               builder:
@@ -449,7 +447,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                           const SizedBox(height: 16),
                                           SizedBox(
                                             width: double.infinity,
-                                            height: 200,
+                                            height: 150,
                                             child: ListView.builder(
                                               itemCount: submittedOrdersLength,
                                               itemBuilder: (context, index) {
@@ -544,25 +542,53 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                                     st.CardFormField(
                                                       controller: controller,
                                                     ),
-                                                    menuButton("Pay", () {
-                                                      (controller.details.complete)
+                                                    menuButton("Pay", () async {
+                                                      final FirebaseFirestore firestore = FirebaseFirestore.instance;
+                                                      final DocumentReference userRef = firestore.collection('users').doc(LoginPage.userID);
+                                                      final userSnapshot = await userRef.get();
+                                                      final name = userSnapshot['name'];
+                                                      final surname = userSnapshot['surname'];
+                                                      final phone = userSnapshot['phone'];
+
+                                                      (controller
+                                                              .details.complete)
                                                           ? context
-                                                          .read<PaymentBloc>()
-                                                          .add(
-                                                        PaymentCreateIntent(
-                                                          billingDetails:
-                                                          st.BillingDetails(
-                                                              phone: "5551234567"),
-                                                          amount: totalAmount.floorToDouble(),
-                                                        ),
-                                                      )
-                                                          : ScaffoldMessenger.of(
-                                                          context)
-                                                          .showSnackBar(customSnackBar(
-                                                          "The form is not complete."));
+                                                              .read<
+                                                                  PaymentBloc>()
+                                                              .add(
+                                                                PaymentCreateIntent(
+                                                                  billingDetails:
+                                                                      st.BillingDetails(
+                                                                          name: name +" "+ surname,
+                                                                          phone: phone,
+                                                                      ),
+                                                                  amount:
+                                                                      totalAmount,
+                                                                ),
+                                                              )
+                                                          : ScaffoldMessenger
+                                                                  .of(context)
+                                                              .showSnackBar(
+                                                                  customSnackBar(
+                                                                      "The form is not complete."));
                                                     }),
                                                   ],
                                                 );
+                                              } else if (state.status ==
+                                                  PaymentStatus.success) {
+                                                resetTable(totalAmount);
+                                                context
+                                                    .read<PaymentBloc>()
+                                                    .add(PaymentStart());
+                                                Future.delayed(Duration.zero,
+                                                    () {
+                                                  Navigator.pushReplacement(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            const PaymentSuccessScreen()),
+                                                  );
+                                                });
                                               } else if (state.status ==
                                                   PaymentStatus.loading) {
                                                 return const Center(
@@ -570,12 +596,8 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                                       CircularProgressIndicator(),
                                                 );
                                               }
-                                              else if (state.status == PaymentStatus.failure){
-                                                const Text("error");
-                                              }
-                                              return const Text("Succes");
+                                              return const Text("Navigating...");
                                             }),
-
                                           if (option == "paypal")
                                             Text("paypal"),
                                         ],
@@ -603,8 +625,6 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
 
   Future<void> resetTable(totalPrice) async {
     if (await checkAuthorizedUser()) {
-      // TODO: Implement payment functionality, now its just for testing.
-
       final usersRef = FirebaseFirestore.instance.collection('users');
       final restaurantRef = widget.tableRef.parent.parent;
 
@@ -669,6 +689,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
       //reset table users after transferring order data
       await widget.tableRef.update({
         'users': [],
+        'unAuthorizedUsers': [],
         'newNotification': false,
         'notifications': [],
       });
@@ -689,11 +710,6 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
           },
         },
       }, SetOptions(merge: true));
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const PaymentSuccessScreen()),
-      );
     }
   }
 

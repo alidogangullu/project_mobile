@@ -108,7 +108,7 @@ class FollowedRestaurantsPage extends StatelessWidget {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      doc["rating"].toString(),
+                                      doc["rating"].toStringAsFixed(2),
                                       style: const TextStyle(
                                           fontSize: 16, color: Colors.grey),
                                     ),

@@ -6,7 +6,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'dart:typed_data';
 import 'package:project_mobile/customWidgets.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 
 class CreateNewPost extends StatefulWidget {
   const CreateNewPost({Key? key, required this.restaurantID}) : super(key: key);
@@ -17,13 +16,6 @@ class CreateNewPost extends StatefulWidget {
 }
 
 class CreateNewPostState extends State<CreateNewPost> {
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-
-  @override
-  void initState() {
-    super.initState();
-    _firebaseMessaging.requestPermission();
-  }
 
   final captionController = TextEditingController();
   final picker = ImagePicker();

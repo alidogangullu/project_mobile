@@ -786,7 +786,7 @@ class UnauthorizedUsersWidgetState extends State<UnauthorizedUsersWidget> {
   List<dynamic> unAuthorizedUsers = [];
   bool isAdmin = false;
 
-  late StreamSubscription unAuthorizedUsersStream;
+  var unAuthorizedUsersStream;
 
   @override
   void initState() {
