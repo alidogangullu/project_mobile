@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+//import 'package:flutter_paypal_checkout/flutter_paypal_checkout.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' as st;
 import 'package:project_mobile/Authentication/loginPage.dart';
 import 'package:project_mobile/Customer/customerHome.dart';
@@ -518,6 +519,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                                     option = "card";
                                                   });
                                                 }),
+                                                /*
                                                 const SizedBox(width: 8),
                                                 paymentOption(
                                                     'paypal', totalAmount, () {
@@ -525,11 +527,25 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                                     option = "paypal";
                                                   });
                                                 }),
+                                                 */
+                                                const SizedBox(width: 8),
+                                                paymentOption(
+                                                    'waiter', totalAmount, () async {
+                                                  await widget.tableRef
+                                                      .update({
+                                                    'newNotification': true,
+                                                    'notifications':
+                                                    FieldValue.arrayUnion(["A waiter request has been sent for payment."]),
+                                                  });
+                                                  setState(() {
+                                                    option = "waiter";
+                                                  });
+                                                }),
                                               ],
                                             ),
                                           const SizedBox(height: 16),
                                           if (option == "")
-                                            Text("Select any payment method!"),
+                                          const Text("Select any payment method!"),
                                           if (option == "card")
                                             BlocBuilder<PaymentBloc,
                                                     PaymentState>(
@@ -543,12 +559,25 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                                       controller: controller,
                                                     ),
                                                     menuButton("Pay", () async {
-                                                      final FirebaseFirestore firestore = FirebaseFirestore.instance;
-                                                      final DocumentReference userRef = firestore.collection('users').doc(LoginPage.userID);
-                                                      final userSnapshot = await userRef.get();
-                                                      final name = userSnapshot['name'];
-                                                      final surname = userSnapshot['surname'];
-                                                      final phone = userSnapshot['phone'];
+                                                      final FirebaseFirestore
+                                                          firestore =
+                                                          FirebaseFirestore
+                                                              .instance;
+                                                      final DocumentReference
+                                                          userRef = firestore
+                                                              .collection(
+                                                                  'users')
+                                                              .doc(LoginPage
+                                                                  .userID);
+                                                      final userSnapshot =
+                                                          await userRef.get();
+                                                      final name =
+                                                          userSnapshot['name'];
+                                                      final surname =
+                                                          userSnapshot[
+                                                              'surname'];
+                                                      final phone =
+                                                          userSnapshot['phone'];
 
                                                       (controller
                                                               .details.complete)
@@ -559,9 +588,12 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                                                 PaymentCreateIntent(
                                                                   billingDetails:
                                                                       st.BillingDetails(
-                                                                          name: name +" "+ surname,
-                                                                          phone: phone,
-                                                                      ),
+                                                                    name: name +
+                                                                        " " +
+                                                                        surname,
+                                                                    phone:
+                                                                        phone,
+                                                                  ),
                                                                   amount:
                                                                       totalAmount,
                                                                 ),
@@ -596,10 +628,71 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                                       CircularProgressIndicator(),
                                                 );
                                               }
-                                              return const Text("Navigating...");
+                                              return const Text(
+                                                  "Navigating...");
                                             }),
+                                          /*
                                           if (option == "paypal")
-                                            Text("paypal"),
+                                            Container(
+                                              color: Colors.blueGrey,
+                                              width: double.infinity,
+                                              height: 500,
+                                              child: PaypalCheckout(
+                                                sandboxMode: true,
+                                                clientId: "",
+                                                secretKey: "",
+                                                returnURL: "",
+                                                cancelURL: "",
+                                                transactions: [
+                                                  {
+                                                    "amount": {
+                                                      "total": totalAmount,
+                                                      "currency": "USD",
+                                                      "details": {
+                                                        "subtotal": totalAmount,
+                                                        "shipping": '0',
+                                                        "shipping_discount": 0
+                                                      }
+                                                    },
+                                                    "description":
+                                                        "The payment transaction description.",
+                                                    "item_list": {
+                                                      "items": [
+                                                        {
+                                                          "name": "food",
+                                                          "quantity": 1,
+                                                          "price": totalAmount,
+                                                          "currency": "USD"
+                                                        },
+                                                      ],
+                                                    }
+                                                  }
+                                                ],
+                                                note: "PAYMENT_NOTE",
+                                                onSuccess: (Map params) async {
+                                                  print("onSuccess: $params");
+                                                  resetTable(totalAmount);
+                                                  Future.delayed(Duration.zero,
+                                                          () {
+                                                        Navigator.pushReplacement(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                              builder: (context) =>
+                                                              const PaymentSuccessScreen()),
+                                                        );
+                                                      });
+                                                },
+                                                onError: (error) {
+                                                  print("onError: $error");
+                                                },
+                                                onCancel: () {
+                                                  print('cancelled:');
+                                                },
+                                              ),
+                                            ),
+                                           */
+                                          if(option == "waiter")
+                                            const Text("A waiter request has been sent for payment!"),
                                         ],
                                       ),
                                     );
