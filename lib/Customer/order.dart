@@ -531,6 +531,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                                 const SizedBox(width: 8),
                                                 paymentOption(
                                                     'waiter', totalAmount, () async {
+                                                  if (await checkAuthorizedUser()) {
                                                   await widget.tableRef
                                                       .update({
                                                     'newNotification': true,
@@ -539,7 +540,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                                   });
                                                   setState(() {
                                                     option = "waiter";
-                                                  });
+                                                  });}
                                                 }),
                                               ],
                                             ),
@@ -578,7 +579,7 @@ class _OrdersState extends State<OrdersPage> with TickerProviderStateMixin {
                                                               'surname'];
                                                       final phone =
                                                           userSnapshot['phone'];
-
+                                                      print(controller.details);
                                                       (controller
                                                               .details.complete)
                                                           ? context

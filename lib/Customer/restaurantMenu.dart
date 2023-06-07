@@ -41,17 +41,32 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 
   void sendWaiterRequest() async {
-    await FirebaseFirestore.instance
-        .collection("Restaurants/${widget.id}/Tables")
+    final usersSnapshot = await FirebaseFirestore
+        .instance
+        .collection(
+        "Restaurants/${widget.id}/Tables")
         .doc(widget.tableNo)
-        .update({
-      'newNotification': true,
-      'notifications':
-          FieldValue.arrayUnion(["A waiter request has been sent."]),
-    });
-
-    ScaffoldMessenger.of(context)
-        .showSnackBar(customSnackBar('A waiter request has been sent.'));
+        .get();
+    final List<dynamic> users =
+    usersSnapshot.data()!['users'];
+    if (users.contains(
+        LoginPage.userID) ||
+        users.contains(
+            "${LoginPage.userID}-admin")) {
+      await FirebaseFirestore.instance
+          .collection("Restaurants/${widget.id}/Tables")
+          .doc(widget.tableNo)
+          .update({
+        'newNotification': true,
+        'notifications':
+        FieldValue.arrayUnion(["A waiter request has been sent."]),
+      });
+      ScaffoldMessenger.of(context)
+          .showSnackBar(customSnackBar('A waiter request has been sent.'));
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(customSnackBar('You are not authorized to do this action!'));
+    }
   }
 
   @override
@@ -748,20 +763,8 @@ class ShoppingCartButton extends StatelessWidget {
                   );
                 }
               : () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Unauthorized User'),
-                      content: const Text(
-                          'You are not authorized to access orders.'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('OK'),
-                        ),
-                      ],
-                    ),
-                  );
+            ScaffoldMessenger.of(context)
+                .showSnackBar(customSnackBar('You are not authorized to access orders!'));
                 },
           icon: const Icon(Icons.shopping_cart),
         );
@@ -908,7 +911,7 @@ class UnauthorizedUsersWidgetState extends State<UnauthorizedUsersWidget> {
                           .update({
                         'users': FieldValue.arrayUnion([user]),
                         'unAuthorizedUsers': FieldValue.arrayRemove([user]),
-                      }).then((value) => unAuthorizedUsers.removeAt(index));
+                      });
                       Navigator.of(context).pop();
                     },
                     child: const Text('Allow'),
