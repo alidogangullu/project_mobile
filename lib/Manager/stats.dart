@@ -1,5 +1,8 @@
+import 'dart:ffi';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:project_mobile/values.dart';
 
@@ -155,6 +158,7 @@ class OrderStats extends StatelessWidget {
                 buildRevenueWidget(constraints, restaurant),
                 const SizedBox(width: 50, height: 20),
                 buildRatedWidgets(constraints, restaurant),
+                const SizedBox(width: 50, height: 20),
               ],
             ),
           ),
@@ -369,9 +373,14 @@ class Revenue extends StatelessWidget {
     const month = '05';
     final daySales = totalSales[year][month];
 
+    final List<FlSpot> chartData = [];
+
     String salesContent = '';
     daySales.forEach((day, sales) {
       salesContent += 'Day $day: $sales\n';
+      double salesAmount = sales.toDouble();
+      final dayIndex = double.tryParse(day);
+      chartData.add(FlSpot(dayIndex!, salesAmount));
     });
 
     return Container(
@@ -407,10 +416,123 @@ class Revenue extends StatelessWidget {
               color: AppColors.white,
             ),
           ),
+          const SizedBox(height: 25),
+          AspectRatio(
+            aspectRatio: 1,
+            child: LineChart(
+              sampleData(chartData),
+              swapAnimationDuration: const Duration(milliseconds: 250),
+            ),
+          ),
         ],
       ),
     );
   }
+
+  LineChartData sampleData(List<FlSpot> chartData) => LineChartData(
+        lineTouchData: lineTouchData1,
+        gridData: gridData,
+        titlesData: titlesData1,
+        borderData: borderData,
+        lineBarsData: lineBarsData1(chartData),
+        minX: 1,
+        maxX: 31,
+        maxY: 600,
+        minY: 0,
+      );
+
+  LineTouchData get lineTouchData1 => LineTouchData(
+        handleBuiltInTouches: true,
+        touchTooltipData: LineTouchTooltipData(
+          tooltipBgColor: Colors.blueGrey.withOpacity(0.8),
+        ),
+      );
+  FlGridData get gridData => FlGridData(show: false);
+  FlTitlesData get titlesData1 => FlTitlesData(
+        bottomTitles: AxisTitles(
+          sideTitles: bottomTitles(),
+        ),
+        rightTitles: AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+        topTitles: AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+        leftTitles: AxisTitles(
+          sideTitles: leftTitles(),
+        ),
+      );
+  FlBorderData get borderData => FlBorderData(
+        show: true,
+        border: Border(
+          bottom:
+              BorderSide(color: AppColors.color50.withOpacity(0.2), width: 4),
+          left: const BorderSide(color: Colors.transparent),
+          right: const BorderSide(color: Colors.transparent),
+          top: const BorderSide(color: Colors.transparent),
+        ),
+      );
+  List<LineChartBarData> lineBarsData1(List<FlSpot> chartData) => [
+        lineChartBarData(chartData),
+      ];
+  SideTitles bottomTitles() => SideTitles(
+        showTitles: true,
+        reservedSize: 32,
+        interval: 1,
+        getTitlesWidget: bottomTitleWidgets,
+      );
+  SideTitles leftTitles() => SideTitles(
+        getTitlesWidget: leftTitleWidgets,
+        showTitles: true,
+        interval: 1,
+        reservedSize: 40,
+      );
+  Widget leftTitleWidgets(double value, TitleMeta meta) {
+    const style = TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 14,
+    );
+    String text;
+    switch (value.toInt()) {
+      case 0:
+        text = '0';
+        break;
+      case 500:
+        text = '500';
+        break;
+      case 1000:
+        text = '1000';
+        break;
+      default:
+        return Container();
+    }
+
+    return Text(text, style: style, textAlign: TextAlign.center);
+  }
+
+  Widget bottomTitleWidgets(double value, TitleMeta meta) {
+    const style = TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    );
+    int day = value.toInt();
+    if (day == 1 || day == 7 || day == 14 || day == 21 || day == 31) {
+      return Text(day.toString(), style: style);
+    } else {
+      return const SizedBox();
+    }
+  }
+
+  LineChartBarData lineChartBarData(List<FlSpot> chartData) =>
+      LineChartBarData(
+        isCurved: true,
+        color: AppColors.color100,
+        barWidth: 2,
+        isStrokeCapRound: true,
+        dotData: FlDotData(show: true),
+        belowBarData: BarAreaData(show: false),
+        spots: chartData,
+      );
 }
 
 Future<List<QueryDocumentSnapshot>> getCompletedOrders(String userId) async {
