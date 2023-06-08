@@ -60,7 +60,7 @@ class _SearchState extends State<Search> {
 
       final collectionReference = FirebaseFirestore.instance.collection('Restaurants');
 
-      final radius = 50000000.0;
+      final radius = 10.0;
       final field = "position";
 
       final stream = geo.collection(collectionRef: collectionReference)

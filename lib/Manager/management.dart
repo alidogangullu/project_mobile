@@ -153,12 +153,14 @@ class _ManagerPanelState extends State<ManagerPanel> {
                                         ],
                                       ),
                                     ),
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          15, 0, 15, 15),
-                                      child: Text(
-                                        doc['address'],
-                                        style: const TextStyle(fontSize: 16),
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            15, 0, 15, 15),
+                                        child: Text(
+                                          doc['address'],
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -238,8 +240,8 @@ class _AddRestaurantState extends State<AddRestaurant> {
   Future<void> initPlatformState() async {
     List<WifiNetwork> wifiList = await AndroidFlutterWifi.getWifiScanResult();
     setState(() {
-      ssidList.add("");
       ssidList = wifiList.map((wifi) => wifi.ssid).toList();
+      ssidList.add("");
     });
   }
 

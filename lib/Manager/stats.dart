@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -253,7 +251,7 @@ class MostRatedDrink extends StatelessWidget {
           const Text(
             'Most Rated Drink',
             style: TextStyle(
-                fontSize: 19.0,
+                fontSize: 16.0,
                 fontWeight: FontWeight.bold,
                 color: AppColors.color900),
           ),
@@ -321,7 +319,7 @@ class MostRatedFood extends StatelessWidget {
           const Text(
             'Most Rated Food',
             style: TextStyle(
-                fontSize: 18.0,
+                fontSize: 16.0,
                 fontWeight: FontWeight.bold,
                 color: AppColors.color900),
           ),

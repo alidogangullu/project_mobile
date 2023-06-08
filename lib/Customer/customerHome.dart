@@ -167,11 +167,7 @@ class HomeState extends State<Home> {
               ? FloatingActionButton(
                   onPressed: () {
                     //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const QRScanner()));
-                    Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const MenuScreen(
-                                id: "tCGe0KgMzjUZzqoCM2rw", tableNo: "1")));
+                    Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const MenuScreen(id: "tCGe0KgMzjUZzqoCM2rw", tableNo: "1")));
                   },
                   child: const Icon(Icons.qr_code_scanner),
                 )
