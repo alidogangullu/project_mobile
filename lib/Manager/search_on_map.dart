@@ -1,5 +1,4 @@
-// ignore_for_file: prefer_interpolation_to_compose_strings
-
+/*
 import 'dart:convert';
 import 'package:project_mobile/Manager/nearby_response.dart';
 import 'package:flutter/material.dart';
@@ -139,3 +138,4 @@ class _SearchOnMapState extends State<SearchOnMap> {
     return position;
   }
 }
+ */
