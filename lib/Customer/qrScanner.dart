@@ -106,7 +106,7 @@ class QRScannerState extends State<QRScanner> {
       restaurantWifi = documentSnapshot["restaurantWiFi"];
 
       if (restaurantWifi == "" || Platform.isIOS) {
-        //manager does not want wifi security or customer has ios device do not use this security because of restrictions.
+        //manager does not want wifi security or customer has ios device do not use this security option because of restrictions.
         nearbyWiFi = true;
       } else {
         nearbyWiFi = await checkWifi();
