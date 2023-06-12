@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:location/location.dart';
@@ -103,7 +105,8 @@ class QRScannerState extends State<QRScanner> {
       //wifi area data
       restaurantWifi = documentSnapshot["restaurantWiFi"];
 
-      if (restaurantWifi == "") {
+      if (restaurantWifi == "" || Platform.isIOS) {
+        //manager does not want wifi security or customer has ios device do not use this security because of restrictions.
         nearbyWiFi = true;
       } else {
         nearbyWiFi = await checkWifi();
