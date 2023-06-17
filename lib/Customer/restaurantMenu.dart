@@ -799,7 +799,7 @@ class UnauthorizedUsersWidgetState extends State<UnauthorizedUsersWidget> {
 
   @override
   void dispose() {
-    unAuthorizedUsersStream.cancel();
+    //unAuthorizedUsersStream.cancel();
     super.dispose();
   }
 

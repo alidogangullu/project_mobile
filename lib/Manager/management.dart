@@ -290,6 +290,7 @@ class _AddRestaurantState extends State<AddRestaurant> {
           ),
           textInputField(
               context, 'Restaurant Name', restaurantNameController, false),
+          if(!Platform.isIOS)
           Padding(
             padding: const EdgeInsets.only(left: 15, bottom: 5),
             child: Row(
